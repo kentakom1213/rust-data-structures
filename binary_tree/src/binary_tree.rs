@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt, mem, ops::DerefMut};
+use std::{cmp::Ordering, fmt, mem};
 
 #[derive(Debug)]
 pub struct BinaryTreeNode<T> {
@@ -9,22 +9,71 @@ pub struct BinaryTreeNode<T> {
 
 #[derive(Debug)]
 pub struct BinaryTree<T> {
+    size: usize,
     pub root: Option<Box<BinaryTreeNode<T>>>,
 }
 
-impl<T: Ord + fmt::Debug> BinaryTree<T> {
+impl<T: Ord> BinaryTree<T> {
     pub fn new() -> Self {
-        BinaryTree { root: None }
+        BinaryTree {
+            size: 0,
+            root: None,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.size
     }
 
     pub fn search(&mut self, value: &T) -> bool {
-        // 身代わりを用意する
         search_inner(value, &self.root)
     }
 
     pub fn insert(&mut self, value: T) -> bool {
-        let res = insert_inner(value, &mut self.root);
-        res
+        let res = search_mut(&value, &mut self.root);
+        if res.is_none() {
+            *res = Some(Box::new(BinaryTreeNode {
+                value,
+                left: None,
+                right: None,
+            }));
+            self.size += 1; // 要素数をインクリメント
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn discard(&mut self, value: &T) -> bool {
+        let res = search_mut(value, &mut self.root);
+        if res.as_ref().is_none() {
+            false
+        } else {
+            let root = res.as_deref_mut().unwrap();
+            match (root.left.take(), root.right.take()) {
+                (None, None) => {
+                    *res = None;
+                }
+                (Some(left), None) => {
+                    *res = Some(left);
+                }
+                (None, Some(right)) => {
+                    *res = Some(right);
+                }
+                (Some(mut left), Some(right)) => {
+                    if let Some(mut rightmost) = left.rightmost_child() {
+                        rightmost.left = Some(left);
+                        rightmost.right = Some(right);
+                        *res = Some(rightmost);
+                    } else {
+                        left.right = Some(right);
+                        *res = Some(left);
+                    }
+                }
+            };
+            self.size -= 1; // 要素数をデクリメント
+            true
+        }
     }
 }
 
@@ -60,22 +109,37 @@ fn search_inner<T: Ord>(value: &T, root: &Option<Box<BinaryTreeNode<T>>>) -> boo
 }
 
 /// keyを挿入するべき位置にあるノードを返す
-fn insert_inner<T: Ord>(value: T, root: &mut Option<Box<BinaryTreeNode<T>>>) -> bool {
+fn search_mut<'a, T: Ord>(
+    value: &T,
+    root: &'a mut Option<Box<BinaryTreeNode<T>>>,
+) -> &'a mut Option<Box<BinaryTreeNode<T>>> {
     if root.is_none() {
-        let mut new_node = Some(Box::new(
-            BinaryTreeNode {
-                value,
-                left: None,
-                right: None,
-            }
-        ));
-        std::mem::swap(root, &mut new_node);
-        return true;
+        return root;
     }
-    let node = root.as_mut().unwrap();
-    match value.cmp(&node.value) {
-        Ordering::Equal => false,
-        Ordering::Less => insert_inner(value, &mut node.left),
-        Ordering::Greater => insert_inner(value, &mut node.right),
+    match value.cmp(&root.as_ref().unwrap().value) {
+        Ordering::Equal => root,
+        Ordering::Less => search_mut(value, &mut root.as_mut().unwrap().left),
+        Ordering::Greater => search_mut(value, &mut root.as_mut().unwrap().right),
+    }
+}
+
+impl<T: Ord> BinaryTreeNode<T> {
+    fn rightmost_child(&mut self) -> Option<Box<Self>> {
+        match self.right {
+            Some(ref mut right) => {
+                if let Some(node) = right.rightmost_child() {
+                    // 右の子に右の子が存在する場合
+                    Some(node)
+                } else {
+                    // 右の子に右の子が存在しない場合
+                    let mut r = self.right.take();
+                    if let Some(ref mut r) = r {
+                        self.right = mem::replace(&mut r.left, None);
+                    }
+                    r
+                }
+            }
+            None => None,
+        }
     }
 }
