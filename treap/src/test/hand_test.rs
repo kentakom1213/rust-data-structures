@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use binary_tree::binary_tree::*;
+use crate::treap::*;
 
 #[test]
 fn test_insert_and_find() {

@@ -1,2 +1,8 @@
+// library
 pub mod treap;
-pub mod splay;
+
+// test
+mod test {
+    mod hand_test;
+    mod rotation;   
+}

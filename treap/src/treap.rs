@@ -1,6 +1,5 @@
 use rand::rngs::ThreadRng;
 use rand::{self, Rng};
-use std::ops::{Deref, DerefMut};
 use std::{cmp::Ordering, fmt, mem};
 
 #[derive(Debug)]
@@ -91,7 +90,7 @@ impl<T: Ord + fmt::Debug> Treap<T> {
 }
 
 /// 整形して表示
-fn pretty_print_inner<K: Ord + fmt::Debug>(node: &Option<Box<TreapNode<K>>>, depth: usize) {
+pub fn pretty_print_inner<K: Ord + fmt::Debug>(node: &Option<Box<TreapNode<K>>>, depth: usize) {
     match node {
         Some(ref node) => {
             pretty_print_inner(&node.left, depth + 2);
@@ -157,7 +156,7 @@ impl<T: Ord> TreapNode<T> {
 }
 
 /// ノードの右回転を行う
-fn rotate_right<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
+pub fn rotate_right<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.left {
             root.left = new_root.right;
@@ -172,7 +171,7 @@ fn rotate_right<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>>
 }
 
 /// ノードの右回転を行う
-fn rotate_left<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
+pub fn rotate_left<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.right {
             root.right = new_root.left;
@@ -183,81 +182,5 @@ fn rotate_left<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> 
         }
     } else {
         None
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_rotate() {
-        let mut root = Some(Box::new(TreapNode {
-            priority: 0.0,
-            value: 4,
-            left: Some(Box::new(TreapNode {
-                priority: 0.0,
-                value: 2,
-                left: Some(Box::new(TreapNode {
-                    priority: 0.0,
-                    value: 1,
-                    left: None,
-                    right: None,
-                })),
-                right: Some(Box::new(TreapNode {
-                    priority: 0.0,
-                    value: 3,
-                    left: None,
-                    right: None,
-                })),
-            })),
-            right: Some(Box::new(TreapNode {
-                priority: 0.0,
-                value: 5,
-                left: None,
-                right: None,
-            })),
-        }));
-
-        println!("----- 回転前 -----");
-        pretty_print_inner(&root, 0);
-
-        // ## 右回転のテスト
-        // 右回転
-        root = rotate_right(root);
-
-        println!("----- 右回転 -----");
-        pretty_print_inner(&root, 0);
-
-        // さらに右回転
-        root = rotate_right(root);
-
-        println!("----- 右回転 -----");
-        pretty_print_inner(&root, 0);
-
-        // さらに右回転
-        root = rotate_right(root);
-
-        println!("----- 右回転 -----");
-        pretty_print_inner(&root, 0);
-
-        // ## 左回転のテスト
-        // 左回転
-        root = rotate_left(root);
-
-        println!("----- 左回転 -----");
-        pretty_print_inner(&root, 0);
-
-        // さらに左回転
-        root = rotate_left(root);
-
-        println!("----- 左回転 -----");
-        pretty_print_inner(&root, 0);
-
-        // さらに左回転
-        root = rotate_left(root);
-
-        println!("----- 左回転 -----");
-        pretty_print_inner(&root, 0);
     }
 }
