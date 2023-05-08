@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use crate::treap::*;
+use treap::treap::*;
 
 #[test]
 fn test_insert_and_find() {
