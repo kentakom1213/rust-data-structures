@@ -2,7 +2,7 @@ use rand::rngs::ThreadRng;
 use rand::{self, Rng};
 use std::fmt::Debug;
 use std::mem::{replace, swap};
-use std::{cmp::Ordering, fmt, mem};
+use std::{cmp::Ordering, fmt};
 
 #[derive(Debug)]
 pub struct TreapNode<T> {
@@ -98,21 +98,6 @@ fn search_inner<T: Ord>(value: &T, root: &Option<Box<TreapNode<T>>>) -> bool {
     }
 }
 
-/// keyを挿入するべき位置にあるノードを返す
-fn search_mut<'a, T: Ord>(
-    value: &T,
-    root: &'a mut Option<Box<TreapNode<T>>>,
-) -> &'a mut Option<Box<TreapNode<T>>> {
-    if root.is_none() {
-        return root;
-    }
-    match value.cmp(&root.as_ref().unwrap().value) {
-        Ordering::Equal => root,
-        Ordering::Less => search_mut(value, &mut root.as_mut().unwrap().left),
-        Ordering::Greater => search_mut(value, &mut root.as_mut().unwrap().right),
-    }
-}
-
 /// 指定されたキーを削除し，新しい根を返す（所有権を受け取る）
 fn delete_inner<T: Ord>(
     value: &T,
@@ -123,9 +108,7 @@ fn delete_inner<T: Ord>(
             Ordering::Equal => {
                 // 値が等しい場合，その要素を葉に持っていき，削除する
                 match (root.left.is_some(), root.right.is_some()) {
-                    (false, false) => {
-                        (None, true)
-                    },
+                    (false, false) => (None, true),
                     (false, true) => {
                         root = rotate_left(Some(root)).unwrap();
                         // 左部分木からvalueを削除
@@ -137,7 +120,7 @@ fn delete_inner<T: Ord>(
                             root.left = left;
                         }
                         (Some(root), true)
-                    },
+                    }
                     (true, _) => {
                         root = rotate_right(Some(root)).unwrap();
                         // 右部分木からvalueを削除
@@ -149,22 +132,21 @@ fn delete_inner<T: Ord>(
                             root.right = right;
                         }
                         (Some(root), true)
-                    },
+                    }
                 }
-
-            },
+            }
             Ordering::Less => {
                 let left = replace(&mut root.left, None);
                 let (mut new_left, is_deleted) = delete_inner(value, left);
                 swap(&mut root.left, &mut new_left);
                 (Some(root), is_deleted)
-            },
+            }
             Ordering::Greater => {
                 let right = replace(&mut root.right, None);
                 let (mut new_right, is_deleted) = delete_inner(value, right);
                 swap(&mut root.right, &mut new_right);
                 (Some(root), is_deleted)
-            },
+            }
         }
     } else {
         (None, false)
@@ -224,28 +206,6 @@ fn insert_inner<T: Ord>(
             right: None,
         }));
         (root, true)
-    }
-}
-
-impl<T: Ord> TreapNode<T> {
-    /// 自分とその子の中から，最も大きいものを探索する
-    fn rightmost_child(&mut self) -> Option<Box<Self>> {
-        match self.right {
-            Some(ref mut right) => {
-                if let Some(node) = right.rightmost_child() {
-                    // 右の子に右の子が存在する場合
-                    Some(node)
-                } else {
-                    // 右の子に右の子が存在しない場合
-                    let mut r = self.right.take();
-                    if let Some(ref mut r) = r {
-                        self.right = mem::replace(&mut r.left, None);
-                    }
-                    r
-                }
-            }
-            None => None,
-        }
     }
 }
 
