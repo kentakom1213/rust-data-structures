@@ -111,16 +111,16 @@ fn test_insert_and_delete_2() {
 }
 
 #[test]
-fn test_random_u8() {
+fn test_insert_delete_random_u8() {
     let mut tree = Treap::<u8>::new();
 
-    for _ in 0..10_000 {
+    for _ in 0..100_000 {
         // 挿入
-        let x: u8 = random();
+        let x = random();
         tree.insert(x);
 
         // 削除
-        let y: u8 = random();
+        let y = random();
         tree.discard(&y);
     }
 }

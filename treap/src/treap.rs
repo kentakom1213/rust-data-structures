@@ -19,7 +19,7 @@ pub struct Treap<T> {
     pub root: Option<Box<TreapNode<T>>>,
 }
 
-impl<T: Ord + Debug + Clone> Treap<T> {
+impl<T: Ord + Clone> Treap<T> {
     pub fn new() -> Self {
         Treap {
             rng: rand::thread_rng(),
@@ -49,34 +49,14 @@ impl<T: Ord + Debug + Clone> Treap<T> {
     }
 
     pub fn discard(&mut self, value: &T) -> bool {
-        let res = search_mut(value, &mut self.root);
-        if res.as_ref().is_none() {
-            false
-        } else {
-            let root = res.as_deref_mut().unwrap();
-            match (root.left.take(), root.right.take()) {
-                (None, None) => {
-                    *res = None;
-                }
-                (Some(left), None) => {
-                    *res = Some(left);
-                }
-                (None, Some(right)) => {
-                    *res = Some(right);
-                }
-                (Some(mut left), Some(right)) => {
-                    if let Some(mut rightmost) = left.rightmost_child() {
-                        rightmost.left = Some(left);
-                        rightmost.right = Some(right);
-                        *res = Some(rightmost);
-                    } else {
-                        left.right = Some(right);
-                        *res = Some(left);
-                    }
-                }
-            };
-            self.size -= 1; // 要素数をデクリメント
+        let root = replace(&mut self.root, None);
+        let (new_root, is_deleted) = delete_inner(value, root);
+        self.root = new_root;
+        if is_deleted {
+            self.size -= 1;
             true
+        } else {
+            false
         }
     }
 }
@@ -89,7 +69,7 @@ impl<T: Ord + fmt::Debug> Treap<T> {
 }
 
 /// 再帰的に表示
-pub fn pretty_print_inner<K: Ord + fmt::Debug>(node: &Option<Box<TreapNode<K>>>, depth: usize) {
+fn pretty_print_inner<K: Ord + fmt::Debug>(node: &Option<Box<TreapNode<K>>>, depth: usize) {
     match node {
         Some(ref node) => {
             pretty_print_inner(&node.left, depth + 2);
@@ -130,6 +110,64 @@ fn search_mut<'a, T: Ord>(
         Ordering::Equal => root,
         Ordering::Less => search_mut(value, &mut root.as_mut().unwrap().left),
         Ordering::Greater => search_mut(value, &mut root.as_mut().unwrap().right),
+    }
+}
+
+/// 指定されたキーを削除し，新しい根を返す（所有権を受け取る）
+fn delete_inner<T: Ord>(
+    value: &T,
+    root: Option<Box<TreapNode<T>>>,
+) -> (Option<Box<TreapNode<T>>>, bool) {
+    if let Some(mut root) = root {
+        match value.cmp(&root.value) {
+            Ordering::Equal => {
+                // 値が等しい場合，その要素を葉に持っていき，削除する
+                match (root.left.is_some(), root.right.is_some()) {
+                    (false, false) => {
+                        (None, true)
+                    },
+                    (false, true) => {
+                        root = rotate_left(Some(root)).unwrap();
+                        // 左部分木からvalueを削除
+                        let left = replace(&mut root.left, None);
+                        let (left, _) = delete_inner(value, left);
+                        if left.is_none() {
+                            root.left = None;
+                        } else {
+                            root.left = left;
+                        }
+                        (Some(root), true)
+                    },
+                    (true, _) => {
+                        root = rotate_right(Some(root)).unwrap();
+                        // 右部分木からvalueを削除
+                        let right = replace(&mut root.right, None);
+                        let (right, _) = delete_inner(value, right);
+                        if right.is_none() {
+                            root.right = None;
+                        } else {
+                            root.right = right;
+                        }
+                        (Some(root), true)
+                    },
+                }
+
+            },
+            Ordering::Less => {
+                let left = replace(&mut root.left, None);
+                let (mut new_left, is_deleted) = delete_inner(value, left);
+                swap(&mut root.left, &mut new_left);
+                (Some(root), is_deleted)
+            },
+            Ordering::Greater => {
+                let right = replace(&mut root.right, None);
+                let (mut new_right, is_deleted) = delete_inner(value, right);
+                swap(&mut root.right, &mut new_right);
+                (Some(root), is_deleted)
+            },
+        }
+    } else {
+        (None, false)
     }
 }
 
@@ -212,7 +250,7 @@ impl<T: Ord> TreapNode<T> {
 }
 
 /// ノードの右回転を行う
-pub fn rotate_right<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
+fn rotate_right<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.left {
             root.left = new_root.right;
@@ -227,7 +265,7 @@ pub fn rotate_right<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<
 }
 
 /// ノードの右回転を行う
-pub fn rotate_left<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
+fn rotate_left<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.right {
             root.right = new_root.left;
