@@ -41,7 +41,7 @@ impl<T: Ord + Clone> Treap<T> {
         let (new_root, is_inserted) = insert_inner(value, self.rng.gen(), root);
         self.root = new_root;
         if is_inserted {
-            self.size += 1; // 要素数をインクリメント
+            self.size += 1;
             true
         } else {
             false
@@ -68,10 +68,10 @@ impl<T: Ord + Clone> Treap<T> {
                 Ordering::Less | Ordering::Equal => {
                     last = root;
                     root = &root.as_ref().unwrap().left;
-                },
+                }
                 Ordering::Greater => {
                     root = &root.as_ref().unwrap().right;
-                },
+                }
             }
         }
         if let Some(last) = last {
@@ -89,10 +89,10 @@ impl<T: Ord + Clone> Treap<T> {
                 Ordering::Less => {
                     last = root;
                     root = &root.as_ref().unwrap().left;
-                },
+                }
                 Ordering::Equal | Ordering::Greater => {
                     root = &root.as_ref().unwrap().right;
-                },
+                }
             }
         }
         if let Some(last) = last {
