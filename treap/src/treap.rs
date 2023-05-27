@@ -155,24 +155,16 @@ fn delete_inner<T: Ord>(
                         root = rotate_left(Some(root)).unwrap();
                         // 左部分木からvalueを削除
                         let left = replace(&mut root.left, None);
-                        let (left, _) = delete_inner(value, left);
-                        if left.is_none() {
-                            root.left = None;
-                        } else {
-                            root.left = left;
-                        }
+                        let (new_left, _) = delete_inner(value, left);
+                        root.left = new_left;
                         (Some(root), true)
                     }
                     (true, _) => {
                         root = rotate_right(Some(root)).unwrap();
                         // 右部分木からvalueを削除
                         let right = replace(&mut root.right, None);
-                        let (right, _) = delete_inner(value, right);
-                        if right.is_none() {
-                            root.right = None;
-                        } else {
-                            root.right = right;
-                        }
+                        let (new_right, _) = delete_inner(value, right);
+                        root.right = new_right;
                         (Some(root), true)
                     }
                 }
