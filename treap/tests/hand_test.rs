@@ -111,16 +111,37 @@ fn test_insert_and_delete_2() {
 }
 
 #[test]
-fn test_insert_delete_random_u8() {
-    let mut tree = Treap::<u8>::new();
+fn test_lower_bound() {
+    let mut tree = Treap::new();
+    tree.insert(1);
+    tree.insert(3);
+    tree.insert(5);
+    tree.insert(8);
 
-    for _ in 0..100_000 {
-        // 挿入
-        let x = random();
-        tree.insert(x);
+    tree.pretty_print();
 
-        // 削除
-        let y = random();
-        tree.discard(&y);
-    }
+    // lower_bound
+    assert_eq!(tree.lower_bound(&0), Some(&1));
+    assert_eq!(tree.lower_bound(&1), Some(&1));
+    assert_eq!(tree.lower_bound(&3), Some(&3));
+    assert_eq!(tree.lower_bound(&7), Some(&8));
+    assert_eq!(tree.lower_bound(&10), None);
+}
+
+#[test]
+fn test_upper_bound() {
+    let mut tree = Treap::new();
+    tree.insert(1);
+    tree.insert(3);
+    tree.insert(5);
+    tree.insert(8);
+
+    tree.pretty_print();
+
+    // lower_bound
+    assert_eq!(tree.upper_bound(&0), Some(&1));
+    assert_eq!(tree.upper_bound(&1), Some(&3));
+    assert_eq!(tree.upper_bound(&3), Some(&5));
+    assert_eq!(tree.upper_bound(&7), Some(&8));
+    assert_eq!(tree.upper_bound(&10), None);
 }

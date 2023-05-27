@@ -59,6 +59,48 @@ impl<T: Ord + Clone> Treap<T> {
             false
         }
     }
+
+    pub fn lower_bound(&self, value: &T) -> Option<&T> {
+        let mut root = &self.root;
+        let mut last = &None;
+        while let Some(_) = root {
+            match value.cmp(&root.as_ref().unwrap().value) {
+                Ordering::Less | Ordering::Equal => {
+                    last = root;
+                    root = &root.as_ref().unwrap().left;
+                },
+                Ordering::Greater => {
+                    root = &root.as_ref().unwrap().right;
+                },
+            }
+        }
+        if let Some(last) = last {
+            Some(&last.as_ref().value)
+        } else {
+            None
+        }
+    }
+
+    pub fn upper_bound(&self, value: &T) -> Option<&T> {
+        let mut root = &self.root;
+        let mut last = &None;
+        while let Some(_) = root {
+            match value.cmp(&root.as_ref().unwrap().value) {
+                Ordering::Less => {
+                    last = root;
+                    root = &root.as_ref().unwrap().left;
+                },
+                Ordering::Equal | Ordering::Greater => {
+                    root = &root.as_ref().unwrap().right;
+                },
+            }
+        }
+        if let Some(last) = last {
+            Some(&last.as_ref().value)
+        } else {
+            None
+        }
+    }
 }
 
 impl<T: Ord + fmt::Debug> Treap<T> {
