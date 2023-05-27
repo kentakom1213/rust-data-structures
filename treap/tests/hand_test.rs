@@ -1,6 +1,7 @@
 #![cfg(test)]
 
 use treap::treap::*;
+use rand::prelude::*;
 
 #[test]
 fn test_insert_and_find() {
@@ -13,6 +14,7 @@ fn test_insert_and_find() {
     assert_eq!(tree.insert(1), false);
     assert_eq!(tree.insert(5), true);
     assert_eq!(tree.insert(9), true);
+    tree.pretty_print();
 
     // 検索
     assert_eq!(tree.search(&2), false);
@@ -20,6 +22,7 @@ fn test_insert_and_find() {
     assert_eq!(tree.search(&5), true);
     assert_eq!(tree.search(&3), true);
     assert_eq!(tree.search(&5), true);
+    assert_eq!(tree.search(&1), true);
 }
 
 #[test]
@@ -105,4 +108,19 @@ fn test_insert_and_delete_2() {
     assert_eq!(tree.discard(&25), true);
     assert_eq!(tree.search(&25), false);
     tree.pretty_print();
+}
+
+#[test]
+fn test_random_u8() {
+    let mut tree = Treap::<u8>::new();
+
+    for _ in 0..10_000 {
+        // 挿入
+        let x: u8 = random();
+        tree.insert(x);
+
+        // 削除
+        let y: u8 = random();
+        tree.discard(&y);
+    }
 }

@@ -1,5 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand::{self, Rng};
+use std::fmt::Debug;
+use std::mem::{replace, swap};
 use std::{cmp::Ordering, fmt, mem};
 
 #[derive(Debug)]
@@ -17,7 +19,7 @@ pub struct Treap<T> {
     pub root: Option<Box<TreapNode<T>>>,
 }
 
-impl<T: Ord> Treap<T> {
+impl<T: Ord + Debug + Clone> Treap<T> {
     pub fn new() -> Self {
         Treap {
             rng: rand::thread_rng(),
@@ -35,19 +37,15 @@ impl<T: Ord> Treap<T> {
     }
 
     pub fn insert(&mut self, value: T) -> bool {
-        let res = search_mut(&value, &mut self.root);
-        if res.is_none() {
-            *res = Some(Box::new(TreapNode {
-                priority: self.rng.gen(),
-                value,
-                left: None,
-                right: None,
-            }));
+        let root = replace(&mut self.root, None);
+        let (new_root, is_inserted) = insert_inner(value, self.rng.gen(), root);
+        self.root = new_root;
+        if is_inserted {
             self.size += 1; // 要素数をインクリメント
+            true
         } else {
-            return false;
+            false
         }
-        true
     }
 
     pub fn discard(&mut self, value: &T) -> bool {
@@ -84,22 +82,20 @@ impl<T: Ord> Treap<T> {
 }
 
 impl<T: Ord + fmt::Debug> Treap<T> {
+    /// 整形して表示する
     pub fn pretty_print(&self) {
         pretty_print_inner(&self.root, 0);
     }
 }
 
-/// 整形して表示
+/// 再帰的に表示
 pub fn pretty_print_inner<K: Ord + fmt::Debug>(node: &Option<Box<TreapNode<K>>>, depth: usize) {
-    if depth == 0 {
-        print!(">");
-    }
     match node {
         Some(ref node) => {
             pretty_print_inner(&node.left, depth + 2);
             println!(
                 "{}{{p:{:.2}, val:{:?}}}",
-                " ".repeat(depth * 2 + 1),
+                " ".repeat(depth * 2),
                 node.priority,
                 node.value
             );
@@ -137,7 +133,64 @@ fn search_mut<'a, T: Ord>(
     }
 }
 
+/// keyを挿入するべき位置にあるノードを返す（所有権を受け取る）
+fn insert_inner<T: Ord>(
+    value: T,
+    priority: f64,
+    mut root: Option<Box<TreapNode<T>>>,
+) -> (Option<Box<TreapNode<T>>>, bool) {
+    if let Some(mut root) = root {
+        match value.cmp(&root.value) {
+            Ordering::Equal => (Some(root), false),
+            Ordering::Less => {
+                let left = replace(&mut root.left, None);
+                let (mut child, is_inserted) = insert_inner(value, priority, left);
+                swap(&mut root.left, &mut child);
+                if is_inserted {
+                    if root.priority > root.left.as_deref().unwrap().priority {
+                        // 親のpriorityの方が大きい場合，右回転を行う
+                        let new_root = rotate_right(Some(root));
+                        (new_root, true)
+                    } else {
+                        // それ以外の場合，回転を行わない
+                        (Some(root), true)
+                    }
+                } else {
+                    (Some(root), false)
+                }
+            }
+            Ordering::Greater => {
+                let right = replace(&mut root.right, None);
+                let (mut child, is_inserted) = insert_inner(value, priority, right);
+                swap(&mut root.right, &mut child);
+                if is_inserted {
+                    if root.priority > root.right.as_deref().unwrap().priority {
+                        // 親のpriorityの方が大きい場合，左回転を行う
+                        let new_root = rotate_left(Some(root));
+                        (new_root, true)
+                    } else {
+                        // それ以外の場合，回転を行わない
+                        (Some(root), true)
+                    }
+                } else {
+                    (Some(root), false)
+                }
+            }
+        }
+    } else {
+        // ノードを挿入
+        root = Some(Box::new(TreapNode {
+            priority,
+            value,
+            left: None,
+            right: None,
+        }));
+        (root, true)
+    }
+}
+
 impl<T: Ord> TreapNode<T> {
+    /// 自分とその子の中から，最も大きいものを探索する
     fn rightmost_child(&mut self) -> Option<Box<Self>> {
         match self.right {
             Some(ref mut right) => {
@@ -188,10 +241,49 @@ pub fn rotate_left<T>(root: Option<Box<TreapNode<T>>>) -> Option<Box<TreapNode<T
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_insert_greater() {
+        let mut tree = Treap::new();
+
+        // 10を挿入
+        println!("--- insert 10 ---");
+        tree.insert(10);
+        tree.pretty_print();
+
+        // 5を挿入
+        println!("--- insert 5 ---");
+        tree.insert(5);
+        tree.pretty_print();
+
+        // 0を挿入
+        println!("--- insert 0 ---");
+        tree.insert(0);
+        tree.pretty_print();
+    }
+
+    #[test]
+    fn test_insert_less() {
+        let mut tree = Treap::new();
+
+        // 0を挿入
+        println!("--- insert 0 ---");
+        tree.insert(0);
+        tree.pretty_print();
+
+        // 5を挿入
+        println!("--- insert 5 ---");
+        tree.insert(5);
+        tree.pretty_print();
+
+        // 10を挿入
+        println!("--- insert 10 ---");
+        tree.insert(10);
+        tree.pretty_print();
+    }
 
     #[test]
     fn test_rotate() {
@@ -221,46 +313,46 @@ mod test {
                 right: None,
             })),
         }));
-    
+
         println!("----- 回転前 -----");
         pretty_print_inner(&root, 0);
-    
+
         // ## 右回転のテスト
         // 右回転
         root = rotate_right(root);
-    
+
         println!("----- 右回転 -----");
         pretty_print_inner(&root, 0);
-    
+
         // さらに右回転
         root = rotate_right(root);
-    
+
         println!("----- 右回転 -----");
         pretty_print_inner(&root, 0);
-    
+
         // さらに右回転
         root = rotate_right(root);
-    
+
         println!("----- 右回転 -----");
         pretty_print_inner(&root, 0);
-    
+
         // ## 左回転のテスト
         // 左回転
         root = rotate_left(root);
-    
+
         println!("----- 左回転 -----");
         pretty_print_inner(&root, 0);
-    
+
         // さらに左回転
         root = rotate_left(root);
-    
+
         println!("----- 左回転 -----");
         pretty_print_inner(&root, 0);
-    
+
         // さらに左回転
         root = rotate_left(root);
-    
+
         println!("----- 左回転 -----");
         pretty_print_inner(&root, 0);
-    }    
+    }
 }
