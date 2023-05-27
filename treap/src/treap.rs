@@ -5,7 +5,7 @@ use std::mem::{replace, swap};
 use std::{cmp::Ordering, fmt};
 
 #[derive(Debug)]
-pub struct TreapNode<T> {
+struct TreapNode<T> {
     pub priority: f64,
     pub value: T,
     pub left: Option<Box<TreapNode<T>>>,
@@ -16,7 +16,7 @@ pub struct TreapNode<T> {
 pub struct Treap<T> {
     rng: ThreadRng,
     size: usize,
-    pub root: Option<Box<TreapNode<T>>>,
+    root: Option<Box<TreapNode<T>>>,
 }
 
 impl<T: Ord + Clone> Treap<T> {
