@@ -59,6 +59,25 @@ pub mod trie {
         }
 
         pub fn insert(&mut self, key: &str, data: T) {
+            *self.get_or_insert_mut(key) = Some(data);
+        }
+
+        pub fn get_mut(&mut self, key: &str) -> Option<&mut T> {
+            let mut node = &mut self.root;
+            for c in key.chars().map(ord) {
+                if node.as_ref().is_none() {
+                    return None;
+                }
+                node = node.as_mut().unwrap().children.get_mut(c).unwrap();
+            }
+            if let Some(value) = node.as_deref_mut().unwrap().data.as_mut() {
+                Some(value)
+            } else {
+                None
+            }
+        }
+
+        pub fn get_or_insert_mut(&mut self, key: &str) -> &mut Option<T> {
             let mut node = &mut self.root;
             for c in key.chars().map(ord).chain([KINDS].into_iter()) {
                 // データの挿入
@@ -66,7 +85,6 @@ pub mod trie {
                     if node.as_ref().is_none() {
                         *node = Some(Box::new(TrieNode::new(None)));
                     }
-                    node.as_mut().unwrap().data = Some(data);
                     break;
                 }
                 if node.as_ref().is_none() {
@@ -74,6 +92,7 @@ pub mod trie {
                 }
                 node = node.as_mut().unwrap().children.get_mut(c).unwrap();
             }
+            &mut node.as_deref_mut().unwrap().data
         }
 
         pub fn traverse(&self) -> Vec<(String, &T)> {
@@ -85,7 +104,11 @@ pub mod trie {
     }
 
     /// trieを順に探索する
-    fn traverse_inner<'a, T>(node: &'a NodePointer<T>, cur: &mut String, list: &mut Vec<(String, &'a T)>) {
+    fn traverse_inner<'a, T>(
+        node: &'a NodePointer<T>,
+        cur: &mut String,
+        list: &mut Vec<(String, &'a T)>,
+    ) {
         if let Some(value) = node.as_ref().unwrap().data.as_ref() {
             let key = cur.clone();
             list.push((key, value));
@@ -104,21 +127,34 @@ pub mod trie {
 
 #[cfg(test)]
 mod test {
+    use crate::trie::Trie;
+
     use super::*;
 
     #[test]
     fn test_trie_node() {
-        let mut trie = trie::Trie::new();
+        let mut trie: Trie<usize> = trie::Trie::new();
 
         // 文字列の挿入
-        trie.insert("powell", 5);
-        trie.insert("kentakomoto", 11);
-        trie.insert("kenta", 5);
-        trie.insert("pow", 3);
-        trie.insert("", 0);
+        // trie.insert("powell", 5);
+        // trie.insert("kentakomoto", 11);
+        // trie.insert("kenta", 5);
+        // trie.insert("pow", 3);
+        // trie.insert("", 0);
+        *trie.get_or_insert_mut("powell") = Some(6);
+        *trie.get_or_insert_mut("kenta") = Some(8);
 
         // デバッグ
         println!("{:#?}", trie);
+
+        // 一覧表示
+        let dict = trie.traverse();
+        println!("{:?}", dict);
+
+        // 検索
+        println!("{:?}", trie.get_mut("pow"));
+
+        *trie.get_mut("powell").unwrap() += 1;
 
         // 一覧表示
         let dict = trie.traverse();
