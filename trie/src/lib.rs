@@ -1,6 +1,7 @@
 /// # trie
 /// - トライ木の実装
 pub mod trie {
+    use std::fmt::Debug;
 
     // 定数
     const ORIGIN: char = 'a'; // 基準となる文字
@@ -44,7 +45,7 @@ pub mod trie {
 
     impl<T> Trie<T>
     where
-        T: Clone,
+        T: Clone + Debug,
     {
         // self.originを基準にした文字の番号を返す
         // fn ord()
@@ -60,6 +61,24 @@ pub mod trie {
 
         pub fn insert(&mut self, key: &str, data: T) {
             *self.get_or_insert_mut(key) = Some(data);
+        }
+
+        pub fn get(&self, key: &str) -> Option<&T> {
+            let mut node = &self.root;
+            for c in key.chars().map(ord) {
+                if node.as_ref().is_none() {
+                    return None;
+                }
+                node = &node.as_ref().unwrap().children[c];
+            }
+            if node.as_ref().is_none() {
+                return None;
+            }
+            if let Some(value) = node.as_deref().unwrap().data.as_ref() {
+                Some(value)
+            } else {
+                None
+            }
         }
 
         pub fn get_mut(&mut self, key: &str) -> Option<&mut T> {
@@ -82,7 +101,7 @@ pub mod trie {
 
         pub fn get_or_insert_mut(&mut self, key: &str) -> &mut Option<T> {
             let mut node = &mut self.root;
-            for c in key.chars().map(ord).chain([KINDS].into_iter()) {
+            for c in key.chars().map(ord).chain(KINDS..=KINDS) {
                 // データの挿入
                 if c == KINDS {
                     if node.as_ref().is_none() {
