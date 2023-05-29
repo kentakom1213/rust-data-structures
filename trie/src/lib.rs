@@ -70,6 +70,9 @@ pub mod trie {
                 }
                 node = node.as_mut().unwrap().children.get_mut(c).unwrap();
             }
+            if node.as_ref().is_none() {
+                return None;
+            }
             if let Some(value) = node.as_deref_mut().unwrap().data.as_mut() {
                 Some(value)
             } else {
