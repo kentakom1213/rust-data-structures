@@ -58,19 +58,21 @@ pub mod trie {
             }
         }
 
-        pub fn insert(&mut self, s: &str, data: T) {
+        pub fn insert(&mut self, key: &str, data: T) {
             let mut node = &mut self.root;
-            let mut idx = 0;
-            for c in s.chars().map(ord) {
+            for c in key.chars().map(ord).chain([KINDS].into_iter()) {
+                // データの挿入
+                if c == KINDS {
+                    if node.as_ref().is_none() {
+                        *node = Some(Box::new(TrieNode::new(None)));
+                    }
+                    node.as_mut().unwrap().data = Some(data);
+                    break;
+                }
                 if node.as_ref().is_none() {
                     *node = Some(Box::new(TrieNode::new(None)));
                 }
                 node = node.as_mut().unwrap().children.get_mut(c).unwrap();
-                if idx + 1 == s.len() {
-                    *node = Some(Box::new(TrieNode::new(Some(data))));
-                    break;
-                }
-                idx += 1;
             }
         }
 
@@ -110,8 +112,10 @@ mod test {
 
         // 文字列の挿入
         trie.insert("powell", 5);
+        trie.insert("kentakomoto", 11);
         trie.insert("kenta", 5);
         trie.insert("pow", 3);
+        trie.insert("", 0);
 
         // デバッグ
         println!("{:#?}", trie);
