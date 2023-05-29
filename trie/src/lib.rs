@@ -29,8 +29,11 @@ pub mod trie {
     where
         T: Clone,
     {
-        pub fn new() -> Self {
-            Self { data: None, children: vec![NodePointer::None; KINDS] }
+        pub fn new(data: Option<T>) -> Self {
+            Self {
+                data,
+                children: vec![NodePointer::None; KINDS],
+            }
         }
     }
 
@@ -60,20 +63,18 @@ pub mod trie {
             let mut idx = 0;
             for c in s.chars().map(ord) {
                 if node.as_ref().is_none() {
-                    *node = Some(Box::new(TrieNode::new()));
+                    *node = Some(Box::new(TrieNode::new(None)));
                 }
                 node = node.as_mut().unwrap().children.get_mut(c).unwrap();
                 if idx + 1 == s.len() {
-                    *node = Some(Box::new(
-                        TrieNode { data: Some(data), children: vec![None; KINDS] }
-                    ));
+                    *node = Some(Box::new(TrieNode::new(Some(data))));
                     break;
                 }
                 idx += 1;
             }
         }
 
-        pub fn traverse(&self) -> Vec<String> {
+        pub fn traverse(&self) -> Vec<(String, &T)> {
             let mut res = vec![];
             let mut cur = String::new();
             traverse_inner(&self.root, &mut cur, &mut res);
@@ -82,9 +83,10 @@ pub mod trie {
     }
 
     /// trieを順に探索する
-    fn traverse_inner<T>(node: &NodePointer<T>, cur: &mut String, list: &mut Vec<String>) {
-        if node.as_ref().unwrap().data.is_some() {
-            list.push(cur.clone());
+    fn traverse_inner<'a, T>(node: &'a NodePointer<T>, cur: &mut String, list: &mut Vec<(String, &'a T)>) {
+        if let Some(value) = node.as_ref().unwrap().data.as_ref() {
+            let key = cur.clone();
+            list.push((key, value));
         }
         if let Some(node) = node.as_deref() {
             for (i, child) in node.children.iter().enumerate() {
@@ -100,22 +102,22 @@ pub mod trie {
 
 #[cfg(test)]
 mod test {
-    use crate::trie::Trie;
-
     use super::*;
 
     #[test]
     fn test_trie_node() {
-        let mut trie: Trie<usize> = trie::Trie::new();
+        let mut trie = trie::Trie::new();
 
         // 文字列の挿入
-        trie.insert("powell", 1);
+        trie.insert("powell", 5);
+        trie.insert("kenta", 5);
+        trie.insert("pow", 3);
 
         // デバッグ
         println!("{:#?}", trie);
 
         // 一覧表示
         let dict = trie.traverse();
-        println!("{:#?}", dict);
+        println!("{:?}", dict);
     }
 }
