@@ -346,6 +346,8 @@ mod test {
             })),
         }));
 
+        println!("{:?}", &root);
+
         println!("----- 回転前 -----");
         pretty_print_inner(&root, 0);
 
