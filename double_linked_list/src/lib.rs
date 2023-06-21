@@ -150,17 +150,51 @@ pub mod double_linked_list {
             self.size += 1;
         }
 
-        // /// 先頭の要素を削除
-        // pub fn delete_head(&mut self) -> Option<T> {
-        //     if let Some(head) = self.head {
-        //         delete(head);
-        //         let data = unsafe { (*head).data };
-        //         self.size -= 1;
-        //         Some(data)
-        //     } else {
-        //         None
-        //     }
-        // }
+        /// 先頭の要素を削除
+        pub fn delete_head(&mut self) -> Option<T> {
+            if let Some(head) = self.head {
+                if let Some(head_next) = unsafe { (*head).next } {
+                    self.head = Some(head_next);
+                    unsafe {
+                        (*head_next).prev = None;
+                    }
+                }
+                // 要素数の修正
+                self.size -= 1;
+                if self.size == 0 {
+                    self.head = None;
+                    self.tail = None;
+                }
+                // 削除したデータを返す
+                let data = unsafe { Box::from_raw(head) }.data;
+                Some(data)
+            } else {
+                None
+            }
+        }
+
+        /// 末尾の要素を削除
+        pub fn delete_tail(&mut self) -> Option<T> {
+            if let Some(tail) = self.tail {
+                if let Some(tail_prev) = unsafe { (*tail).prev } {
+                    self.tail = Some(tail_prev);
+                    unsafe {
+                        (*tail_prev).next = None;
+                    }
+                }
+                // 要素数の修正
+                self.size -= 1;
+                if self.size == 0 {
+                    self.head = None;
+                    self.tail = None;
+                }
+                // 削除したデータを返す
+                let data = unsafe { Box::from_raw(tail) }.data;
+                Some(data)
+            } else {
+                None
+            }
+        }
 
         /// i番目のノードの取得
         pub fn nth(&mut self, n: usize) -> Option<*mut Node<T>> {
@@ -233,16 +267,38 @@ mod test {
     }
 
     #[test]
-    fn test_delete() {
+    fn test_delete_head() {
         let mut dll = DoubleLinkedList::new();
 
         for i in 0..N {
             dll.insert_tail(i);
         }
 
-        let ptr = next(dll.head.unwrap()).unwrap();
+        println!("削除前");
+        println!("{:?}", &dll);
 
-        let val = delete(ptr);
-        println!("{:?}", val);
+        assert_eq!(dll.delete_head(), Some(0));
+        assert_eq!(dll.delete_head(), Some(1));
+        assert_eq!(dll.delete_head(), Some(2));
+
+        println!("先頭3つを削除");
+        println!("{:?}", &dll);
+    
+        assert_eq!(dll.delete_tail(), Some(9));
+        assert_eq!(dll.delete_tail(), Some(8));
+        assert_eq!(dll.delete_tail(), Some(7));
+
+        println!("末尾3つを削除");
+        println!("{:?}", &dll);
+
+        assert_eq!(dll.delete_head(), Some(3));
+        assert_eq!(dll.delete_head(), Some(4));
+        assert_eq!(dll.delete_head(), Some(5));
+        assert_eq!(dll.delete_head(), Some(6));
+
+        println!("すべての要素を削除");
+        println!("{:?}", &dll);
+
+        assert_eq!(dll.delete_tail(), None);
     }
 }

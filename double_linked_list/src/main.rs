@@ -9,16 +9,6 @@ fn main() {
 
     println!("{:?}", &list);
 
-    // 連番で取得
-    {
-        let mut ptr = list.head;
-
-        while let Some(rptr) = ptr {
-            println!("{:?}", ptr);
-            ptr = next(rptr);
-        }
-    }
-
     // 5番目の要素の後に挿入
     {
         let ptr = list.nth(4).unwrap();
@@ -33,8 +23,22 @@ fn main() {
     {
         let ptr = list.nth(5).unwrap();
 
-        // delete(ptr);
+        delete(ptr);
 
         println!("{:?}", &list);
+    }
+
+    // 逆向きにトラバース
+    {
+        let mut tail = list.tail;
+
+        while let Some(tail_ptr) = tail {
+            print!("{:?} -> ", unsafe { &*tail_ptr });
+            unsafe {
+                tail = (*tail_ptr).prev;
+            }
+        }
+
+        println!("End");
     }
 }
