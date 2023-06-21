@@ -35,20 +35,52 @@ pub mod double_linked_list {
             });
             Box::into_raw(new_node)
         }
+    }
 
-        /// 現在のノードの次に値を挿入
-        pub fn insert_next(&mut self, val: T) {
-            let new_ptr = Self::new_pointer(val);
+    /// 1つ後のポインタを返す
+    pub fn next<T: Val>(ptr: *mut Node<T>) -> Option<*mut Node<T>> {
+        unsafe { (*ptr).next }
+    }
 
-            if let Some(next_next) = self.next {
-                unsafe {
-                    (*new_ptr).next = Some(next_next);
-                }
+    /// 1つ前のポインタを返す
+    pub fn prev<T: Val>(ptr: *mut Node<T>) -> Option<*mut Node<T>> {
+        unsafe { (*ptr).prev }
+    }
+
+    /// ポインタの後に挿入
+    pub fn insert_next<T: Val>(ptr: *mut Node<T>, val: T) {
+        let new_ptr = Node::new_pointer(val);
+
+        if let Some(ptr_next) = unsafe { (*ptr).next } {
+            unsafe {
+                (*new_ptr).next = Some(ptr_next);
+                (*ptr_next).prev = Some(new_ptr);
             }
+        }
 
-            self.next = Some(new_ptr);
+        unsafe {
+            (*ptr).next = Some(new_ptr);
+            (*new_ptr).prev = Some(ptr);
+        };
+    }
+
+    /// ポインタの前に挿入
+    pub fn insert_prev<T: Val>(ptr: *mut Node<T>, val: T) {
+        let new_ptr = Node::new_pointer(val);
+
+        if let Some(ptr_prev) = unsafe { (*ptr).prev } {
+            unsafe {
+                (*new_ptr).prev = Some(ptr_prev);
+                (*ptr_prev).next = Some(new_ptr);
+            }
+        }
+
+        unsafe {
+            (*ptr).prev = Some(new_ptr);
+            (*new_ptr).next = Some(ptr);
         }
     }
+
 
     impl<T: Val> Debug for Node<T> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -58,6 +90,7 @@ pub mod double_linked_list {
 
     /// ## DoubleLinkedList
     pub struct DoubleLinkedList<T: Val> {
+        pub size: usize,
         pub head: Option<*mut Node<T>>,
         pub tail: Option<*mut Node<T>>,
     }
@@ -66,6 +99,7 @@ pub mod double_linked_list {
         /// 連結リストの作成
         pub fn new() -> Self {
             Self {
+                size: 0,
                 head: None,
                 tail: None,
             }
@@ -76,10 +110,12 @@ pub mod double_linked_list {
             let new_ptr = Node::new_pointer(val);
             if let Some(head) = self.head {
                 unsafe {
+                    (*head).prev = Some(new_ptr);
                     (*new_ptr).next = Some(head);
                 }
             }
             self.head = Some(new_ptr);
+            self.size += 1;
         }
 
         /// i番目のノードの取得
@@ -128,10 +164,22 @@ fn main() {
     println!("{:?}", &list);
 
     // 連番で取得
-    let mut ptr = list.head;
+    {
+        let mut ptr = list.head;
 
-    while let Some(rptr) = ptr {
-        println!("{:?}", ptr);
-        ptr = unsafe { rptr.as_mut() }.unwrap().next;
+        while let Some(rptr) = ptr {
+            println!("{:?}", ptr);
+            ptr = next(rptr);
+        }
+    }
+
+    // 5番目の要素の後に挿入
+    {
+        let ptr = list.nth(4).unwrap();
+
+        insert_next(ptr, 200);
+        insert_prev(ptr, 100);
+
+        println!("{:?}", &list);
     }
 }
