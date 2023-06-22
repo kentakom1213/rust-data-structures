@@ -23,7 +23,7 @@ fn main() {
     {
         let ptr = list.nth(5).unwrap();
 
-        delete(ptr);
+        list.delete(ptr);
 
         println!("{:?}", &list);
     }

@@ -82,7 +82,7 @@ pub mod double_linked_list {
     }
 
     /// ノードを削除
-    pub fn delete<T: Val>(ptr: *mut Node<T>) -> T {
+    fn delete_node<T: Val>(ptr: *mut Node<T>) -> Option<T> {
         match unsafe { ((*ptr).prev, (*ptr).next) } {
             (Some(ptr_prev), Some(ptr_next)) => unsafe {
                 (*ptr_prev).next = Some(ptr_next);
@@ -92,7 +92,7 @@ pub mod double_linked_list {
         }
         // 生ポインタをBoxに包みなおす
         let node_box = unsafe { Box::from_raw(ptr) };
-        (*node_box).data
+        Some((*node_box).data)
     }
 
     impl<T: Val> Debug for Node<T> {
@@ -103,7 +103,7 @@ pub mod double_linked_list {
 
     /// ## DoubleLinkedList
     pub struct DoubleLinkedList<T: Val> {
-        pub size: usize,
+        size: usize,
         pub head: Option<*mut Node<T>>,
         pub tail: Option<*mut Node<T>>,
     }
@@ -116,6 +116,11 @@ pub mod double_linked_list {
                 head: None,
                 tail: None,
             }
+        }
+
+        /// 要素数の取得
+        pub fn len(&self) -> usize {
+            self.size
         }
 
         /// 先頭に要素を追加
@@ -224,6 +229,21 @@ pub mod double_linked_list {
             }
             None
         }
+
+        /// delete
+        pub fn delete(&mut self, ptr: *mut Node<T>) -> Option<T> {
+            if Some(ptr) == self.head {
+                self.delete_head()
+            } else if Some(ptr) == self.tail {
+                self.delete_tail()
+            } else {
+                let res = delete_node(ptr);
+                if res.is_some() {
+                    self.size -= 1;
+                }
+                res
+            }
+        }
     }
 
     impl<T: Val> Debug for DoubleLinkedList<T> {
@@ -297,7 +317,7 @@ mod test {
 
         println!("先頭3つを削除");
         println!("{:?}", &dll);
-    
+
         assert_eq!(dll.delete_tail(), Some(9));
         assert_eq!(dll.delete_tail(), Some(8));
         assert_eq!(dll.delete_tail(), Some(7));
@@ -329,17 +349,45 @@ mod test {
         dll.insert_tail("epsilon");
 
         println!("{:?}", &dll);
+        assert_eq!(dll.len(), 5);
 
         {
             // betaを検索
             let beta = dll.find(&"beta");
-            
+
             // 削除
             if let Some(ptr) = beta {
-                delete(ptr);
+                dll.delete(ptr);
             }
         }
 
         println!("{:?}", &dll);
+        assert_eq!(dll.len(), 4);
+
+        {
+            // epsilonを検索
+            let eps = dll.find(&"epsilon");
+
+            // 削除
+            if let Some(ptr) = eps {
+                dll.delete(ptr);
+            }
+        }
+
+        println!("{:?}", &dll);
+        assert_eq!(dll.len(), 3);
+
+        {
+            // alphaを検索
+            let alpha = dll.find(&"alpha");
+
+            // 削除
+            if let Some(ptr) = alpha {
+                dll.delete(ptr);
+            }
+        }
+
+        println!("{:?}", &dll);
+        assert_eq!(dll.len(), 2);
     }
 }
