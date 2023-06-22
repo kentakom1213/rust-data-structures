@@ -210,6 +210,20 @@ pub mod double_linked_list {
             }
             ptr
         }
+
+        /// 一致する要素があるノードを返す
+        pub fn find(&mut self, key: &T) -> Option<*mut Node<T>> {
+            let mut ptr = self.head;
+            while let Some(rptr) = ptr {
+                if unsafe { &(*rptr).data } == key {
+                    return ptr;
+                }
+                unsafe {
+                    ptr = (*rptr).next;
+                }
+            }
+            None
+        }
     }
 
     impl<T: Val> Debug for DoubleLinkedList<T> {
@@ -300,5 +314,32 @@ mod test {
         println!("{:?}", &dll);
 
         assert_eq!(dll.delete_tail(), None);
+    }
+
+    #[test]
+    fn test_find() {
+        impl Val for &str {}
+
+        let mut dll = DoubleLinkedList::<&str>::new();
+
+        dll.insert_tail("alpha");
+        dll.insert_tail("beta");
+        dll.insert_tail("gamma");
+        dll.insert_tail("delta");
+        dll.insert_tail("epsilon");
+
+        println!("{:?}", &dll);
+
+        {
+            // betaを検索
+            let beta = dll.find(&"beta");
+            
+            // 削除
+            if let Some(ptr) = beta {
+                delete(ptr);
+            }
+        }
+
+        println!("{:?}", &dll);
     }
 }
