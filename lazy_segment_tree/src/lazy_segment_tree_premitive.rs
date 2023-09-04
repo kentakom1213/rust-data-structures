@@ -104,47 +104,44 @@ mod test_lazy_segtree {
     #[test]
     fn test_get_range() {
         let mut lazy_segtree = LazySegmentTree::new(4);
+        // -> [0, 0, 0, 0]
         println!("{:?}", &lazy_segtree);
 
         // 区間加算
         lazy_segtree.set_range(0, 3, 5);
-        println!("set:[0, 3) += 5");
+        // -> [5, 5, 5, 0]
         println!("{:?}", &lazy_segtree);
 
         // 区間取得
-        println!("[0, 1) -> {:?}", lazy_segtree.get_range(0, 1));
-        println!("{:?}", &lazy_segtree);
-        println!("[1, 3) -> {:?}", lazy_segtree.get_range(1, 3));
-        println!("{:?}", &lazy_segtree);
-        println!("[1, 4) -> {:?}", lazy_segtree.get_range(1, 4));
-        println!("{:?}", &lazy_segtree);
-        println!("[0, 4) -> {:?}", lazy_segtree.get_range(0, 4));
-        println!("{:?}", &lazy_segtree);
+        assert_eq!(lazy_segtree.get_range(0, 1), 5);
+        assert_eq!(lazy_segtree.get_range(1, 3), 10);
+        assert_eq!(lazy_segtree.get_range(1, 4), 10);
+        assert_eq!(lazy_segtree.get_range(0, 4), 15);
 
         // 区間加算
         lazy_segtree.set_range(2, 4, -2);
-        println!("set:[2, 4) -= 2");
+        // -> [5, 5, 3, -2]
         println!("{:?}", &lazy_segtree);
 
         // 区間取得
-        println!("[0, 1) -> {:?}", lazy_segtree.get_range(0, 1));
-        println!("{:?}", &lazy_segtree);
-        println!("[1, 3) -> {:?}", lazy_segtree.get_range(1, 3));
-        println!("{:?}", &lazy_segtree);
-        println!("[1, 4) -> {:?}", lazy_segtree.get_range(1, 4));
-        println!("{:?}", &lazy_segtree);
-        println!("[0, 4) -> {:?}", lazy_segtree.get_range(0, 4));
-        println!("{:?}", &lazy_segtree);
+        assert_eq!(lazy_segtree.get_range(0, 1), 5);
+        assert_eq!(lazy_segtree.get_range(1, 3), 8);
+        assert_eq!(lazy_segtree.get_range(1, 4), 6);
+        assert_eq!(lazy_segtree.get_range(0, 4), 11);
     }
 
     #[test]
     fn test_size_1() {
         let mut lazy_segtree = LazySegmentTree::new(1);
+        // -> [0]
         println!("{:?}", &lazy_segtree);
+
+        assert_eq!(lazy_segtree.get_range(0, 1), 0);
 
         lazy_segtree.set_range(0, 1, 1);
+        // -> [1]
         println!("{:?}", &lazy_segtree);
 
-        
+        assert_eq!(lazy_segtree.get_range(0, 1), 1);
     }
 }

@@ -1,3 +1,6 @@
-mod monoid;
+#![allow(non_snake_case)]
 
-mod RAQ;
+mod lazy_segment_tree;
+mod lazy_segment_tree_premitive;
+mod alg;
+mod structures;
