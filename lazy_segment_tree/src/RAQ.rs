@@ -31,44 +31,54 @@ impl LazySegmentTree {
         }
     }
 
-    /// 一点加算
-    /// - 0-indexed
-    pub fn set_point(&mut self, mut idx: usize, val: T) {
-        idx += self.offset;
-        // 根に到達するまで更新
-        while idx > 0 {
-            // 加算
-            self.data[idx] += val;
-            idx >>= 1; // 2で割る
-        }
-    }
-
     /// 遅延値を評価
-    fn eval(&mut self, idx: usize) {
+    fn eval(&mut self, idx: usize, len: usize) {
         // 葉でなければ子に伝搬
-        if idx < self.offset - 1 {
+        if idx < self.offset {
+            self.lazy[idx * 2] += self.lazy[idx];
             self.lazy[idx * 2 + 1] += self.lazy[idx];
-            self.lazy[idx * 2 + 2] += self.lazy[idx];
         }
         // 自身を更新
-        self.data[idx] += self.lazy[idx];
+        self.data[idx] += self.lazy[idx] * len as isize;
         self.lazy[idx] = I;
     }
 
     /// 区間加算
     /// - [left, right)
     pub fn set_range(&mut self, left: usize, right: usize, val: T) {
+        self.set_range_sub(left, right, val, 0, self.offset, 1);
+    }
 
+    fn set_range_sub(&mut self, left: usize, right: usize, val: T, begin: usize, end: usize, idx: usize) {
+        // 遅延値を評価
+        self.eval(idx, end - begin);
+        // 区間を内包するとき
+        if left <= begin && end <= right {
+            self.lazy[idx] += val;
+            self.eval(idx, end - begin);
+        }
+        // 区間が重なるとき
+        else if left < end && begin < right {
+            let mid = (begin + end) / 2;
+            // 左の子を更新
+            self.set_range_sub(left, right, val, begin, mid, idx * 2);
+            // 右の子を更新
+            self.set_range_sub(left, right, val, mid, end, idx * 2 + 1);
+            // 値を更新
+            self.data[idx] = self.data[idx * 2] + self.data[idx * 2 + 1];
+        }
     }
 
     /// 区間取得
     /// - 再帰実装
     /// - [left, right)
-    pub fn get_range_rec(&mut self, left: usize, right: usize) -> T {
+    pub fn get_range(&mut self, left: usize, right: usize) -> T {
         self.get_range_sub(left, right, 0, self.offset, 1)
     }
 
     fn get_range_sub(&mut self, left: usize, right: usize, begin: usize, end: usize, idx: usize) -> T {
+        // 遅延値を評価
+        self.eval(idx, end - begin);
         // 区間を含まない
         if end <= left || right <= begin {
             I
@@ -85,29 +95,6 @@ impl LazySegmentTree {
             l_val + r_val
         }
     }
-
-    /// 区間取得
-    /// - 非再帰実装
-    /// - [left, right)
-    pub fn get_range_non_rec(&self, mut left: usize, mut right: usize) -> T {
-        left += self.offset;
-        right += self.offset;
-        let mut res = T::default(); // 解を保存
-
-        while left < right {
-            if left & 1 == 1 {
-                res += self.data[left];
-                left += 1;
-            }
-            if right & 1 == 1 {
-                right -= 1;
-                res += self.data[right];
-            }
-            left >>= 1;
-            right >>= 1;
-        }
-        res
-    }
 }
 
 #[cfg(test)]
@@ -115,54 +102,49 @@ mod test_lazy_segtree {
     use super::*;
 
     #[test]
-    fn test_get_range_non_rec() {
+    fn test_get_range() {
         let mut lazy_segtree = LazySegmentTree::new(4);
-        println!("{:?}", &lazy_segtree.data[4..8]);
+        println!("{:?}", &lazy_segtree);
 
-        // 一点加算
-        lazy_segtree.set_point(0, 5);
-        println!("{:?}", &lazy_segtree.data[4..8]);
-
-        // 区間取得
-        println!("[0, 1) -> {:?}", lazy_segtree.get_range_non_rec(0, 1));
-        println!("[1, 3) -> {:?}", lazy_segtree.get_range_non_rec(1, 3));
-        println!("[1, 4) -> {:?}", lazy_segtree.get_range_non_rec(1, 4));
-        println!("[0, 4) -> {:?}", lazy_segtree.get_range_non_rec(0, 4));
-
-        // 一点加算
-        lazy_segtree.set_point(3, -2);
-        println!("{:?}", &lazy_segtree.data[4..8]);
+        // 区間加算
+        lazy_segtree.set_range(0, 3, 5);
+        println!("set:[0, 3) += 5");
+        println!("{:?}", &lazy_segtree);
 
         // 区間取得
-        println!("[0, 1) -> {:?}", lazy_segtree.get_range_non_rec(0, 1));
-        println!("[1, 3) -> {:?}", lazy_segtree.get_range_non_rec(1, 3));
-        println!("[1, 4) -> {:?}", lazy_segtree.get_range_non_rec(1, 4));
-        println!("[0, 4) -> {:?}", lazy_segtree.get_range_non_rec(0, 4));
+        println!("[0, 1) -> {:?}", lazy_segtree.get_range(0, 1));
+        println!("{:?}", &lazy_segtree);
+        println!("[1, 3) -> {:?}", lazy_segtree.get_range(1, 3));
+        println!("{:?}", &lazy_segtree);
+        println!("[1, 4) -> {:?}", lazy_segtree.get_range(1, 4));
+        println!("{:?}", &lazy_segtree);
+        println!("[0, 4) -> {:?}", lazy_segtree.get_range(0, 4));
+        println!("{:?}", &lazy_segtree);
+
+        // 区間加算
+        lazy_segtree.set_range(2, 4, -2);
+        println!("set:[2, 4) -= 2");
+        println!("{:?}", &lazy_segtree);
+
+        // 区間取得
+        println!("[0, 1) -> {:?}", lazy_segtree.get_range(0, 1));
+        println!("{:?}", &lazy_segtree);
+        println!("[1, 3) -> {:?}", lazy_segtree.get_range(1, 3));
+        println!("{:?}", &lazy_segtree);
+        println!("[1, 4) -> {:?}", lazy_segtree.get_range(1, 4));
+        println!("{:?}", &lazy_segtree);
+        println!("[0, 4) -> {:?}", lazy_segtree.get_range(0, 4));
+        println!("{:?}", &lazy_segtree);
     }
 
     #[test]
-    fn test_get_range_rec() {
-        let mut lazy_segtree = LazySegmentTree::new(4);
-        println!("{:?}", &lazy_segtree.data);
+    fn test_size_1() {
+        let mut lazy_segtree = LazySegmentTree::new(1);
+        println!("{:?}", &lazy_segtree);
 
-        // 一点加算
-        lazy_segtree.set_point(0, 5);
-        println!("{:?}", &lazy_segtree.data);
+        lazy_segtree.set_range(0, 1, 1);
+        println!("{:?}", &lazy_segtree);
 
-        // 区間取得
-        println!("[0, 1) -> {:?}", lazy_segtree.get_range_rec(0, 1));
-        println!("[1, 3) -> {:?}", lazy_segtree.get_range_rec(1, 3));
-        println!("[1, 4) -> {:?}", lazy_segtree.get_range_rec(1, 4));
-        println!("[0, 4) -> {:?}", lazy_segtree.get_range_rec(0, 4));
-
-        // 一点加算
-        lazy_segtree.set_point(3, -2);
-        println!("{:?}", &lazy_segtree.data);
-
-        // 区間取得
-        println!("[0, 1) -> {:?}", lazy_segtree.get_range_rec(0, 1));
-        println!("[1, 3) -> {:?}", lazy_segtree.get_range_rec(1, 3));
-        println!("[1, 4) -> {:?}", lazy_segtree.get_range_rec(1, 4));
-        println!("[0, 4) -> {:?}", lazy_segtree.get_range_rec(0, 4));
+        
     }
 }
