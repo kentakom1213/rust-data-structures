@@ -1,12 +1,12 @@
 use crate::alg::Monoid;
 
-/// ## RAQ
+/// ## RSQandRAQ
 /// - 区間加算
 /// - 区間和
 #[derive(Debug)]
-pub struct RAQ;
+pub struct RSQandRAQ;
 
-impl Monoid for RAQ {
+impl Monoid for RSQandRAQ {
     type X = isize;
     type M = isize;
     const IX: Self::X = 0;
@@ -60,7 +60,7 @@ mod test_abstract_lazy_segment_tree {
     #[test]
     fn test_raq() {
         // 遅延セグメント木
-        let mut segtree = LazySegmentTree::<RAQ>::new(4);
+        let mut segtree = LazySegmentTree::<RSQandRAQ>::new(4);
         // -> [0, 0, 0, 0]
 
         segtree.set_range(0, 2, 4);
