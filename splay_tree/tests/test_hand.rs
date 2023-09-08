@@ -15,7 +15,7 @@ fn test_insert_random() {
     assert_eq!(tree.insert(9, "6th"), true);
     assert_eq!(tree.insert(2, "7th"), true);
     assert_eq!(tree.insert(6, "8th"), true);
-    tree.pretty_print();
+    println!("{:?}", &tree);
 
     // 検索
     // assert_eq!(tree.search(&2), false);
@@ -39,7 +39,7 @@ fn test_insert_sorted() {
     assert_eq!(tree.insert(6, "6th"), true);
     assert_eq!(tree.insert(7, "7th"), true);
     assert_eq!(tree.insert(8, "8th"), true);
-    tree.pretty_print();
+    println!("{:?}", &tree);
 
     // 検索
     // assert_eq!(tree.search(&2), false);

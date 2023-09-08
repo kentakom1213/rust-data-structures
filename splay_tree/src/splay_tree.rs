@@ -1,12 +1,12 @@
+#![allow(unused_must_use)]
+
 use std::mem::{replace, swap};
 use std::ops::DerefMut;
 use std::{cmp::Ordering, fmt::Debug};
 
 /// # Node
-pub struct Node<T, U>
-where
-    T: Ord,
-{
+#[derive(Debug)]
+pub struct Node<T: Ord, U> {
     pub key: T,
     pub value: U,
     pub left: Option<Box<Node<T, U>>>,
@@ -26,17 +26,15 @@ impl<T: Ord, U> Node<T, U> {
 
 /// # SplayTree
 /// スプレー木のクラス
-pub struct SplayTree<T, U>
-where
-    T: Ord,
-{
+pub struct SplayTree<T: Ord, U> {
     size: usize,
-    root: Option<Box<Node<T, U>>>,
+    pub root: Option<Box<Node<T, U>>>,
 }
 
 impl<T, U> SplayTree<T, U>
 where
-    T: Ord,
+    T: Ord + Debug,
+    U: Debug,
 {
     pub fn new() -> Self {
         Self {
@@ -98,33 +96,37 @@ fn search_mut<'a, T: Ord, U>(
 }
 
 // ----- Debug -----
-impl<T, U> SplayTree<T, U>
+impl<T, U> Debug for SplayTree<T, U>
 where
     T: Ord + Debug,
     U: Debug,
 {
-    /// 整形して表示する
-    pub fn pretty_print(&self) {
-        pretty_print_inner(&self.root, 0);
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        pretty_print_inner(f, &self.root, 0);
+        Ok(())
     }
 }
 
 /// 再帰的に表示
-fn pretty_print_inner<T, U>(node: &Option<Box<Node<T, U>>>, depth: usize)
-where
+fn pretty_print_inner<T, U>(
+    f: &mut std::fmt::Formatter<'_>,
+    node: &Option<Box<Node<T, U>>>,
+    depth: usize,
+) where
     T: Ord + Debug,
     U: Debug,
 {
     match node {
         Some(ref node) => {
-            pretty_print_inner(&node.left, depth + 2);
-            println!(
+            pretty_print_inner(f, &node.left, depth + 2);
+            writeln!(
+                f,
                 "{}(key: {:?}, value: {:?})",
                 " ".repeat(depth * 2),
                 node.key,
                 node.value
             );
-            pretty_print_inner(&node.right, depth + 2);
+            pretty_print_inner(f, &node.right, depth + 2);
         }
         None => {}
     }
