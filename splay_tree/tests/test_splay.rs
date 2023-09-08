@@ -31,8 +31,15 @@ fn test_from_path() {
         }
     };
 
+    println!("### before splay ###");
     println!("{:?}", &tree);
 
     assert_eq!(tree.search(&5), Some(&5));
     assert_eq!(tree.search(&6), None);
+
+    // スプレー操作を行う
+    tree.splay(&0);
+
+    println!("### after splay ###");
+    println!("{:?}", &tree);
 }
