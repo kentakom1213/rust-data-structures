@@ -133,31 +133,25 @@ fn splay_inner<T: Ord, U>(
                     (rotate_right(root), true)
                 }
                 Ordering::Less => {
-                    // 孫を切り離す
-                    let left_left = replace(&mut left.as_deref_mut().unwrap().left, None);
                     // 孫をsplay
+                    let left_left = replace(&mut left.as_deref_mut().unwrap().left, None);
                     let (mut new_left_left, is_found) = splay_inner(left_left, key);
-                    // 新しい孫をくっつける
                     swap(&mut left.as_deref_mut().unwrap().left, &mut new_left_left);
-                    // 親をrotate
+                    // 親を右に回転
                     let tmp_child = rotate_right(root);
-                    // さらにrotate
+                    // さらに右に回転
                     (rotate_right(tmp_child), is_found)
                 }
                 Ordering::Greater => {
-                    // 孫を切り離す
-                    let left_right = replace(&mut left.as_deref_mut().unwrap().right, None);
                     // 孫をsplay
+                    let left_right = replace(&mut left.as_deref_mut().unwrap().right, None);
                     let (mut new_left_right, is_found) = splay_inner(left_right, key);
-                    // 新しい孫をくっつける
                     swap(&mut left.as_deref_mut().unwrap().right, &mut new_left_right);
-                    // 左の子を切り離す
+                    // 左の子を左に回転
                     let left = replace(&mut root.as_deref_mut().unwrap().left, None);
-                    // 左にrotate
                     let mut new_left = rotate_left(left);
-                    // 新しい子をくっつける
                     swap(&mut root.as_deref_mut().unwrap().left, &mut new_left);
-                    // さらに右にrotate
+                    // さらに右に回転
                     (rotate_right(root), is_found)
                 }
             }
@@ -174,31 +168,28 @@ fn splay_inner<T: Ord, U>(
                     (rotate_left(root), true)
                 }
                 Ordering::Less => {
-                    // 孫を切り離す
-                    let right_left = replace(&mut right.as_deref_mut().unwrap().left, None);
                     // 孫をsplay
+                    let right_left = replace(&mut right.as_deref_mut().unwrap().left, None);
                     let (mut new_right_left, is_found) = splay_inner(right_left, key);
-                    // 新しい孫をくっつける
                     swap(&mut right.as_deref_mut().unwrap().left, &mut new_right_left);
-                    // 右の子を切り離す
+                    // 右の子を右に回転
                     let right = replace(&mut root.as_deref_mut().unwrap().right, None);
-                    // 右にrotate
                     let mut new_right = rotate_right(right);
-                    // 新しい子をくっつける
                     swap(&mut root.as_deref_mut().unwrap().right, &mut new_right);
-                    // さらに左にrotate
+                    // さらに左に回転
                     (rotate_left(root), is_found)
                 }
                 Ordering::Greater => {
-                    // 孫を切り離す
-                    let right_right = replace(&mut right.as_deref_mut().unwrap().right, None);
                     // 孫をsplay
+                    let right_right = replace(&mut right.as_deref_mut().unwrap().right, None);
                     let (mut new_right_right, is_found) = splay_inner(right_right, key);
-                    // 新しい孫をくっつける
-                    swap(&mut right.as_deref_mut().unwrap().right, &mut new_right_right);
-                    // 親をrotate
+                    swap(
+                        &mut right.as_deref_mut().unwrap().right,
+                        &mut new_right_right,
+                    );
+                    // 親を左に回転
                     let tmp_child = rotate_left(root);
-                    // さらにrotate
+                    // さらに左に回転
                     (rotate_left(tmp_child), is_found)
                 }
             }
