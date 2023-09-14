@@ -1,7 +1,6 @@
 #![allow(unused_must_use)]
 
 use std::mem::{replace, swap};
-use std::ops::DerefMut;
 use std::{cmp::Ordering, fmt::Debug};
 
 /// # Node
@@ -68,9 +67,15 @@ where
 
     /// ## splay
     /// スプレー操作をおこなう
-    pub fn splay(&mut self, key: &T) {
+    /// - 戻り値
+    ///   - `bool`：要素が存在したかどうか
+    pub fn splay(&mut self, key: &T) -> bool {
+        // 根の取り出し
         let root = replace(&mut self.root, None);
-        self.root = splay_inner(root, key);
+        // スプレー操作
+        let (new_root, is_found) = splay_inner(root, key);
+        self.root = new_root;
+        is_found
     }
 }
 
@@ -103,26 +108,81 @@ fn search_mut<'a, T: Ord, U>(
 }
 
 /// splay操作を行う
-fn splay_inner<T: Ord, U>(root: Option<Box<Node<T, U>>>, key: &T) -> Option<Box<Node<T, U>>> {
+/// - 戻り値
+///   - `Option<Box<Node<T, U>>>`：新しく根となるノード
+///   - `bool`：目的の値が存在したかどうか
+fn splay_inner<T: Ord, U>(
+    mut root: Option<Box<Node<T, U>>>,
+    key: &T,
+) -> (Option<Box<Node<T, U>>>, bool) {
     if root.is_none() {
-        todo!()
+        return (root, false);
     }
+    // 孫 → 子
     match key.cmp(&root.as_deref().unwrap().key) {
-        Ordering::Equal => todo!(),
-        Ordering::Less => todo!(),
-        Ordering::Greater => todo!(),
+        Ordering::Equal => (root, true),
+        Ordering::Less => {
+            // 左の子
+            let left = &mut root.as_deref_mut().unwrap().left;
+            if left.is_none() {
+                return (root, false);
+            }
+            match key.cmp(&left.as_deref().unwrap().key) {
+                Ordering::Equal => {
+                    // 左の子をrootに
+                    (rotate_right(root), true)
+                }
+                Ordering::Less => {
+                    // 孫を切り離す
+                    let left_left = replace(&mut left.as_deref_mut().unwrap().left, None);
+                    // 孫をsplay
+                    let (mut new_left_left, is_found) = splay_inner(left_left, key);
+                    // 新しい孫をくっつける
+                    swap(&mut left.as_deref_mut().unwrap().left, &mut new_left_left);
+                    // 親をrotate
+                    let tmp_child = rotate_right(root);
+                    // さらにrotate
+                    (rotate_right(tmp_child), is_found)
+                }
+                Ordering::Greater => {
+                    // 孫を切り離す
+                    let left_right = replace(&mut left.as_deref_mut().unwrap().right, None);
+                    // 孫をsplay
+                    let (mut new_left_right, is_found) = splay_inner(left_right, key);
+                    // 新しい孫をくっつける
+                    swap(&mut left.as_deref_mut().unwrap().right, &mut new_left_right);
+                    // 左の子を切り離す
+                    let left = replace(&mut root.as_deref_mut().unwrap().left, None);
+                    // 左にrotate
+                    let mut new_left = rotate_left(left);
+                    // 新しい子をくっつける
+                    swap(&mut root.as_deref_mut().unwrap().left, &mut new_left);
+                    // さらにrotate
+                    (rotate_right(root), is_found)
+                }
+            }
+        }
+        Ordering::Greater => {
+            // 子を切り離す
+            let right = replace(&mut root.as_deref_mut().unwrap().right, None);
+            match key.cmp(&right.as_deref().unwrap().key) {
+                Ordering::Equal => todo!(),
+                Ordering::Less => todo!(),
+                Ordering::Greater => todo!(),
+            }
+        }
     }
 }
 
-/// 左回転
+/// ### 右回転
 /// ```not-rust
 ///        Y                      X    
-///       / \        left        / \   
+///       / \       right        / \   
 ///      X   C  === rotate ==>  A   Y  
 ///     / \                        / \
 ///    A   B                      B   C
 /// ```
-fn rotate_left<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, U>>> {
+fn rotate_right<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, U>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.left {
             root.left = new_root.right;
@@ -136,15 +196,15 @@ fn rotate_left<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, U
     }
 }
 
-/// 右回転
+/// ### 左回転
 /// ```not-rust
 ///      X                          Y  
-///     / \         right          / \
+///     / \         left           / \
 ///    A   Y    === rotate ==>    X   C
 ///       / \                    / \   
 ///      B   C                  A   B  
 /// ```
-fn rotate_right<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, U>>> {
+fn rotate_left<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, U>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.right {
             root.right = new_root.left;
@@ -199,10 +259,8 @@ mod test_splay_tree_util {
     use crate::tree;
 
     /// 再帰的に表示
-    fn pretty_print<T, U>(
-        node: &Option<Box<Node<T, U>>>,
-        depth: usize,
-    ) where
+    fn pretty_print<T, U>(node: &Option<Box<Node<T, U>>>, depth: usize)
+    where
         T: Ord + Debug,
         U: Debug,
     {
@@ -249,38 +307,38 @@ mod test_splay_tree_util {
 
         // ## 右回転のテスト
         // 右回転
-        root = rotate_right(root);
+        root = rotate_left(root);
 
         println!("----- 右回転 -----");
         pretty_print(&root, 0);
 
         // さらに右回転
-        root = rotate_right(root);
+        root = rotate_left(root);
 
         println!("----- 右回転 -----");
         pretty_print(&root, 0);
 
         // さらに右回転
-        root = rotate_right(root);
+        root = rotate_left(root);
 
         println!("----- 右回転 -----");
         pretty_print(&root, 0);
 
         // ## 左回転のテスト
         // 左回転
-        root = rotate_left(root);
+        root = rotate_right(root);
 
         println!("----- 左回転 -----");
         pretty_print(&root, 0);
 
         // さらに左回転
-        root = rotate_left(root);
+        root = rotate_right(root);
 
         println!("----- 左回転 -----");
         pretty_print(&root, 0);
 
         // さらに左回転
-        root = rotate_left(root);
+        root = rotate_right(root);
 
         println!("----- 左回転 -----");
         pretty_print(&root, 0);
