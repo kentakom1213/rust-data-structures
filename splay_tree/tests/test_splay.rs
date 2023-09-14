@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use splay_tree::{splay_tree::*, tree};
+use splay_tree::{encode::Encode, splay_tree::*, tree};
 
 #[test]
 fn test_splay_left() {
@@ -25,11 +25,15 @@ fn test_splay_left() {
 
     println!("----- before -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((((0)1)2)3)");
 
     tree.splay(&2);
 
+    println!("{}", tree.encode());
+
     println!("----- after -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(((0)1)2(3))");
 }
 
 #[test]
@@ -55,11 +59,13 @@ fn test_splay_left_left() {
 
     println!("----- before -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((((0)1)2)3)");
 
     tree.splay(&0);
 
     println!("----- after -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(0((1)2(3)))");
 }
 
 #[test]
@@ -81,11 +87,13 @@ fn test_splay_right() {
 
     println!("----- before -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(0(1(2)))");
 
     tree.splay(&1);
 
     println!("----- after -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((0)1(2))");
 }
 
 #[test]
@@ -107,11 +115,13 @@ fn test_splay_right_left() {
 
     println!("----- before -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(0((1)2))");
 
     tree.splay(&1);
 
     println!("----- after -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((0)1(2))");
 }
 
 #[test]
@@ -137,11 +147,13 @@ fn test_splay_right_right() {
 
     println!("----- before -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(0(1((2)3)))");
 
     tree.splay(&3);
 
     println!("----- after -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(((0)1(2))3)");
 }
 
 #[test]
@@ -163,11 +175,13 @@ fn test_splay_left_right() {
 
     println!("----- before -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((0(1))2)");
 
     tree.splay(&1);
 
     println!("----- after -----");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((0)1(2))");
 }
 
 #[test]
@@ -175,22 +189,22 @@ fn test_from_path_left() {
     let mut tree: SplayTree<u8, &str> = SplayTree::new();
 
     tree.root = tree! {
-        key: 0,
+        key: 5,
         value: "alpha",
         left: tree! {
-            key: 1,
+            key: 4,
             value: "beta",
             left: tree! {
-                key: 2,
+                key: 3,
                 value: "gamma",
                 left: tree! {
-                    key: 3,
+                    key: 2,
                     value: "delta",
                     left: tree! {
-                        key: 4,
+                        key: 1,
                         value: "epsilon",
                         left: tree! {
-                            key: 5,
+                            key: 0,
                             value: "zeta",
                         }
                     }
@@ -201,12 +215,14 @@ fn test_from_path_left() {
 
     println!("### before splay ###");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "((((((0)1)2)3)4)5)");
 
     // スプレー操作を行う
     tree.splay(&0);
 
     println!("### after splay ###");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(0(((1)2(3))4(5)))");
 }
 
 #[test]
@@ -244,10 +260,12 @@ fn test_from_path_right() {
 
     println!("### before splay ###");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(0(1(2(3(4(5(6)))))))");
 
     // スプレー操作を行う
     tree.splay(&6);
 
     println!("### after splay ###");
     println!("{:?}", &tree);
+    assert_eq!(&tree.encode(), "(((0)1((2)3((4)5)))6)");
 }

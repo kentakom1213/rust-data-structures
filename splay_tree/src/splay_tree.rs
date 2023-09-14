@@ -281,30 +281,11 @@ mod test_splay_tree_util {
     use super::*;
     use crate::tree;
 
-    /// 再帰的に表示
-    fn pretty_print<T, U>(node: &Option<Box<Node<T, U>>>, depth: usize)
-    where
-        T: Ord + Debug,
-        U: Debug,
-    {
-        match node {
-            Some(ref node) => {
-                pretty_print(&node.left, depth + 1);
-                println!(
-                    "{}(key: {:?}, value: {:?})",
-                    " ".repeat(depth * 2),
-                    node.key,
-                    node.value
-                );
-                pretty_print(&node.right, depth + 2);
-            }
-            None => {}
-        }
-    }
-
     #[test]
     fn test_rotate() {
-        let mut root = tree! {
+        let mut tree = SplayTree::new();
+
+        tree.root = tree! {
             key: 4,
             value: "1st",
             left: tree! {
@@ -326,44 +307,44 @@ mod test_splay_tree_util {
         };
 
         println!("----- 回転前 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
 
         // ## 右回転のテスト
         // 右回転
-        root = rotate_left(root);
+        tree.root = rotate_left(tree.root);
 
         println!("----- 右回転 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
 
         // さらに右回転
-        root = rotate_left(root);
+        tree.root = rotate_left(tree.root);
 
         println!("----- 右回転 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
 
         // さらに右回転
-        root = rotate_left(root);
+        tree.root = rotate_left(tree.root);
 
         println!("----- 右回転 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
 
         // ## 左回転のテスト
         // 左回転
-        root = rotate_right(root);
+        tree.root = rotate_right(tree.root);
 
         println!("----- 左回転 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
 
         // さらに左回転
-        root = rotate_right(root);
+        tree.root = rotate_right(tree.root);
 
         println!("----- 左回転 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
 
         // さらに左回転
-        root = rotate_right(root);
+        tree.root = rotate_right(tree.root);
 
         println!("----- 左回転 -----");
-        pretty_print(&root, 0);
+        println!("{:?}", &tree);
     }
 }
