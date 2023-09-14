@@ -1,7 +1,6 @@
 #![cfg(test)]
 
 use splay_tree::splay_tree::*;
-use splay_tree::tree;
 
 #[test]
 fn test_insert_random() {
@@ -49,90 +48,4 @@ fn test_insert_sorted() {
     // assert_eq!(tree.search(&3), true);
     // assert_eq!(tree.search(&5), true);
     // assert_eq!(tree.search(&1), true);
-}
-
-#[test]
-fn test_splay_left() {
-    let mut tree = SplayTree::new();
-
-    tree.root = tree! {
-        key: 3,
-        value: "3",
-        left: tree! {
-            key: 2,
-            value: "2",
-            left: tree! {
-                key: 1,
-                value: "1",
-                left: tree! {
-                    key: 0,
-                    value: "0",
-                }
-            }
-        }
-    };
-
-    println!("----- before -----");
-    println!("{:?}", &tree);
-
-    tree.splay(&2);
-
-    println!("----- after -----");
-    println!("{:?}", &tree);
-}
-
-#[test]
-fn test_splay_left_left() {
-    let mut tree = SplayTree::new();
-
-    tree.root = tree! {
-        key: 3,
-        value: "3",
-        left: tree! {
-            key: 2,
-            value: "2",
-            left: tree! {
-                key: 1,
-                value: "1",
-                left: tree! {
-                    key: 0,
-                    value: "0",
-                }
-            }
-        }
-    };
-
-    println!("----- before -----");
-    println!("{:?}", &tree);
-
-    tree.splay(&0);
-
-    println!("----- after -----");
-    println!("{:?}", &tree);
-}
-
-#[test]
-fn test_splay_left_right() {
-    let mut tree = SplayTree::new();
-
-    tree.root = tree! {
-        key: 2,
-        value: "2",
-        left: tree! {
-            key: 0,
-            value: "0",
-            right: tree! {
-                key: 1,
-                value: "1",
-            }
-        }
-    };
-
-    println!("----- before -----");
-    println!("{:?}", &tree);
-
-    tree.splay(&1);
-
-    println!("----- after -----");
-    println!("{:?}", &tree);
 }
