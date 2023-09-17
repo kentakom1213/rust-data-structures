@@ -48,8 +48,12 @@ where
 
     /// ## search
     /// 値の検索を行う
-    pub fn search(&mut self, key: &T) -> Option<&U> {
-        search_inner(&self.root, key)
+    pub fn get(&mut self, key: &T) -> Option<&U> {
+        if self.splay(key) {
+            Some(&self.root.as_deref().unwrap().value)
+        } else {
+            None
+        }
     }
 
     /// ## insert
@@ -79,19 +83,6 @@ where
         let (new_root, is_found) = splay_inner(root, key);
         self.root = new_root;
         is_found
-    }
-}
-
-/// keyを検索する
-fn search_inner<'a, T: Ord, U>(root: &'a Option<Box<Node<T, U>>>, value: &T) -> Option<&'a U> {
-    if root.is_none() {
-        return None;
-    }
-    let node = root.as_ref().unwrap();
-    match value.cmp(&node.key) {
-        Ordering::Equal => Some(&node.value),
-        Ordering::Less => search_inner(&node.left, value),
-        Ordering::Greater => search_inner(&node.right, value),
     }
 }
 
