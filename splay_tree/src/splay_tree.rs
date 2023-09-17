@@ -32,7 +32,7 @@ pub struct SplayTree<T: Ord, U> {
 
 impl<T, U> SplayTree<T, U>
 where
-    T: Ord + Debug,
+    T: Ord + Clone,
     U: Debug,
 {
     pub fn new() -> Self {
@@ -56,13 +56,16 @@ where
     /// 値の挿入
     pub fn insert(&mut self, key: T, value: U) -> bool {
         let res = search_mut(&mut self.root, &key);
-        if res.is_none() {
-            *res = Some(Box::new(Node::new(key, value)));
+        let is_inserted = if res.is_none() {
+            *res = Some(Box::new(Node::new(key.clone(), value)));
             self.size += 1; // 要素数をインクリメント
             true
         } else {
             false
-        }
+        };
+        // スプレー操作
+        self.splay(&key);
+        is_inserted
     }
 
     /// ## splay

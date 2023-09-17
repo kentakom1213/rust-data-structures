@@ -7,13 +7,35 @@ fn test_insert_random() {
     let mut tree = SplayTree::new();
 
     // 挿入
+    println!("> Insert (3, \"1st\")");
     assert_eq!(tree.insert(3, "1st"), true);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (1, \"2nd\")");
     assert_eq!(tree.insert(1, "2nd"), true);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (4, \"3rd\")");
     assert_eq!(tree.insert(4, "3rd"), true);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (1, \"4th\")");
     assert_eq!(tree.insert(1, "4th"), false);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (5, \"5th\")");
     assert_eq!(tree.insert(5, "5th"), true);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (9, \"6th\")");
     assert_eq!(tree.insert(9, "6th"), true);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (2, \"7th\")");
     assert_eq!(tree.insert(2, "7th"), true);
+    println!("{:?}", &tree);
+    
+    println!("> Insert (6, \"8th\")");
     assert_eq!(tree.insert(6, "8th"), true);
     println!("{:?}", &tree);
 

@@ -269,3 +269,52 @@ fn test_from_path_right() {
     println!("{:?}", &tree);
     assert_eq!(&tree.encode(), "(((0)1((2)3((4)5)))6)");
 }
+
+
+#[test]
+fn test_splay_not_found() {
+    let mut tree: SplayTree<u8, &str> = SplayTree::new();
+
+    tree.root = tree! {
+        key: 1,
+        value: "alpha",
+        right: tree! {
+            key: 2,
+            value: "beta",
+            right: tree! {
+                key: 4,
+                value: "gamma",
+                right: tree! {
+                    key: 8,
+                    value: "delta",
+                    right: tree! {
+                        key: 16,
+                        value: "epsilon",
+                        right: tree! {
+                            key: 32,
+                            value: "zeta",
+                            right: tree! {
+                                key: 64,
+                                value: "eta",
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    println!("{:?}", &tree);
+
+    println!("> Splay for 3");
+    tree.splay(&3);
+    println!("{:?}", &tree);
+
+    println!("> Splay for 50");
+    tree.splay(&50);
+    println!("{:?}", &tree);
+
+    println!("> Splay for 3");
+    tree.splay(&3);
+    println!("{:?}", &tree);
+}
