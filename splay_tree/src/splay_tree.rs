@@ -46,8 +46,10 @@ where
         self.size
     }
 
-    /// ## search
+    /// ## get
     /// 値の検索を行う
+    /// ### 戻り値
+    /// - `Option<&U>`: キーに紐づいた値
     pub fn get(&mut self, key: &T) -> Option<&U> {
         if self.splay(key) {
             Some(&self.root.as_deref().unwrap().value)
@@ -58,6 +60,8 @@ where
 
     /// ## insert
     /// 値の挿入
+    /// ### 戻り値
+    /// - `bool`: 値が挿入されたか
     pub fn insert(&mut self, key: T, value: U) -> bool {
         // rootの取り出し
         let root = replace(&mut self.root, None);
@@ -87,10 +91,38 @@ where
         true
     }
 
+    /// ## delete
+    /// 値の削除
+    /// ### 戻り値
+    /// - `Option<U>`: 削除された値
+    pub fn delete(&mut self, key: &T) -> Option<U> {
+        // rootの取り出し
+        let root = replace(&mut self.root, None);
+        // splay操作
+        let (mut tmp_root, is_found) = splay_inner(root, &key);
+        if !is_found {
+            self.root = tmp_root;
+            return None;
+        }
+        // 削除
+        if tmp_root.as_deref().unwrap().left.is_none() {
+            swap(&mut self.root, &mut tmp_root.as_deref_mut().unwrap().right);
+        } else {
+            let root_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
+            swap(&mut self.root, &mut splay_inner(root_left, key).0);
+            swap(
+                &mut self.root.as_deref_mut().unwrap().right,
+                &mut tmp_root.as_deref_mut().unwrap().right,
+            );
+        }
+        let deleted = replace(&mut tmp_root, None);
+        Some(deleted.unwrap().value)
+    }
+
     /// ## splay
     /// スプレー操作をおこなう
-    /// - 戻り値
-    ///   - `bool`：要素が存在したかどうか
+    /// ### 戻り値
+    /// - `bool`：要素が存在したかどうか
     pub fn splay(&mut self, key: &T) -> bool {
         // 根の取り出し
         let root = replace(&mut self.root, None);
@@ -101,10 +133,11 @@ where
     }
 }
 
+/// ## splay_inner
 /// splay操作を行う
-/// - 戻り値
-///   - `Option<Box<Node<T, U>>>`：新しく根となるノード
-///   - `bool`：目的の値が存在したかどうか
+/// ### 戻り値
+/// - `Option<Box<Node<T, U>>>`：新しく根となるノード
+/// - `bool`：目的の値が存在したかどうか
 fn splay_inner<T: Ord, U>(
     mut root: Option<Box<Node<T, U>>>,
     key: &T,

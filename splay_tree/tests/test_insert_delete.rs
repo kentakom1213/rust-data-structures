@@ -143,3 +143,55 @@ fn test_insert_sorted() {
     assert_eq!(tree.get(&""), None);
     println!("{:?}", &tree);
 }
+
+#[test]
+fn test_delete() {
+    let mut tree = SplayTree::new();
+
+    for i in 1..=20 {
+        match i % 10 {
+            1 => tree.insert(i, format!("{}st", i)),
+            2 => tree.insert(i, format!("{}nd", i)),
+            3 => tree.insert(i, format!("{}rd", i)),
+            _ => tree.insert(i, format!("{}th", i)),
+        };
+    }
+
+    println!("{:?}", &tree);
+
+    println!("> Delete 1");
+    assert_eq!(tree.delete(&1), Some("1st".to_string()));
+    println!("{:?}", &tree);
+
+    println!("> Get 18");
+    tree.get(&18);
+    println!("{:?}", &tree);
+
+    println!("> Delete 18");
+    assert_eq!(tree.delete(&18), Some("18th".to_string()));
+    println!("{:?}", &tree);
+
+    println!("> Delete 100");
+    assert_eq!(tree.delete(&100), None);
+    println!("{:?}", &tree);
+
+    println!("> Delete 2");
+    assert_eq!(tree.delete(&2), Some("2nd".to_string()));
+    println!("{:?}", &tree);
+
+    println!("> Delete 3");
+    assert_eq!(tree.delete(&3), Some("3rd".to_string()));
+    println!("{:?}", &tree);
+
+    println!("> Delete 11");
+    assert_eq!(tree.delete(&11), Some("11st".to_string()));
+    println!("{:?}", &tree);
+
+    println!("> Delete 11");
+    assert_eq!(tree.delete(&11), None);
+    println!("{:?}", &tree);
+
+    println!("> Delete 11");
+    assert_eq!(tree.delete(&11), None);
+    println!("{:?}", &tree);
+}
