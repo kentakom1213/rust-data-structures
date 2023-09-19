@@ -49,8 +49,8 @@ fn test_insert_random() {
     println!("{:?}", &tree);
 
     println!("> Get 5");
-    assert_eq!(tree.get(&5), Some(&"5th"));
     println!("{:?}", &tree);
+    assert_eq!(tree.get(&5), Some(&"5th"));
 
     println!("> Get 3");
     assert_eq!(tree.get(&3), Some(&"1st"));

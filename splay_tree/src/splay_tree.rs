@@ -59,17 +59,32 @@ where
     /// ## insert
     /// 値の挿入
     pub fn insert(&mut self, key: T, value: U) -> bool {
-        let res = search_mut(&mut self.root, &key);
-        let is_inserted = if res.is_none() {
-            *res = Some(Box::new(Node::new(key.clone(), value)));
-            self.size += 1; // 要素数をインクリメント
-            true
-        } else {
-            false
-        };
-        // スプレー操作
-        self.splay(&key);
-        is_inserted
+        // rootの取り出し
+        let root = replace(&mut self.root, None);
+        // splay操作
+        let (mut tmp_root, is_found) = splay_inner(root, &key);
+        if is_found {
+            self.root = tmp_root;
+            return false;
+        }
+        // 挿入
+        self.root = Some(Box::new(Node::new(key.clone(), value)));
+        if tmp_root.is_some() {
+            match key.cmp(&tmp_root.as_deref().unwrap().key) {
+                Ordering::Equal => unreachable!(),
+                Ordering::Less => {
+                    let mut new_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
+                    swap(&mut self.root.as_deref_mut().unwrap().left, &mut new_left);
+                    swap(&mut self.root.as_deref_mut().unwrap().right, &mut tmp_root);
+                }
+                Ordering::Greater => {
+                    let mut new_right = replace(&mut tmp_root.as_deref_mut().unwrap().right, None);
+                    swap(&mut self.root.as_deref_mut().unwrap().right, &mut new_right);
+                    swap(&mut self.root.as_deref_mut().unwrap().left, &mut tmp_root);
+                }
+            }
+        }
+        true
     }
 
     /// ## splay
@@ -83,21 +98,6 @@ where
         let (new_root, is_found) = splay_inner(root, key);
         self.root = new_root;
         is_found
-    }
-}
-
-/// keyを挿入するべき位置にあるノードを返す
-fn search_mut<'a, T: Ord, U>(
-    root: &'a mut Option<Box<Node<T, U>>>,
-    key: &T,
-) -> &'a mut Option<Box<Node<T, U>>> {
-    if root.is_none() {
-        return root;
-    }
-    match key.cmp(&root.as_ref().unwrap().key) {
-        Ordering::Equal => root,
-        Ordering::Less => search_mut(&mut root.as_deref_mut().unwrap().left, key),
-        Ordering::Greater => search_mut(&mut root.as_deref_mut().unwrap().right, key),
     }
 }
 

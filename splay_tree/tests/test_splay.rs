@@ -270,7 +270,6 @@ fn test_from_path_right() {
     assert_eq!(&tree.encode(), "(((0)1((2)3((4)5)))6)");
 }
 
-
 #[test]
 fn test_splay_not_found() {
     let mut tree: SplayTree<u8, &str> = SplayTree::new();
