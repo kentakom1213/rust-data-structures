@@ -1,7 +1,6 @@
 #![cfg(test)]
 
 use splay_tree::splay_tree::*;
-use splay_tree::tree;
 
 #[test]
 fn test_insert_random() {
@@ -205,7 +204,7 @@ fn test_get_mut() {
 
     for d in PI.chars() {
         if let Some(_) = d.to_digit(10) {
-            if let Some(mut cnt) = counter.get_mut(&d) {
+            if let Some(cnt) = counter.get_mut(&d) {
                 *cnt += 1;
             } else {
                 counter.insert(d, 1);
