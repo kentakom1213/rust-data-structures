@@ -58,6 +58,18 @@ where
         }
     }
 
+    /// ## get_mut
+    /// 値を検索し、変更できる形で返す
+    /// ### 戻り値
+    /// - `Option<&mut U>`: キーに紐づいた値
+    pub fn get_mut(&mut self, key: &T) -> Option<&mut U> {
+        if self.splay(key) {
+            Some(&mut self.root.as_deref_mut().unwrap().value)
+        } else {
+            None
+        }
+    }
+
     /// ## insert
     /// 値の挿入を行う。
     /// すでに同じキーが存在した場合は値を置き換えて前の値を返す。
@@ -133,6 +145,28 @@ where
         self.root = new_root;
         is_found
     }
+
+    /// ## to_vec
+    /// 要素を順にVecとして取り出す
+    pub fn to_vec(&self) -> Vec<(&T, &U)> {
+        let mut res = vec![];
+        traverse(&self.root, &mut res);
+        res
+    }
+}
+
+/// ## traverse
+/// 順に取り出す
+fn traverse<'a, T: Ord, U>(root: &'a Option<Box<Node<T, U>>>, res: &mut Vec<(&'a T, &'a U)>) {
+    if root.is_none() {
+        return;
+    }
+    // 左の子を探索
+    traverse(&root.as_ref().unwrap().left, res);
+    // 値を追加
+    res.push((&root.as_ref().unwrap().key, &root.as_ref().unwrap().value));
+    // 右の子を探索
+    traverse(&root.as_ref().unwrap().right, res);
 }
 
 /// ## splay_inner
@@ -226,7 +260,7 @@ fn splay_inner<T: Ord, U>(
     }
 }
 
-/// ### 右回転
+/// ## 右回転
 /// ```not-rust
 ///        Y                      X    
 ///       / \       right        / \   
@@ -248,7 +282,7 @@ fn rotate_right<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, 
     }
 }
 
-/// ### 左回転
+/// ## 左回転
 /// ```not-rust
 ///      X                          Y  
 ///     / \         left           / \
@@ -375,5 +409,40 @@ mod test_splay_tree_util {
 
         println!("----- 左回転 -----");
         println!("{:?}", &tree);
+    }
+
+    #[test]
+    fn test_traverse() {
+        let mut tree = SplayTree::new();
+
+        tree.root = tree! {
+            key: 3,
+            value: "1st",
+            left: tree! {
+                key: 1,
+                value: "2nd",
+            },
+            right: tree! {
+                key: 4,
+                value: "3rd",
+                right: tree! {
+                    key: 5,
+                    value: "5th"
+                }
+            }
+        };
+
+        println!("{:?}", &tree);
+
+        // traverse
+        let mut res = vec![];
+        traverse(&tree.root, &mut res);
+
+        println!("{:?}", &res);
+
+        assert_eq!(
+            res,
+            vec![(&1, &"2nd"), (&3, &"1st"), (&4, &"3rd"), (&5, &"5th")]
+        );
     }
 }

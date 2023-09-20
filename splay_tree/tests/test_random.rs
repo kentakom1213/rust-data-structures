@@ -41,9 +41,6 @@ fn test_random_insert_delete() {
         // 削除
         let y = random();
 
-        assert_eq!(
-            std_map.remove(&y),
-            splay_map.delete(&y)
-        );
+        assert_eq!(std_map.remove(&y), splay_map.delete(&y));
     }
 }

@@ -1,6 +1,7 @@
 #![cfg(test)]
 
 use splay_tree::splay_tree::*;
+use splay_tree::tree;
 
 #[test]
 fn test_insert_random() {
@@ -194,4 +195,43 @@ fn test_delete() {
     println!("> Delete 11");
     assert_eq!(tree.delete(&11), None);
     println!("{:?}", &tree);
+}
+
+#[test]
+fn test_get_mut() {
+    const PI: &str = "3. 141592653589 793238462643 383279502884 197169399375";
+
+    let mut counter: SplayTree<char, usize> = SplayTree::new();
+
+    for d in PI.chars() {
+        if let Some(_) = d.to_digit(10) {
+            if let Some(mut cnt) = counter.get_mut(&d) {
+                *cnt += 1;
+            } else {
+                counter.insert(d, 1);
+            }
+        }
+    }
+
+    println!("{:?}", &counter);
+
+    // Vecに変換
+    let digits = counter.to_vec();
+    println!("{:?}", &digits);
+
+    assert_eq!(
+        digits,
+        vec![
+            (&'0', &1),
+            (&'1', &4),
+            (&'2', &5),
+            (&'3', &9),
+            (&'4', &4),
+            (&'5', &5),
+            (&'6', &4),
+            (&'7', &4),
+            (&'8', &5),
+            (&'9', &8)
+        ]
+    )
 }
