@@ -8,35 +8,35 @@ fn test_insert_random() {
 
     // 挿入
     println!("> Insert (3, \"1st\")");
-    assert_eq!(tree.insert(3, "1st"), true);
+    assert_eq!(tree.insert(3, "1st"), None);
     println!("{:?}", &tree);
 
     println!("> Insert (1, \"2nd\")");
-    assert_eq!(tree.insert(1, "2nd"), true);
+    assert_eq!(tree.insert(1, "2nd"), None);
     println!("{:?}", &tree);
 
     println!("> Insert (4, \"3rd\")");
-    assert_eq!(tree.insert(4, "3rd"), true);
+    assert_eq!(tree.insert(4, "3rd"), None);
     println!("{:?}", &tree);
 
     println!("> Insert (1, \"4th\")");
-    assert_eq!(tree.insert(1, "4th"), false);
+    assert_eq!(tree.insert(1, "4th"), Some("2nd"));
     println!("{:?}", &tree);
 
     println!("> Insert (5, \"5th\")");
-    assert_eq!(tree.insert(5, "5th"), true);
+    assert_eq!(tree.insert(5, "5th"), None);
     println!("{:?}", &tree);
 
     println!("> Insert (9, \"6th\")");
-    assert_eq!(tree.insert(9, "6th"), true);
+    assert_eq!(tree.insert(9, "6th"), None);
     println!("{:?}", &tree);
 
     println!("> Insert (2, \"7th\")");
-    assert_eq!(tree.insert(2, "7th"), true);
+    assert_eq!(tree.insert(2, "7th"), None);
     println!("{:?}", &tree);
 
     println!("> Insert (6, \"8th\")");
-    assert_eq!(tree.insert(6, "8th"), true);
+    assert_eq!(tree.insert(6, "8th"), None);
     println!("{:?}", &tree);
 
     // 検索
@@ -61,7 +61,7 @@ fn test_insert_random() {
     println!("{:?}", &tree);
 
     println!("> Get 1");
-    assert_eq!(tree.get(&1), Some(&"2nd"));
+    assert_eq!(tree.get(&1), Some(&"4th"));
     println!("{:?}", &tree);
 
     println!("> Get 100");
@@ -79,35 +79,35 @@ fn test_insert_sorted() {
 
     // 挿入
     println!("> Insert (\"1st\", 3)");
-    assert_eq!(tree.insert("1st", 3), true);
+    assert_eq!(tree.insert("1st", 3), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"2nd\", 1)");
-    assert_eq!(tree.insert("2nd", 1), true);
+    assert_eq!(tree.insert("2nd", 1), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"3rd\", 4)");
-    assert_eq!(tree.insert("3rd", 4), true);
+    assert_eq!(tree.insert("3rd", 4), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"4th\", 1)");
-    assert_eq!(tree.insert("4th", 1), true);
+    assert_eq!(tree.insert("4th", 1), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"5th\", 5)");
-    assert_eq!(tree.insert("5th", 5), true);
+    assert_eq!(tree.insert("5th", 5), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"6th\", 9)");
-    assert_eq!(tree.insert("6th", 9), true);
+    assert_eq!(tree.insert("6th", 9), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"7th\", 2)");
-    assert_eq!(tree.insert("7th", 2), true);
+    assert_eq!(tree.insert("7th", 2), None);
     println!("{:?}", &tree);
 
     println!("> Insert (\"8th\", 6)");
-    assert_eq!(tree.insert("8th", 6), true);
+    assert_eq!(tree.insert("8th", 6), None);
     println!("{:?}", &tree);
 
     // 検索

@@ -32,7 +32,7 @@ pub struct SplayTree<T: Ord, U> {
 
 impl<T, U> SplayTree<T, U>
 where
-    T: Ord + Clone,
+    T: Ord + Clone + Debug,
     U: Debug,
 {
     pub fn new() -> Self {
@@ -59,17 +59,19 @@ where
     }
 
     /// ## insert
-    /// 値の挿入
+    /// 値の挿入を行う。
+    /// すでに同じキーが存在した場合は値を置き換えて前の値を返す。
     /// ### 戻り値
-    /// - `bool`: 値が挿入されたか
-    pub fn insert(&mut self, key: T, value: U) -> bool {
+    /// - `Option<U>`: 以前の値
+    pub fn insert(&mut self, key: T, value: U) -> Option<U> {
         // rootの取り出し
         let root = replace(&mut self.root, None);
         // splay操作
         let (mut tmp_root, is_found) = splay_inner(root, &key);
         if is_found {
             self.root = tmp_root;
-            return false;
+            let res = replace(&mut self.root.as_deref_mut().unwrap().value, value);
+            return Some(res);
         }
         // 挿入
         self.root = Some(Box::new(Node::new(key.clone(), value)));
@@ -88,7 +90,7 @@ where
                 }
             }
         }
-        true
+        None
     }
 
     /// ## delete
