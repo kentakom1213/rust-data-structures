@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use splay_tree::splay_tree::*;
+use splay_tree::splay_tree_map::*;
 #[cfg(test)]
 use std::collections::BTreeMap;
 
@@ -8,7 +8,7 @@ fn test_random_insert_get() {
     const CASE: usize = 100_000;
 
     let mut std_map: BTreeMap<u16, u16> = BTreeMap::new();
-    let mut splay_map: SplayTree<u16, u16> = SplayTree::new();
+    let mut splay_map: SplayTreeMap<u16, u16> = SplayTreeMap::new();
 
     for _ in 0..CASE {
         // 挿入
@@ -29,7 +29,7 @@ fn test_random_insert_delete() {
     const CASE: usize = 100_000;
 
     let mut std_map: BTreeMap<u16, u16> = BTreeMap::new();
-    let mut splay_map: SplayTree<u16, u16> = SplayTree::new();
+    let mut splay_map: SplayTreeMap<u16, u16> = SplayTreeMap::new();
 
     for _ in 0..CASE {
         // 挿入
@@ -38,9 +38,15 @@ fn test_random_insert_delete() {
         std_map.insert(x, x >> 3);
         splay_map.insert(x, x >> 3);
 
+        // 要素数の確認
+        assert_eq!(std_map.len(), splay_map.len());
+
         // 削除
         let y = random();
 
         assert_eq!(std_map.remove(&y), splay_map.delete(&y));
+
+        // 要素数の確認
+        assert_eq!(std_map.len(), splay_map.len());
     }
 }

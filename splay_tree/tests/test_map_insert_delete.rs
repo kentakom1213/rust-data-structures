@@ -1,43 +1,61 @@
 #![cfg(test)]
 
-use splay_tree::splay_tree::*;
+use splay_tree::splay_tree_map::*;
 
 #[test]
 fn test_insert_random() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
+
+    assert_eq!(tree.len(), 0);
 
     // 挿入
     println!("> Insert (3, \"1st\")");
     assert_eq!(tree.insert(3, "1st"), None);
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 1);
+
     println!("> Insert (1, \"2nd\")");
     assert_eq!(tree.insert(1, "2nd"), None);
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 2);
 
     println!("> Insert (4, \"3rd\")");
     assert_eq!(tree.insert(4, "3rd"), None);
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 3);
+
     println!("> Insert (1, \"4th\")");
     assert_eq!(tree.insert(1, "4th"), Some("2nd"));
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 3);
 
     println!("> Insert (5, \"5th\")");
     assert_eq!(tree.insert(5, "5th"), None);
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 4);
+
     println!("> Insert (9, \"6th\")");
     assert_eq!(tree.insert(9, "6th"), None);
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 5);
 
     println!("> Insert (2, \"7th\")");
     assert_eq!(tree.insert(2, "7th"), None);
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 6);
+
     println!("> Insert (6, \"8th\")");
     assert_eq!(tree.insert(6, "8th"), None);
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 7);
 
     // 検索
     println!("> Get 2");
@@ -75,7 +93,7 @@ fn test_insert_random() {
 
 #[test]
 fn test_insert_sorted() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     // 挿入
     println!("> Insert (\"1st\", 3)");
@@ -146,7 +164,7 @@ fn test_insert_sorted() {
 
 #[test]
 fn test_delete() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     for i in 1..=20 {
         match i % 10 {
@@ -157,50 +175,70 @@ fn test_delete() {
         };
     }
 
+    assert_eq!(tree.len(), 20);
+
     println!("{:?}", &tree);
 
     println!("> Delete 1");
     assert_eq!(tree.delete(&1), Some("1st".to_string()));
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 19);
+
     println!("> Get 18");
     tree.get(&18);
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 19);
 
     println!("> Delete 18");
     assert_eq!(tree.delete(&18), Some("18th".to_string()));
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 18);
+
     println!("> Delete 100");
     assert_eq!(tree.delete(&100), None);
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 18);
 
     println!("> Delete 2");
     assert_eq!(tree.delete(&2), Some("2nd".to_string()));
     println!("{:?}", &tree);
 
+    assert_eq!(tree.len(), 17);
+
     println!("> Delete 3");
     assert_eq!(tree.delete(&3), Some("3rd".to_string()));
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 16);
 
     println!("> Delete 11");
     assert_eq!(tree.delete(&11), Some("11st".to_string()));
     println!("{:?}", &tree);
 
-    println!("> Delete 11");
-    assert_eq!(tree.delete(&11), None);
-    println!("{:?}", &tree);
+    assert_eq!(tree.len(), 15);
 
     println!("> Delete 11");
     assert_eq!(tree.delete(&11), None);
     println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 15);
+
+    println!("> Delete 11");
+    assert_eq!(tree.delete(&11), None);
+    println!("{:?}", &tree);
+
+    assert_eq!(tree.len(), 15);
 }
 
 #[test]
 fn test_get_mut() {
     const PI: &str = "3. 141592653589 793238462643 383279502884 197169399375";
 
-    let mut counter: SplayTree<char, usize> = SplayTree::new();
+    let mut counter: SplayTreeMap<char, usize> = SplayTreeMap::new();
 
     for d in PI.chars() {
         if let Some(_) = d.to_digit(10) {

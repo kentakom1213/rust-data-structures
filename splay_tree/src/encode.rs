@@ -1,11 +1,11 @@
-use crate::splay_tree::*;
+use crate::splay_tree_map::*;
 use std::fmt::Debug;
 
 pub trait Encode {
     fn encode(&self) -> String;
 }
 
-impl<T: Ord + Debug, U> Encode for SplayTree<T, U> {
+impl<T: Ord + Debug, U> Encode for SplayTreeMap<T, U> {
     /// ## encode
     /// かっこ区切りの文字列にフォーマットする
     fn encode(&self) -> String {

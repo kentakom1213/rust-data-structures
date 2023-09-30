@@ -23,14 +23,14 @@ impl<T: Ord, U> Node<T, U> {
     }
 }
 
-/// # SplayTree
+/// # SplayTreeMap
 /// スプレー木のクラス
-pub struct SplayTree<T: Ord, U> {
+pub struct SplayTreeMap<T: Ord, U> {
     size: usize,
     pub root: Option<Box<Node<T, U>>>,
 }
 
-impl<T, U> SplayTree<T, U>
+impl<T, U> SplayTreeMap<T, U>
 where
     T: Ord + Clone + Debug,
     U: Debug,
@@ -102,6 +102,8 @@ where
                 }
             }
         }
+        // 要素数の更新
+        self.size += 1;
         None
     }
 
@@ -130,6 +132,8 @@ where
             );
         }
         let deleted = replace(&mut tmp_root, None);
+        // 要素数の更新
+        self.size -= 1;
         Some(deleted.unwrap().value)
     }
 
@@ -305,7 +309,7 @@ fn rotate_left<T: Ord, U>(root: Option<Box<Node<T, U>>>) -> Option<Box<Node<T, U
 }
 
 // ----- Debug -----
-impl<T, U> Debug for SplayTree<T, U>
+impl<T, U> Debug for SplayTreeMap<T, U>
 where
     T: Ord + Debug,
     U: Debug,
@@ -346,7 +350,7 @@ mod test_splay_tree_util {
 
     #[test]
     fn test_rotate() {
-        let mut tree = SplayTree::new();
+        let mut tree = SplayTreeMap::new();
 
         tree.root = tree! {
             key: 4,
@@ -413,7 +417,7 @@ mod test_splay_tree_util {
 
     #[test]
     fn test_traverse() {
-        let mut tree = SplayTree::new();
+        let mut tree = SplayTreeMap::new();
 
         tree.root = tree! {
             key: 3,

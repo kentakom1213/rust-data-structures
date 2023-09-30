@@ -1,10 +1,10 @@
 #![cfg(test)]
 
-use splay_tree::{encode::Encode, splay_tree::*, tree};
+use splay_tree::{encode::Encode, splay_tree_map::*, tree};
 
 #[test]
 fn test_splay_left() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 3,
@@ -38,7 +38,7 @@ fn test_splay_left() {
 
 #[test]
 fn test_splay_left_left() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 3,
@@ -70,7 +70,7 @@ fn test_splay_left_left() {
 
 #[test]
 fn test_splay_right() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 0,
@@ -98,7 +98,7 @@ fn test_splay_right() {
 
 #[test]
 fn test_splay_right_left() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 0,
@@ -126,7 +126,7 @@ fn test_splay_right_left() {
 
 #[test]
 fn test_splay_right_right() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 0,
@@ -158,7 +158,7 @@ fn test_splay_right_right() {
 
 #[test]
 fn test_splay_left_right() {
-    let mut tree = SplayTree::new();
+    let mut tree = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 2,
@@ -186,7 +186,7 @@ fn test_splay_left_right() {
 
 #[test]
 fn test_from_path_left() {
-    let mut tree: SplayTree<u8, &str> = SplayTree::new();
+    let mut tree: SplayTreeMap<u8, &str> = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 5,
@@ -227,7 +227,7 @@ fn test_from_path_left() {
 
 #[test]
 fn test_from_path_right() {
-    let mut tree: SplayTree<u8, &str> = SplayTree::new();
+    let mut tree: SplayTreeMap<u8, &str> = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 0,
@@ -272,7 +272,7 @@ fn test_from_path_right() {
 
 #[test]
 fn test_splay_not_found() {
-    let mut tree: SplayTree<u8, &str> = SplayTree::new();
+    let mut tree: SplayTreeMap<u8, &str> = SplayTreeMap::new();
 
     tree.root = tree! {
         key: 1,
