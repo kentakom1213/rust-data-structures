@@ -1,4 +1,5 @@
-#[cfg(test)]
+#![cfg(test)]
+
 use splay_tree::splay_tree_set::*;
 
 #[test]
@@ -13,4 +14,13 @@ fn test_from_range() {
     println!("--- get 0 ---");
     set.get(&0);
     println!("{:?}", &set);
+}
+
+#[test]
+fn test_from_vec() {
+    let set: SplayTreeSet<char> = "31415926535897932384626".chars().collect();
+
+    println!("{:?}", &set);
+
+    assert_eq!(set.len(), 9);
 }

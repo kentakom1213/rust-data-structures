@@ -1,3 +1,5 @@
+#![cfg(test)]
+
 use rand::prelude::*;
 use splay_tree::splay_tree_map::*;
 #[cfg(test)]

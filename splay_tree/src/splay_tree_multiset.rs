@@ -22,14 +22,14 @@ impl<T: Ord> Node<T> {
     }
 }
 
-/// # SplayTreeSet
+/// # SplayTreeMultiSet
 /// スプレー木のクラス
-pub struct SplayTreeSet<T: Ord> {
+pub struct SplayTreeMultiSet<T: Ord> {
     size: usize,
     pub root: Option<Box<Node<T>>>,
 }
 
-impl<T> SplayTreeSet<T>
+impl<T> SplayTreeMultiSet<T>
 where
     T: Ord + Clone,
 {
@@ -59,29 +59,21 @@ where
     /// ## insert
     /// 値の挿入を行う。
     /// すでに同じキーが存在した場合は値を置き換えて前の値を返す。
-    /// ### 戻り値
-    /// - `Option<T>`: 以前の値
-    pub fn insert(&mut self, key: T) -> Option<T> {
+    pub fn insert(&mut self, key: T) {
         // rootの取り出し
         let root = replace(&mut self.root, None);
         // splay操作
-        let (mut tmp_root, is_found) = splay_inner(root, &key);
-        if is_found {
-            self.root = tmp_root;
-            let res = replace(&mut self.root.as_deref_mut().unwrap().key, key);
-            return Some(res);
-        }
+        let (mut tmp_root, _) = splay_inner(root, &key);
         // 挿入
         self.root = Some(Box::new(Node::new(key.clone())));
         if tmp_root.is_some() {
             match key.cmp(&tmp_root.as_deref().unwrap().key) {
-                Ordering::Equal => unreachable!(),
                 Ordering::Less => {
                     let mut new_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
                     swap(&mut self.root.as_deref_mut().unwrap().left, &mut new_left);
                     swap(&mut self.root.as_deref_mut().unwrap().right, &mut tmp_root);
                 }
-                Ordering::Greater => {
+                Ordering::Equal | Ordering::Greater => {
                     let mut new_right = replace(&mut tmp_root.as_deref_mut().unwrap().right, None);
                     swap(&mut self.root.as_deref_mut().unwrap().right, &mut new_right);
                     swap(&mut self.root.as_deref_mut().unwrap().left, &mut tmp_root);
@@ -90,7 +82,6 @@ where
         }
         // 要素数の更新
         self.size += 1;
-        None
     }
 
     /// ## delete
@@ -292,9 +283,9 @@ fn rotate_left<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
 }
 
 // ----- FromIterator -----
-impl<T: Ord + Clone> FromIterator<T> for SplayTreeSet<T> {
+impl<T: Ord + Clone> FromIterator<T> for SplayTreeMultiSet<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let mut res = SplayTreeSet::new();
+        let mut res = SplayTreeMultiSet::new();
         for item in iter {
             res.insert(item);
         }
@@ -303,7 +294,7 @@ impl<T: Ord + Clone> FromIterator<T> for SplayTreeSet<T> {
 }
 
 // ----- Debug -----
-impl<T: Ord + Debug> Debug for SplayTreeSet<T> {
+impl<T: Ord + Debug> Debug for SplayTreeMultiSet<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fmt_inner(f, &self.root, 0);
         Ok(())
