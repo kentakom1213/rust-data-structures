@@ -1,3 +1,5 @@
+#![allow(unused_macros)]
+
 /// # linked_list
 /// 連結リスト作成用マクロ
 macro_rules! linked_list {

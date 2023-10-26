@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "LinkedList"
+name = "linked_list"
 version = "0.1.0"
