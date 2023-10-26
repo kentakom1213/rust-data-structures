@@ -13,8 +13,8 @@ fn main() {
     {
         let ptr = list.nth(4).unwrap();
 
-        insert_next(ptr, 200);
-        insert_prev(ptr, 100);
+        unsafe { insert_next(ptr, 200) };
+        unsafe { insert_prev(ptr, 100) };
 
         println!("{:?}", &list);
     }
@@ -23,7 +23,7 @@ fn main() {
     {
         let ptr = list.nth(5).unwrap();
 
-        list.delete(ptr);
+        unsafe { list.delete(ptr) };
 
         println!("{:?}", &list);
     }
