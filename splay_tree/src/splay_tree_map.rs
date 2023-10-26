@@ -77,7 +77,7 @@ where
     /// - `Option<U>`: 以前の値
     pub fn insert(&mut self, key: T, value: U) -> Option<U> {
         // rootの取り出し
-        let root = replace(&mut self.root, None);
+        let root = self.root.take();
         // splay操作
         let (mut tmp_root, is_found) = splay_inner(root, &key);
         if is_found {
@@ -91,12 +91,12 @@ where
             match key.cmp(&tmp_root.as_deref().unwrap().key) {
                 Ordering::Equal => unreachable!(),
                 Ordering::Less => {
-                    let mut new_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
+                    let mut new_left = tmp_root.as_deref_mut().unwrap().left.take();
                     swap(&mut self.root.as_deref_mut().unwrap().left, &mut new_left);
                     swap(&mut self.root.as_deref_mut().unwrap().right, &mut tmp_root);
                 }
                 Ordering::Greater => {
-                    let mut new_right = replace(&mut tmp_root.as_deref_mut().unwrap().right, None);
+                    let mut new_right = tmp_root.as_deref_mut().unwrap().right.take();
                     swap(&mut self.root.as_deref_mut().unwrap().right, &mut new_right);
                     swap(&mut self.root.as_deref_mut().unwrap().left, &mut tmp_root);
                 }
@@ -113,7 +113,7 @@ where
     /// - `Option<U>`: 削除された値
     pub fn delete(&mut self, key: &T) -> Option<U> {
         // rootの取り出し
-        let root = replace(&mut self.root, None);
+        let root = self.root.take();
         // splay操作
         let (mut tmp_root, is_found) = splay_inner(root, &key);
         if !is_found {
@@ -124,14 +124,14 @@ where
         if tmp_root.as_deref().unwrap().left.is_none() {
             swap(&mut self.root, &mut tmp_root.as_deref_mut().unwrap().right);
         } else {
-            let root_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
+            let root_left = tmp_root.as_deref_mut().unwrap().left.take();
             swap(&mut self.root, &mut splay_inner(root_left, key).0);
             swap(
                 &mut self.root.as_deref_mut().unwrap().right,
                 &mut tmp_root.as_deref_mut().unwrap().right,
             );
         }
-        let deleted = replace(&mut tmp_root, None);
+        let deleted = tmp_root.take();
         // 要素数の更新
         self.size -= 1;
         Some(deleted.unwrap().value)
@@ -143,7 +143,7 @@ where
     /// - `bool`：要素が存在したかどうか
     pub fn splay(&mut self, key: &T) -> bool {
         // 根の取り出し
-        let root = replace(&mut self.root, None);
+        let root = self.root.take();
         // スプレー操作
         let (new_root, is_found) = splay_inner(root, key);
         self.root = new_root;
@@ -201,7 +201,7 @@ fn splay_inner<T: Ord, U>(
                 }
                 Ordering::Less => {
                     // 孫をsplay
-                    let left_left = replace(&mut left.as_deref_mut().unwrap().left, None);
+                    let left_left = left.as_deref_mut().unwrap().left.take();
                     let (mut new_left_left, is_found) = splay_inner(left_left, key);
                     swap(&mut left.as_deref_mut().unwrap().left, &mut new_left_left);
                     // 親を右に回転
@@ -211,11 +211,11 @@ fn splay_inner<T: Ord, U>(
                 }
                 Ordering::Greater => {
                     // 孫をsplay
-                    let left_right = replace(&mut left.as_deref_mut().unwrap().right, None);
+                    let left_right = left.as_deref_mut().unwrap().right.take();
                     let (mut new_left_right, is_found) = splay_inner(left_right, key);
                     swap(&mut left.as_deref_mut().unwrap().right, &mut new_left_right);
                     // 左の子を左に回転
-                    let left = replace(&mut root.as_deref_mut().unwrap().left, None);
+                    let left = root.as_deref_mut().unwrap().left.take();
                     let mut new_left = rotate_left(left);
                     swap(&mut root.as_deref_mut().unwrap().left, &mut new_left);
                     // さらに右に回転
@@ -236,11 +236,11 @@ fn splay_inner<T: Ord, U>(
                 }
                 Ordering::Less => {
                     // 孫をsplay
-                    let right_left = replace(&mut right.as_deref_mut().unwrap().left, None);
+                    let right_left = right.as_deref_mut().unwrap().left.take();
                     let (mut new_right_left, is_found) = splay_inner(right_left, key);
                     swap(&mut right.as_deref_mut().unwrap().left, &mut new_right_left);
                     // 右の子を右に回転
-                    let right = replace(&mut root.as_deref_mut().unwrap().right, None);
+                    let right = root.as_deref_mut().unwrap().right.take();
                     let mut new_right = rotate_right(right);
                     swap(&mut root.as_deref_mut().unwrap().right, &mut new_right);
                     // さらに左に回転
@@ -248,7 +248,7 @@ fn splay_inner<T: Ord, U>(
                 }
                 Ordering::Greater => {
                     // 孫をsplay
-                    let right_right = replace(&mut right.as_deref_mut().unwrap().right, None);
+                    let right_right = right.as_deref_mut().unwrap().right.take();
                     let (mut new_right_right, is_found) = splay_inner(right_right, key);
                     swap(
                         &mut right.as_deref_mut().unwrap().right,

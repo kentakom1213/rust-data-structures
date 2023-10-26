@@ -16,7 +16,7 @@ impl<T: Ord + Debug, U> Encode for SplayTreeMap<T, U> {
 }
 
 /// 木をかっこ区切りの文字列に変換する
-fn encode_inner<'a, T: Ord + Debug, U>(root: &'a Option<Box<Node<T, U>>>, res: &mut String) {
+fn encode_inner<T: Ord + Debug, U>(root: &Option<Box<Node<T, U>>>, res: &mut String) {
     if let Some(root) = root {
         let res_l = if root.left.is_some() {
             let mut res_l = String::new();
