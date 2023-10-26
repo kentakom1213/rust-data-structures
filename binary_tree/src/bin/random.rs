@@ -1,4 +1,3 @@
-use rand;
 use binary_tree::binary_tree::*;
 use rand::prelude::*;
 

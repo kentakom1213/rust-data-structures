@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt, mem};
+use std::{cmp::Ordering, fmt};
 
 #[derive(Debug)]
 pub struct BinaryTreeNode<T> {
@@ -134,7 +134,7 @@ impl<T: Ord> BinaryTreeNode<T> {
                     // 右の子に右の子が存在しない場合
                     let mut r = self.right.take();
                     if let Some(ref mut r) = r {
-                        self.right = mem::replace(&mut r.left, None);
+                        self.right = r.left.take();
                     }
                     r
                 }
