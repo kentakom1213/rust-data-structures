@@ -1,7 +1,6 @@
 #![cfg(test)]
 
 use treap::treap::*;
-use rand::prelude::*;
 
 #[test]
 fn test_insert_and_find() {

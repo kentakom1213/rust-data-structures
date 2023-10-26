@@ -2,7 +2,7 @@
 
 use rand::prelude::*;
 use std::collections::BTreeSet;
-use std::ops::Bound::{Excluded, Included, Unbounded};
+use std::ops::Bound::{Excluded, Unbounded};
 use treap::treap::*;
 
 #[test]

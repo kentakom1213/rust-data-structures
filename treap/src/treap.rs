@@ -1,7 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand::{self, Rng};
 use std::fmt::Debug;
-use std::mem::{replace, swap};
+use std::mem::swap;
 use std::{cmp::Ordering, fmt};
 
 #[derive(Debug)]
@@ -37,7 +37,7 @@ impl<T: Ord + Clone> Treap<T> {
     }
 
     pub fn insert(&mut self, value: T) -> bool {
-        let root = replace(&mut self.root, None);
+        let root = self.root.take();
         let (new_root, is_inserted) = insert_inner(value, self.rng.gen(), root);
         self.root = new_root;
         if is_inserted {
@@ -49,7 +49,7 @@ impl<T: Ord + Clone> Treap<T> {
     }
 
     pub fn discard(&mut self, value: &T) -> bool {
-        let root = replace(&mut self.root, None);
+        let root = self.root.take();
         let (new_root, is_deleted) = delete_inner(value, root);
         self.root = new_root;
         if is_deleted {
@@ -63,7 +63,7 @@ impl<T: Ord + Clone> Treap<T> {
     pub fn lower_bound(&self, value: &T) -> Option<&T> {
         let mut root = &self.root;
         let mut last = &None;
-        while let Some(_) = root {
+        while root.is_some() {
             match value.cmp(&root.as_ref().unwrap().value) {
                 Ordering::Less | Ordering::Equal => {
                     last = root;
@@ -84,7 +84,7 @@ impl<T: Ord + Clone> Treap<T> {
     pub fn upper_bound(&self, value: &T) -> Option<&T> {
         let mut root = &self.root;
         let mut last = &None;
-        while let Some(_) = root {
+        while root.is_some() {
             match value.cmp(&root.as_ref().unwrap().value) {
                 Ordering::Less => {
                     last = root;
@@ -154,7 +154,7 @@ fn delete_inner<T: Ord>(
                     (false, true) => {
                         root = rotate_left(Some(root)).unwrap();
                         // 左部分木からvalueを削除
-                        let left = replace(&mut root.left, None);
+                        let left = root.left.take();
                         let (new_left, _) = delete_inner(value, left);
                         root.left = new_left;
                         (Some(root), true)
@@ -162,7 +162,7 @@ fn delete_inner<T: Ord>(
                     (true, _) => {
                         root = rotate_right(Some(root)).unwrap();
                         // 右部分木からvalueを削除
-                        let right = replace(&mut root.right, None);
+                        let right = root.right.take();
                         let (new_right, _) = delete_inner(value, right);
                         root.right = new_right;
                         (Some(root), true)
@@ -170,13 +170,13 @@ fn delete_inner<T: Ord>(
                 }
             }
             Ordering::Less => {
-                let left = replace(&mut root.left, None);
+                let left = root.left.take();
                 let (mut new_left, is_deleted) = delete_inner(value, left);
                 swap(&mut root.left, &mut new_left);
                 (Some(root), is_deleted)
             }
             Ordering::Greater => {
-                let right = replace(&mut root.right, None);
+                let right = root.right.take();
                 let (mut new_right, is_deleted) = delete_inner(value, right);
                 swap(&mut root.right, &mut new_right);
                 (Some(root), is_deleted)
@@ -197,7 +197,7 @@ fn insert_inner<T: Ord>(
         match value.cmp(&root.value) {
             Ordering::Equal => (Some(root), false),
             Ordering::Less => {
-                let left = replace(&mut root.left, None);
+                let left = root.left.take();
                 let (mut child, is_inserted) = insert_inner(value, priority, left);
                 swap(&mut root.left, &mut child);
                 if is_inserted {
@@ -214,7 +214,7 @@ fn insert_inner<T: Ord>(
                 }
             }
             Ordering::Greater => {
-                let right = replace(&mut root.right, None);
+                let right = root.right.take();
                 let (mut child, is_inserted) = insert_inner(value, priority, right);
                 swap(&mut root.right, &mut child);
                 if is_inserted {

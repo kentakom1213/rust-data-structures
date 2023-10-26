@@ -1,4 +1,3 @@
-use rand;
 use treap::treap::*;
 use rand::prelude::*;
 
