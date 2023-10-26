@@ -30,8 +30,8 @@ pub struct SplayTreeMultiSet<T: Ord> {
 }
 
 impl<T> SplayTreeMultiSet<T>
-where
-    T: Ord + Clone,
+    where
+        T: Ord + Clone,
 {
     pub fn new() -> Self {
         Self {
@@ -63,11 +63,11 @@ where
         // rootの取り出し
         let root = replace(&mut self.root, None);
         // splay操作
-        let (mut tmp_root, _) = splay_inner(root, &key);
+        let mut tmp_root = splay_inner(root, &key, le);
         // 挿入
         self.root = Some(Box::new(Node::new(key.clone())));
         if tmp_root.is_some() {
-            match key.cmp(&tmp_root.as_deref().unwrap().key) {
+            match key.cmp(&tmp_root.as_ref().unwrap().key) {
                 Ordering::Less => {
                     let mut new_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
                     swap(&mut self.root.as_deref_mut().unwrap().left, &mut new_left);
@@ -92,17 +92,17 @@ where
         // rootの取り出し
         let root = replace(&mut self.root, None);
         // splay操作
-        let (mut tmp_root, is_found) = splay_inner(root, &key);
-        if !is_found {
+        let mut tmp_root = splay_inner(root, &key, le);
+        if !key.eq(&tmp_root.as_ref().unwrap().key) {
             self.root = tmp_root;
             return None;
         }
         // 削除
-        if tmp_root.as_deref().unwrap().left.is_none() {
+        if tmp_root.as_ref().unwrap().left.is_none() {
             swap(&mut self.root, &mut tmp_root.as_deref_mut().unwrap().right);
         } else {
             let root_left = replace(&mut tmp_root.as_deref_mut().unwrap().left, None);
-            swap(&mut self.root, &mut splay_inner(root_left, key).0);
+            swap(&mut self.root, &mut splay_inner(root_left, key, le));
             swap(
                 &mut self.root.as_deref_mut().unwrap().right,
                 &mut tmp_root.as_deref_mut().unwrap().right,
@@ -122,9 +122,29 @@ where
         // 根の取り出し
         let root = replace(&mut self.root, None);
         // スプレー操作
-        let (new_root, is_found) = splay_inner(root, key);
+        let new_root = splay_inner(root, key, le);
         self.root = new_root;
-        is_found
+        key.eq(&self.root.as_deref().unwrap().key)
+    }
+
+    /// ## lower_bound
+    /// - lower_boundを求める
+    pub fn lower_bound(&mut self, key: &T) {
+        // 根の取り出し
+        let root = replace(&mut self.root, None);
+        // スプレー操作
+        let new_root = splay_inner(root, key, le);
+        self.root = new_root;
+    }
+
+    /// ## upper_bound
+    /// - lower_boundを求める
+    pub fn upper_bound(&mut self, key: &T) {
+        // 根の取り出し
+        let root = replace(&mut self.root, None);
+        // スプレー操作
+        let new_root = splay_inner(root, key, lt);
+        self.root = new_root;
     }
 
     /// ## to_vec
@@ -150,80 +170,82 @@ fn traverse<'a, T: Ord>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
     traverse(&root.as_ref().unwrap().right, res);
 }
 
+/// # lt
+/// - less than
+fn lt<T: Ord>(x: &T, y: &T) -> bool {
+    match x.cmp(&y) {
+        Ordering::Less => true,
+        Ordering::Equal | Ordering::Greater => false,
+    }
+}
+
+/// # le
+/// - less equal
+fn le<T: Ord>(x: &T, y: &T) -> bool {
+    match x.cmp(&y) {
+        Ordering::Less | Ordering::Equal => true,
+        Ordering::Greater => false,
+    }
+}
+
 /// ## splay_inner
 /// splay操作を行う
 /// ### 戻り値
 /// - `Option<Box<Node<T>>>`：新しく根となるノード
 /// - `bool`：目的の値が存在したかどうか
-fn splay_inner<T: Ord>(mut root: Option<Box<Node<T>>>, key: &T) -> (Option<Box<Node<T>>>, bool) {
+fn splay_inner<T: Ord, F: Fn(&T, &T) -> bool>(mut root: Option<Box<Node<T>>>, key: &T, compare: F) -> Option<Box<Node<T>>> {
     if root.is_none() {
-        return (root, false);
+        return root;
     }
-    // 孫 → 子
-    match key.cmp(&root.as_deref().unwrap().key) {
-        Ordering::Equal => (root, true),
-        Ordering::Less => {
-            // 左の子
+    match compare(key, &root.as_ref().unwrap().key) {
+        true => {
             let left = &mut root.as_deref_mut().unwrap().left;
             if left.is_none() {
-                return (root, false);
+                return root;
             }
-            match key.cmp(&left.as_deref().unwrap().key) {
-                Ordering::Equal => {
-                    // 左の子をrootに
-                    (rotate_right(root), true)
-                }
-                Ordering::Less => {
-                    // 孫をsplay
+            match compare(key, &left.as_ref().unwrap().key) {
+                true => {
                     let left_left = replace(&mut left.as_deref_mut().unwrap().left, None);
-                    let (mut new_left_left, is_found) = splay_inner(left_left, key);
+                    let mut new_left_left = splay_inner(left_left, key, le);
                     swap(&mut left.as_deref_mut().unwrap().left, &mut new_left_left);
                     // 親を右に回転
                     let tmp_child = rotate_right(root);
                     // さらに右に回転
-                    (rotate_right(tmp_child), is_found)
+                    rotate_right(tmp_child)
                 }
-                Ordering::Greater => {
-                    // 孫をsplay
+                false => {
                     let left_right = replace(&mut left.as_deref_mut().unwrap().right, None);
-                    let (mut new_left_right, is_found) = splay_inner(left_right, key);
+                    let mut new_left_right = splay_inner(left_right, key, le);
                     swap(&mut left.as_deref_mut().unwrap().right, &mut new_left_right);
                     // 左の子を左に回転
                     let left = replace(&mut root.as_deref_mut().unwrap().left, None);
                     let mut new_left = rotate_left(left);
                     swap(&mut root.as_deref_mut().unwrap().left, &mut new_left);
                     // さらに右に回転
-                    (rotate_right(root), is_found)
+                    rotate_right(root)
                 }
             }
         }
-        Ordering::Greater => {
-            // 右の子
+        false => {
             let right = &mut root.as_deref_mut().unwrap().right;
             if right.is_none() {
-                return (root, false);
+                return root;
             }
-            match key.cmp(&right.as_deref().unwrap().key) {
-                Ordering::Equal => {
-                    // 右の子をrootに
-                    (rotate_left(root), true)
-                }
-                Ordering::Less => {
-                    // 孫をsplay
+            match compare(key, &right.as_ref().unwrap().key) {
+                true => {
                     let right_left = replace(&mut right.as_deref_mut().unwrap().left, None);
-                    let (mut new_right_left, is_found) = splay_inner(right_left, key);
+                    let mut new_right_left = splay_inner(right_left, key, le);
                     swap(&mut right.as_deref_mut().unwrap().left, &mut new_right_left);
                     // 右の子を右に回転
                     let right = replace(&mut root.as_deref_mut().unwrap().right, None);
                     let mut new_right = rotate_right(right);
                     swap(&mut root.as_deref_mut().unwrap().right, &mut new_right);
                     // さらに左に回転
-                    (rotate_left(root), is_found)
+                    rotate_left(root)
                 }
-                Ordering::Greater => {
-                    // 孫をsplay
+                false => {
                     let right_right = replace(&mut right.as_deref_mut().unwrap().right, None);
-                    let (mut new_right_right, is_found) = splay_inner(right_right, key);
+                    let mut new_right_right = splay_inner(right_right, key, le);
                     swap(
                         &mut right.as_deref_mut().unwrap().right,
                         &mut new_right_right,
@@ -231,7 +253,7 @@ fn splay_inner<T: Ord>(mut root: Option<Box<Node<T>>>, key: &T) -> (Option<Box<N
                     // 親を左に回転
                     let tmp_child = rotate_left(root);
                     // さらに左に回転
-                    (rotate_left(tmp_child), is_found)
+                    rotate_left(tmp_child)
                 }
             }
         }
@@ -284,7 +306,7 @@ fn rotate_left<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
 
 // ----- FromIterator -----
 impl<T: Ord + Clone> FromIterator<T> for SplayTreeMultiSet<T> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
         let mut res = SplayTreeMultiSet::new();
         for item in iter {
             res.insert(item);
@@ -303,8 +325,8 @@ impl<T: Ord + Debug> Debug for SplayTreeMultiSet<T> {
 
 /// 再帰的に表示
 fn fmt_inner<T>(f: &mut std::fmt::Formatter<'_>, node: &Option<Box<Node<T>>>, depth: usize)
-where
-    T: Ord + Debug,
+    where
+        T: Ord + Debug,
 {
     match node {
         Some(ref node) => {

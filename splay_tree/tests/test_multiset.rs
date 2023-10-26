@@ -55,7 +55,16 @@ fn test_insert_delete() {
 
     assert_eq!(pi.len(), multiset.len());
 
-    println!("--- get 9 ---");
-    multiset.get(&'9');
+    println!("--- lower_bound 9 ---");
+    multiset.lower_bound(&'9');
     println!("{:?}", &multiset);
+
+    println!("--- upper_bound 9 ---");
+    multiset.upper_bound(&'9');
+    println!("{:?}", &multiset);
+
+    println!("--- lower_bound 9 ---");
+    multiset.lower_bound(&'9');
+    println!("{:?}", &multiset);
+
 }
