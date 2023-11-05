@@ -6,13 +6,13 @@ use std::{cmp::Ordering, fmt::Debug};
 
 /// # Node
 #[derive(Debug)]
-pub struct Node<T: Ord> {
+pub struct Node<T: Ord + Debug> {
     pub key: T,
     pub left: Option<Box<Node<T>>>,
     pub right: Option<Box<Node<T>>>,
 }
 
-impl<T: Ord> Node<T> {
+impl<T: Ord + Debug> Node<T> {
     pub fn new(key: T) -> Self {
         Self {
             key,
@@ -24,14 +24,14 @@ impl<T: Ord> Node<T> {
 
 /// # SplayTreeMultiSet
 /// スプレー木のクラス
-pub struct SplayTreeMultiSet<T: Ord> {
+pub struct SplayTreeMultiSet<T: Ord + Debug> {
     size: usize,
     pub root: Option<Box<Node<T>>>,
 }
 
 impl<T> SplayTreeMultiSet<T>
 where
-    T: Ord + Clone,
+    T: Ord + Clone + Debug,
 {
     /// `a <= b`の値を返す
     #[inline]
@@ -188,7 +188,7 @@ where
 
 /// ## traverse
 /// 順に取り出す
-fn traverse<'a, T: Ord>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
+fn traverse<'a, T: Ord + Debug>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
     if root.is_none() {
         return;
     }
@@ -204,7 +204,7 @@ fn traverse<'a, T: Ord>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
 /// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
 fn binary_search<'a, T, C>(root: &'a Option<Box<Node<T>>>, key: &T, compare: C) -> &'a Option<Box<Node<T>>>
 where
-    T: Ord,
+    T: Ord + Debug,
     C: Fn(&T, &T) -> bool
 {
     if root.is_none() {
@@ -212,24 +212,79 @@ where
     }
     if compare(key, &root.as_ref().unwrap().key) {
         let left = &root.as_ref().unwrap().left;
-        let tmp = binary_search(left, key, compare);
-        if tmp.is_none() {
-            root
+        if left.is_none() {
+            return root;
+        }
+        if compare(key, &left.as_ref().unwrap().key) {
+            let leftleft = &left.as_ref().unwrap().left;
+            let tmp = binary_search(leftleft, key, compare);
+            if tmp.is_none() {
+                left
+            } else {
+                tmp
+            }
         } else {
-            tmp
+            let leftright = &left.as_ref().unwrap().right;
+            let tmp = binary_search(leftright, key, compare);
+            if tmp.is_none() {
+                root
+            } else {
+                tmp
+            }
         }
     } else {
         let right = &root.as_ref().unwrap().right;
-        binary_search(right, key, compare)
+        if right.is_none() {
+            return right;
+        }
+        if compare(key, &right.as_ref().unwrap().key) {
+            let rightleft = &right.as_ref().unwrap().left;
+            let tmp = binary_search(rightleft, key, compare);
+            if tmp.is_none() {
+                right
+            } else {
+                tmp
+            }
+        } else {
+            let rightright = &right.as_ref().unwrap().right;
+            binary_search(rightright, key, compare)
+        }
     }
 }
+
+// /// ## binary_search
+// /// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
+// fn binary_search<'a, T, C>(root: &'a Option<Box<Node<T>>>, key: &T, compare: C) -> &'a Option<Box<Node<T>>>
+// where
+//     T: Ord + Debug,
+//     C: Fn(&T, &T) -> bool
+// {
+//     eprintln!("key = {:?}", key);
+//     if root.is_none() {
+//         return root;
+//     }
+//     if compare(key, &root.as_ref().unwrap().key) {
+//         eprintln!("left: &root.as_ref().unwrap().key = {:?}", &root.as_ref().unwrap().key);
+//         let left = &root.as_ref().unwrap().left;
+//         let tmp = binary_search(left, key, compare);
+//         if tmp.is_none() {
+//             root
+//         } else {
+//             tmp
+//         }
+//     } else {
+//         eprintln!("right: &root.as_ref().unwrap().key = {:?}", &root.as_ref().unwrap().key);
+//         let right = &root.as_ref().unwrap().right;
+//         binary_search(right, key, compare)
+//     }
+// }
 
 /// ## splay_inner
 /// splay操作を行う
 /// ### 戻り値
 /// - `Option<Box<Node<T>>>`：新しく根となるノード
 /// - `bool`：目的の値が存在したかどうか
-fn splay_inner<T: Ord>(mut root: Option<Box<Node<T>>>, key: &T) -> (Option<Box<Node<T>>>, bool) {
+fn splay_inner<T: Ord + Debug>(mut root: Option<Box<Node<T>>>, key: &T) -> (Option<Box<Node<T>>>, bool) {
     if root.is_none() {
         return (root, false);
     }
@@ -320,7 +375,7 @@ fn splay_inner<T: Ord>(mut root: Option<Box<Node<T>>>, key: &T) -> (Option<Box<N
 ///     / \                        / \
 ///    A   B                      B   C
 /// ```
-fn rotate_right<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
+fn rotate_right<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.left {
             root.left = new_root.right;
@@ -342,7 +397,7 @@ fn rotate_right<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
 ///       / \                    / \
 ///      B   C                  A   B
 /// ```
-fn rotate_left<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
+fn rotate_left<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.right {
             root.right = new_root.left;
@@ -357,7 +412,7 @@ fn rotate_left<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
 }
 
 // ----- FromIterator -----
-impl<T: Ord + Clone> FromIterator<T> for SplayTreeMultiSet<T> {
+impl<T: Ord + Clone + Debug> FromIterator<T> for SplayTreeMultiSet<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut res = SplayTreeMultiSet::new();
         for item in iter {
