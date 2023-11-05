@@ -145,24 +145,36 @@ where
         is_found
     }
 
+    // /// ## lower_bound
+    // /// - lower_boundを求める
+    // pub fn lower_bound(&mut self, key: &T) {
+    //     // 根の取り出し
+    //     let root = self.root.take();
+    //     // スプレー操作
+    //     let (new_root, _) = splay_inner(root, key);
+    //     self.root = new_root;
+    // }
+
+    // /// ## upper_bound
+    // /// - lower_boundを求める
+    // pub fn upper_bound(&mut self, key: &T) {
+    //     // 根の取り出し
+    //     let root = self.root.take();
+    //     // スプレー操作
+    //     let (new_root, _) = splay_inner(root, key);
+    //     self.root = new_root;
+    // }
+
     /// ## lower_bound
     /// - lower_boundを求める
-    pub fn lower_bound(&mut self, key: &T) {
-        // 根の取り出し
-        let root = self.root.take();
-        // スプレー操作
-        let (new_root, _) = splay_inner(root, key);
-        self.root = new_root;
+    pub fn lower_bound(&mut self, key: &T) -> &Option<Box<Node<T>>> {
+        binary_search(&self.root, key, Self::le)
     }
 
     /// ## upper_bound
     /// - lower_boundを求める
-    pub fn upper_bound(&mut self, key: &T) {
-        // 根の取り出し
-        let root = self.root.take();
-        // スプレー操作
-        let (new_root, _) = splay_inner(root, key);
-        self.root = new_root;
+    pub fn upper_bound(&mut self, key: &T) -> &Option<Box<Node<T>>> {
+        binary_search(&self.root, key, Self::lt)
     }
 
     /// ## to_vec
@@ -186,6 +198,30 @@ fn traverse<'a, T: Ord>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
     res.push(&root.as_ref().unwrap().key);
     // 右の子を探索
     traverse(&root.as_ref().unwrap().right, res);
+}
+
+/// ## binary_search
+/// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
+fn binary_search<'a, T, C>(root: &'a Option<Box<Node<T>>>, key: &T, compare: C) -> &'a Option<Box<Node<T>>>
+where
+    T: Ord,
+    C: Fn(&T, &T) -> bool
+{
+    if root.is_none() {
+        return root;
+    }
+    if compare(key, &root.as_ref().unwrap().key) {
+        let left = &root.as_ref().unwrap().left;
+        let tmp = binary_search(left, key, compare);
+        if tmp.is_none() {
+            root
+        } else {
+            tmp
+        }
+    } else {
+        let right = &root.as_ref().unwrap().right;
+        binary_search(right, key, compare)
+    }
 }
 
 /// ## splay_inner

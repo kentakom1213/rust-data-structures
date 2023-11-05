@@ -46,25 +46,47 @@ fn test_insert() {
 }
 
 #[test]
-fn test_insert_delete() {
-    let pi = "314159265358979323846264338327950288419";
-
-    let mut multiset: SplayTreeMultiSet<char> = pi.chars().collect();
+fn test_insert_delete_non_duplicate() {
+    let mut multiset: SplayTreeMultiSet<usize> = (0..5).collect();
 
     println!("{:?}", &multiset);
 
-    assert_eq!(pi.len(), multiset.len());
+    println!("--- lower_bound 3 ---");
+    let lb3 = multiset.lower_bound(&3);
+    println!("{:?}", lb3);
 
-    println!("--- lower_bound 9 ---");
-    multiset.lower_bound(&'9');
+    println!("--- upper_bound 3 ---");
+    let ub3 = multiset.upper_bound(&3);
+    println!("{:?}", ub3);
+
+    println!("--- lower_bound 4 ---");
+    let lb4 = multiset.lower_bound(&4);
+    println!("{:?}", lb4);
+
+    println!("--- upper_bound 4 ---");
+    let ub4 = multiset.upper_bound(&4);
+    println!("{:?}", ub4);
+}
+
+#[test]
+fn test_insert_delete_duplicate() {
+    let mut multiset: SplayTreeMultiSet<usize> = [0, 1, 3, 3, 4, 4].into_iter().collect();
+
     println!("{:?}", &multiset);
 
-    println!("--- upper_bound 9 ---");
-    multiset.upper_bound(&'9');
-    println!("{:?}", &multiset);
+    println!("--- lower_bound 3 ---");
+    let lb3 = multiset.lower_bound(&3);
+    println!("{:?}", lb3);
 
-    println!("--- lower_bound 9 ---");
-    multiset.lower_bound(&'9');
-    println!("{:?}", &multiset);
+    println!("--- upper_bound 3 ---");
+    let ub3 = multiset.upper_bound(&3);
+    println!("{:?}", ub3);
 
+    println!("--- lower_bound 4 ---");
+    let lb4 = multiset.lower_bound(&4);
+    println!("{:?}", lb4);
+
+    println!("--- upper_bound 4 ---");
+    let ub4 = multiset.upper_bound(&4);
+    println!("{:?}", ub4);
 }
