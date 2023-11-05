@@ -62,13 +62,17 @@ where
         self.size
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.size == 0
+    }
+
     /// ## get
     /// 値の検索を行う
     /// ### 戻り値
     /// - `Option<&T>`: キーに紐づいた値
     pub fn get(&mut self, key: &T) -> Option<&T> {
-        if self.lower_bound_splay(key) {
-            Some(&self.root.as_deref().unwrap().key)
+        if self.lower_bound_splay(key) && &self.root.as_ref().unwrap().key == key {
+            Some(&self.root.as_ref().unwrap().key)
         } else {
             None
         }
@@ -86,14 +90,14 @@ where
         if tmp_root.is_some() {
             match key.cmp(&tmp_root.as_ref().unwrap().key) {
                 Ordering::Less => {
-                    let mut new_left = tmp_root.as_deref_mut().unwrap().left.take();
-                    swap(&mut self.root.as_deref_mut().unwrap().left, &mut new_left);
-                    swap(&mut self.root.as_deref_mut().unwrap().right, &mut tmp_root);
+                    let mut new_left = tmp_root.as_mut().unwrap().left.take();
+                    swap(&mut self.root.as_mut().unwrap().left, &mut new_left);
+                    swap(&mut self.root.as_mut().unwrap().right, &mut tmp_root);
                 }
                 Ordering::Equal | Ordering::Greater => {
-                    let mut new_right = tmp_root.as_deref_mut().unwrap().right.take();
-                    swap(&mut self.root.as_deref_mut().unwrap().right, &mut new_right);
-                    swap(&mut self.root.as_deref_mut().unwrap().left, &mut tmp_root);
+                    let mut new_right = tmp_root.as_mut().unwrap().right.take();
+                    swap(&mut self.root.as_mut().unwrap().right, &mut new_right);
+                    swap(&mut self.root.as_mut().unwrap().left, &mut tmp_root);
                 }
             }
         }
@@ -106,23 +110,46 @@ where
     /// ### 戻り値
     /// - `Option<T>`: 削除された値
     pub fn delete(&mut self, key: &T) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
         // rootの取り出し
         let root = self.root.take();
         // splay操作
-        let (mut tmp_root, _) = binary_search_mut(root, &key, Self::le);
-        if !key.eq(&tmp_root.as_ref().unwrap().key) {
+        // tmp_root := keyより真に大きいノードのうち最小のもの
+        let (mut tmp_root, _) = binary_search_mut(root, &key, Self::lt);
+        // 値の存在判定
+        if &tmp_root.as_ref().unwrap().key == key {
+            // 値が根にあるとき（何もしない）
+        } else if tmp_root
+            .as_ref()
+            .unwrap()
+            .left
+            .as_deref()
+            .map(|k| &k.key == key)
+            == Some(true)
+        {
+            // 値が左の子にあるとき（右回転）
+            tmp_root = rotate_right(tmp_root);
+        } else {
+            // 値がないとき（Noneを返す）
             self.root = tmp_root;
             return None;
         }
         // 削除
         if tmp_root.as_ref().unwrap().left.is_none() {
-            swap(&mut self.root, &mut tmp_root.as_deref_mut().unwrap().right);
+            swap(&mut self.root, &mut tmp_root.as_mut().unwrap().right);
         } else {
-            let root_left = tmp_root.as_deref_mut().unwrap().left.take();
-            swap(&mut self.root, &mut binary_search_mut(root_left, key, Self::le).0);
+            let root_left = tmp_root.as_mut().unwrap().left.take();
+            // 左の子のうち最大の要素を新しい根に
             swap(
-                &mut self.root.as_deref_mut().unwrap().right,
-                &mut tmp_root.as_deref_mut().unwrap().right,
+                &mut self.root,
+                &mut binary_search_mut(root_left, key, Self::lt).0,
+            );
+            // 根の右側に子を付け替える
+            swap(
+                &mut self.root.as_mut().unwrap().right,
+                &mut tmp_root.as_mut().unwrap().right,
             );
         }
         let deleted = tmp_root.take();
@@ -143,7 +170,7 @@ where
     }
 
     /// ## upper_bound_splay
-    /// - lower_boundを求める
+    /// - upper_boundを求める
     pub fn upper_bound_splay(&mut self, key: &T) -> bool {
         // 根の取り出し
         let root = self.root.take();
@@ -160,7 +187,7 @@ where
     }
 
     /// ## upper_bound
-    /// - lower_boundを求める
+    /// - upper_boundを求める
     pub fn upper_bound(&mut self, key: &T) -> &Option<Box<Node<T>>> {
         binary_search(&self.root, key, Self::lt)
     }

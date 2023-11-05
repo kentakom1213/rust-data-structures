@@ -321,4 +321,3 @@ fn test_binary_search_complete_splay() {
     multiset.upper_bound_splay(&5);
     println!("{:#?}", multiset);
 }
-
