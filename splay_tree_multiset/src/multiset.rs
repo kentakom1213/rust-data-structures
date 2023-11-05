@@ -113,6 +113,7 @@ where
         // splay操作
         // tmp_root := keyより真に大きいノードのうち最小のもの
         let (mut tmp_root, _) = splay(root, key, Self::lt);
+        eprintln!("tmp_root = {:#?}", tmp_root);
         // 値の存在判定
         if &tmp_root.as_ref().unwrap().key == key {
             // 値が根にあるとき（何もしない）
@@ -130,6 +131,7 @@ where
             self.root = tmp_root;
             return None;
         }
+        eprintln!("tmp_root = {:#?}", tmp_root);
         // 削除
         if tmp_root.as_ref().unwrap().left.is_none() {
             swap(&mut self.root, &mut tmp_root.as_mut().unwrap().right);

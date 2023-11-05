@@ -1,5 +1,6 @@
 use rand::random;
-use splay_tree_multiset::multiset::*;
+use splay_tree_multiset::multiset::{*, self};
+use superslice::Ext;
 
 #[test]
 fn test_insert() {
@@ -68,5 +69,48 @@ fn test_insert_random() {
 
         println!("--- insert {} ---", x);
         println!("{:#?}", multiset);
+    }
+}
+
+#[test]
+fn test_random_delete() {
+    const INSERT_SIZE: usize = 10;
+    const QUERY_SIZE: usize = 5;
+
+    let mut array = vec![];
+    let mut multiset = SplayTreeMultiSet::<u8>::new();
+
+    // random insert
+    for _ in 0..INSERT_SIZE {
+        let x = random();
+        array.push(x);
+        multiset.insert(x);
+    }
+
+    println!("{:?}", array);
+
+    // arrayのソート
+    array.sort();
+
+    assert_eq!(array.len(), multiset.len());
+
+    // random insert and delete
+    for _ in 0..QUERY_SIZE {
+        let x = random();
+
+        println!("--- del {} ---", x);
+
+        // arrayから削除
+        if let Ok(idx) = array.binary_search(&x) {
+            array.remove(idx);
+        }
+
+        // multisetから削除
+        multiset.delete(&x);
+
+        println!("{:?}", array);
+        println!("{:?}", multiset);
+
+        assert_eq!(array.len(), multiset.len());
     }
 }
