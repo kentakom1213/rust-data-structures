@@ -65,8 +65,9 @@ where
     /// ### 戻り値
     /// - `Option<&T>`: キーに紐づいた値
     pub fn get(&mut self, key: &T) -> Option<&T> {
-        if self.lower_bound_splay(key) && &self.root.as_ref().unwrap().key == key {
-            Some(&self.root.as_ref().unwrap().key)
+        let lb = self.lower_bound(key);
+        if lb.is_some_and(|k| k == key) {
+            lb
         } else {
             None
         }
@@ -78,7 +79,7 @@ where
         // rootの取り出し
         let root = self.root.take();
         // splay操作（一番右の要素）
-        let (mut tmp_root, _) = binary_search_mut(root, &key, Self::lt);
+        let (mut tmp_root, _) = splay(root, &key, Self::lt);
         // 挿入
         self.root = Some(Box::new(Node::new(key.clone())));
         if tmp_root.is_some() {
@@ -111,7 +112,7 @@ where
         let root = self.root.take();
         // splay操作
         // tmp_root := keyより真に大きいノードのうち最小のもの
-        let (mut tmp_root, _) = binary_search_mut(root, key, Self::lt);
+        let (mut tmp_root, _) = splay(root, key, Self::lt);
         // 値の存在判定
         if &tmp_root.as_ref().unwrap().key == key {
             // 値が根にあるとき（何もしない）
@@ -120,8 +121,7 @@ where
             .unwrap()
             .left
             .as_deref()
-            .map(|k| &k.key == key)
-            == Some(true)
+            .is_some_and(|k| &k.key == key)
         {
             // 値が左の子にあるとき（右回転）
             tmp_root = rotate_right(tmp_root);
@@ -136,10 +136,7 @@ where
         } else {
             let root_left = tmp_root.as_mut().unwrap().left.take();
             // 左の子のうち最大の要素を新しい根に
-            swap(
-                &mut self.root,
-                &mut binary_search_mut(root_left, key, Self::lt).0,
-            );
+            swap(&mut self.root, &mut splay(root_left, key, Self::lt).0);
             // 根の右側に子を付け替える
             swap(
                 &mut self.root.as_mut().unwrap().right,
@@ -152,38 +149,34 @@ where
         Some(deleted.unwrap().key)
     }
 
-    /// ## lower_bound_splay
-    /// - lower_boundを求める
-    pub fn lower_bound_splay(&mut self, key: &T) -> bool {
-        // 根の取り出し
-        let root = self.root.take();
-        // スプレー操作
-        let (new_root, is_found) = binary_search_mut(root, key, Self::le);
-        self.root = new_root;
-        is_found
-    }
-
-    /// ## upper_bound_splay
-    /// - upper_boundを求める
-    pub fn upper_bound_splay(&mut self, key: &T) -> bool {
-        // 根の取り出し
-        let root = self.root.take();
-        // スプレー操作
-        let (new_root, is_found) = binary_search_mut(root, key, Self::lt);
-        self.root = new_root;
-        is_found
-    }
-
     /// ## lower_bound
     /// - lower_boundを求める
-    pub fn lower_bound(&mut self, key: &T) -> &Option<Box<Node<T>>> {
-        binary_search(&self.root, key, Self::le)
+    pub fn lower_bound(&mut self, key: &T) -> Option<&T> {
+        // 根の取り出し
+        let root = self.root.take();
+        // スプレー操作
+        let (new_root, is_found) = splay(root, key, Self::le);
+        self.root = new_root;
+        if is_found {
+            Some(&self.root.as_ref().unwrap().key)
+        } else {
+            None
+        }
     }
 
     /// ## upper_bound
     /// - upper_boundを求める
-    pub fn upper_bound(&mut self, key: &T) -> &Option<Box<Node<T>>> {
-        binary_search(&self.root, key, Self::lt)
+    pub fn upper_bound(&mut self, key: &T) -> Option<&T> {
+        // 根の取り出し
+        let root = self.root.take();
+        // スプレー操作
+        let (new_root, is_found) = splay(root, key, Self::lt);
+        self.root = new_root;
+        if is_found {
+            Some(&self.root.as_ref().unwrap().key)
+        } else {
+            None
+        }
     }
 
     /// ## to_vec
@@ -209,69 +202,9 @@ fn traverse<'a, T: Ord + Debug>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'
     traverse(&root.as_ref().unwrap().right, res);
 }
 
-/// ## binary_search
+/// ## splay
 /// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
-fn binary_search<'a, T, C>(
-    root: &'a Option<Box<Node<T>>>,
-    key: &T,
-    compare: C,
-) -> &'a Option<Box<Node<T>>>
-where
-    T: Ord + Debug,
-    C: Fn(&T, &T) -> bool,
-{
-    if root.is_none() {
-        return root;
-    }
-    if compare(key, &root.as_ref().unwrap().key) {
-        let left = &root.as_ref().unwrap().left;
-        if left.is_none() {
-            return root;
-        }
-        if compare(key, &left.as_ref().unwrap().key) {
-            let leftleft = &left.as_ref().unwrap().left;
-            let tmp = binary_search(leftleft, key, compare);
-            if tmp.is_none() {
-                left
-            } else {
-                tmp
-            }
-        } else {
-            let leftright = &left.as_ref().unwrap().right;
-            let tmp = binary_search(leftright, key, compare);
-            if tmp.is_none() {
-                root
-            } else {
-                tmp
-            }
-        }
-    } else {
-        let right = &root.as_ref().unwrap().right;
-        if right.is_none() {
-            return right;
-        }
-        if compare(key, &right.as_ref().unwrap().key) {
-            let rightleft = &right.as_ref().unwrap().left;
-            let tmp = binary_search(rightleft, key, compare);
-            if tmp.is_none() {
-                right
-            } else {
-                tmp
-            }
-        } else {
-            let rightright = &right.as_ref().unwrap().right;
-            binary_search(rightright, key, compare)
-        }
-    }
-}
-
-/// ## binary_search_mut
-/// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
-fn binary_search_mut<T, C>(
-    mut root: Option<Box<Node<T>>>,
-    key: &T,
-    compare: C,
-) -> (Option<Box<Node<T>>>, bool)
+fn splay<T, C>(mut root: Option<Box<Node<T>>>, key: &T, compare: C) -> (Option<Box<Node<T>>>, bool)
 where
     T: Ord + Debug,
     C: Fn(&T, &T) -> bool,
@@ -286,7 +219,7 @@ where
         }
         if compare(key, &left.as_ref().unwrap().key) {
             let leftleft = left.as_mut().unwrap().left.take();
-            let (mut tmp, is_found) = binary_search_mut(leftleft, key, compare);
+            let (mut tmp, is_found) = splay(leftleft, key, compare);
             // 戻す
             swap(&mut left.as_mut().unwrap().left, &mut tmp);
             // 親を右に回転
@@ -298,7 +231,7 @@ where
             (rotate_right(tmp_left), true)
         } else {
             let leftright = left.as_mut().unwrap().right.take();
-            let (mut new_leftright, is_found) = binary_search_mut(leftright, key, compare);
+            let (mut new_leftright, is_found) = splay(leftright, key, compare);
             // 戻す
             swap(&mut left.as_mut().unwrap().right, &mut new_leftright);
             // root->left->rightがNoneでないとき
@@ -319,7 +252,7 @@ where
         }
         if compare(key, &right.as_ref().unwrap().key) {
             let rightleft = right.as_mut().unwrap().left.take();
-            let (mut tmp, is_found) = binary_search_mut(rightleft, key, compare);
+            let (mut tmp, is_found) = splay(rightleft, key, compare);
             // 戻す
             swap(&mut right.as_mut().unwrap().left, &mut tmp);
             if is_found {
@@ -332,7 +265,7 @@ where
             (rotate_left(root), true)
         } else {
             let rightright = right.as_mut().unwrap().right.take();
-            let (mut tmp, is_found) = binary_search_mut(rightright, key, compare);
+            let (mut tmp, is_found) = splay(rightright, key, compare);
             // 戻す
             swap(&mut right.as_mut().unwrap().right, &mut tmp);
             // 親を左回転

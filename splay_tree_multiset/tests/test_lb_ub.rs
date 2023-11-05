@@ -1,8 +1,6 @@
 #![cfg(test)]
 
-use itertools::Itertools;
 use rand::*;
-use splay_tree_multiset::multiset;
 use splay_tree_multiset::multiset::*;
 use splay_tree_multiset::tree;
 use superslice::Ext;
@@ -16,17 +14,17 @@ fn test_binary_search_non_duplicate() {
     println!("--- lower_bound 3 ---");
     let lb3 = multiset.lower_bound(&3);
     println!("{:?}", lb3);
-    assert_eq!(lb3.as_ref().unwrap().key, 3);
+    assert_eq!(lb3, Some(&3));
 
     println!("--- upper_bound 3 ---");
     let ub3 = multiset.upper_bound(&3);
     println!("{:?}", ub3);
-    assert_eq!(ub3.as_ref().unwrap().key, 4);
+    assert_eq!(ub3, Some(&4));
 
     println!("--- lower_bound 4 ---");
     let lb4 = multiset.lower_bound(&4);
     println!("{:?}", lb4);
-    assert_eq!(lb4.as_ref().unwrap().key, 4);
+    assert_eq!(lb4, Some(&4));
 
     println!("--- upper_bound 4 ---");
     let ub4 = multiset.upper_bound(&4);
@@ -43,17 +41,17 @@ fn test_binary_search_duplicate() {
     println!("--- lower_bound 3 ---");
     let lb3 = multiset.lower_bound(&3);
     println!("{:?}", lb3);
-    assert_eq!(lb3.as_ref().unwrap().key, 3);
+    assert_eq!(lb3, Some(&3));
 
     println!("--- upper_bound 3 ---");
     let ub3 = multiset.upper_bound(&3);
     println!("{:?}", ub3);
-    assert_eq!(ub3.as_ref().unwrap().key, 4);
+    assert_eq!(ub3, Some(&4));
 
     println!("--- lower_bound 4 ---");
     let lb4 = multiset.lower_bound(&4);
     println!("{:?}", lb4);
-    assert_eq!(lb4.as_ref().unwrap().key, 4);
+    assert_eq!(lb4, Some(&4));
 
     println!("--- upper_bound 4 ---");
     let ub4 = multiset.upper_bound(&4);
@@ -92,32 +90,32 @@ fn test_binary_search_complete() {
     println!("--- lower_bound 3 ---");
     let lb3 = multiset.lower_bound(&3);
     println!("{:?}", lb3);
-    assert_eq!(lb3.as_ref().unwrap().key, 3);
+    assert_eq!(lb3, Some(&3));
 
     println!("--- upper_bound 3 ---");
     let ub3 = multiset.upper_bound(&3);
     println!("{:?}", ub3);
-    assert_eq!(ub3.as_ref().unwrap().key, 4);
+    assert_eq!(ub3, Some(&4));
 
     println!("--- lower_bound 4 ---");
     let lb4 = multiset.lower_bound(&4);
     println!("{:?}", lb4);
-    assert_eq!(lb4.as_ref().unwrap().key, 4);
+    assert_eq!(lb4, Some(&4));
 
     println!("--- upper_bound 4 ---");
     let ub4 = multiset.upper_bound(&4);
     println!("{:?}", ub4);
-    assert_eq!(ub4.as_ref().unwrap().key, 5);
+    assert_eq!(ub4, Some(&5));
 
     println!("--- lower_bound 5 ---");
     let lb5 = multiset.lower_bound(&5);
     println!("{:?}", lb5);
-    assert_eq!(lb5.as_ref().unwrap().key, 5);
+    assert_eq!(lb5, Some(&5));
 
     println!("--- upper_bound 5 ---");
     let ub5 = multiset.upper_bound(&5);
     println!("{:?}", ub5);
-    assert_eq!(ub5.as_ref().unwrap().key, 6);
+    assert_eq!(ub5, Some(&6));
 }
 
 #[test]
@@ -144,23 +142,13 @@ fn test_lb_ub_random() {
         let lb_expected = array.lower_bound(&x);
         let lb_actual = multiset.lower_bound(&x);
 
-        if let Some(&expected_val) = array.get(lb_expected) {
-            let actual_val = lb_actual.as_ref().unwrap().key;
-            assert_eq!(expected_val, actual_val);
-        } else {
-            assert!(lb_actual.is_none());
-        }
-        
+        assert_eq!(array.get(lb_expected), lb_actual);
+
         // upper_bound
         let ub_expected = array.upper_bound(&x);
         let ub_actual = multiset.upper_bound(&x);
 
-        if let Some(&expected_val) = array.get(ub_expected) {
-            let actual_val = ub_actual.as_ref().unwrap().key;
-            assert_eq!(expected_val, actual_val);
-        } else {
-            assert!(ub_actual.is_none());
-        }  
+        assert_eq!(array.get(ub_expected), ub_actual);
     }
 }
 
@@ -171,7 +159,7 @@ fn test_binary_search_duplicate_splay() {
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 3 ---");
-    multiset.lower_bound_splay(&3);
+    multiset.lower_bound(&3);
     println!("{:?}", &multiset);
     // assert_eq!(lb3.as_ref().unwrap().key, 3);
 
@@ -180,7 +168,7 @@ fn test_binary_search_duplicate_splay() {
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 3 ---");
-    multiset.upper_bound_splay(&3);
+    multiset.upper_bound(&3);
     println!("{:?}", &multiset);
     // assert_eq!(ub3.as_ref().unwrap().key, 4);
 
@@ -189,7 +177,7 @@ fn test_binary_search_duplicate_splay() {
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 4 ---");
-    multiset.lower_bound_splay(&4);
+    multiset.lower_bound(&4);
     println!("{:?}", &multiset);
     // assert_eq!(lb4.as_ref().unwrap().key, 4);
 
@@ -198,11 +186,10 @@ fn test_binary_search_duplicate_splay() {
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 4 ---");
-    multiset.upper_bound_splay(&4);
+    multiset.upper_bound(&4);
     println!("{:?}", &multiset);
     // assert!(ub4.is_none());
 }
-
 
 #[test]
 fn test_binary_search_duplicate_right_splay() {
@@ -211,7 +198,7 @@ fn test_binary_search_duplicate_right_splay() {
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 3 ---");
-    multiset.lower_bound_splay(&3);
+    multiset.lower_bound(&3);
     println!("{:?}", &multiset);
     // assert_eq!(lb3.as_ref().unwrap().key, 3);
 
@@ -220,7 +207,7 @@ fn test_binary_search_duplicate_right_splay() {
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 3 ---");
-    multiset.upper_bound_splay(&3);
+    multiset.upper_bound(&3);
     println!("{:?}", &multiset);
     // assert_eq!(ub3.as_ref().unwrap().key, 4);
 
@@ -229,7 +216,7 @@ fn test_binary_search_duplicate_right_splay() {
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 4 ---");
-    multiset.lower_bound_splay(&4);
+    multiset.lower_bound(&4);
     println!("{:?}", &multiset);
     // assert_eq!(lb4.as_ref().unwrap().key, 4);
 
@@ -238,7 +225,7 @@ fn test_binary_search_duplicate_right_splay() {
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 4 ---");
-    multiset.upper_bound_splay(&4);
+    multiset.upper_bound(&4);
     println!("{:?}", &multiset);
     // assert!(ub4.is_none());
 }
@@ -273,7 +260,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", &multiset);
 
     println!("--- lower_bound 3 ---");
-    multiset.lower_bound_splay(&3);
+    multiset.lower_bound(&3);
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
@@ -282,7 +269,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", &multiset);
 
     println!("--- upper_bound 3 ---");
-    multiset.upper_bound_splay(&3);
+    multiset.upper_bound(&3);
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
@@ -291,7 +278,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", &multiset);
 
     println!("--- lower_bound 4 ---");
-    multiset.lower_bound_splay(&4);
+    multiset.lower_bound(&4);
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
@@ -300,24 +287,24 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", &multiset);
 
     println!("--- upper_bound 4 ---");
-    multiset.upper_bound_splay(&4);
+    multiset.upper_bound(&4);
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
     let mut multiset = SplayTreeMultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
-    
+
     println!("--- lower_bound 5 ---");
-    multiset.lower_bound_splay(&5);
+    multiset.lower_bound(&5);
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
     let mut multiset = SplayTreeMultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
-    
+
     println!("--- upper_bound 5 ---");
-    multiset.upper_bound_splay(&5);
+    multiset.upper_bound(&5);
     println!("{:#?}", multiset);
 }
