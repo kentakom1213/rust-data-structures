@@ -36,19 +36,13 @@ where
     /// `a <= b`の値を返す
     #[inline]
     fn le(a: &T, b: &T) -> bool {
-        match a.cmp(b) {
-            Ordering::Less | Ordering::Equal => true,
-            _ => false,
-        }
+        matches!(a.cmp(b), Ordering::Less | Ordering::Equal)
     }
 
     /// `a < b`の値を返す
     #[inline]
     fn lt(a: &T, b: &T) -> bool {
-        match a.cmp(b) {
-            Ordering::Less => true,
-            _ => false,
-        }
+        matches!(a.cmp(b), Ordering::Less)
     }
 
     pub fn new() -> Self {
@@ -117,7 +111,7 @@ where
         let root = self.root.take();
         // splay操作
         // tmp_root := keyより真に大きいノードのうち最小のもの
-        let (mut tmp_root, _) = binary_search_mut(root, &key, Self::lt);
+        let (mut tmp_root, _) = binary_search_mut(root, key, Self::lt);
         // 値の存在判定
         if &tmp_root.as_ref().unwrap().key == key {
             // 値が根にあるとき（何もしない）
