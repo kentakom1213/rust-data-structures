@@ -264,7 +264,6 @@ where
             return (root, true);
         }
         if compare(key, &left.as_ref().unwrap().key) {
-            eprintln!("left -> left");
             let leftleft = left.as_mut().unwrap().left.take();
             let (mut tmp, is_found) = binary_search_mut(leftleft, key, compare);
             // 戻す
@@ -277,7 +276,6 @@ where
             // さらに右回転
             (rotate_right(tmp_left), true)
         } else {
-            eprintln!("left -> right");
             let leftright = left.as_mut().unwrap().right.take();
             let (mut new_leftright, is_found) = binary_search_mut(leftright, key, compare);
             // 戻す
@@ -299,7 +297,6 @@ where
             return (root, false);
         }
         if compare(key, &right.as_ref().unwrap().key) {
-            eprintln!("right -> left");
             let rightleft = right.as_mut().unwrap().left.take();
             let (mut tmp, is_found) = binary_search_mut(rightleft, key, compare);
             // 戻す
@@ -313,15 +310,14 @@ where
             // 親を左回転
             (rotate_left(root), true)
         } else {
-            eprintln!("right -> right");
             let rightright = right.as_mut().unwrap().right.take();
-            let (mut tmp, _) = binary_search_mut(rightright, key, compare);
+            let (mut tmp, is_found) = binary_search_mut(rightright, key, compare);
             // 戻す
             swap(&mut right.as_mut().unwrap().right, &mut tmp);
             // 親を左回転
             let tmp_child = rotate_left(root);
             // さらに左回転
-            (rotate_left(tmp_child), false)
+            (rotate_left(tmp_child), is_found)
         }
     }
 }

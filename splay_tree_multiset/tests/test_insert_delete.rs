@@ -1,3 +1,4 @@
+use rand::random;
 use splay_tree_multiset::multiset::*;
 
 #[test]
@@ -42,3 +43,47 @@ fn test_insert() {
 
     assert_eq!(multiset.len(), 6);
 }
+
+#[test]
+fn test_insert_sorted_greater() {
+    let multiset: SplayTreeMultiSet<usize> = (0..20).collect();
+
+    println!("{:#?}", multiset);
+}
+
+#[test]
+fn test_insert_sorted_less() {
+    let multiset: SplayTreeMultiSet<usize> = (0..20).rev().collect();
+
+    println!("{:#?}", multiset);
+}
+
+#[test]
+fn test_insert_random() {
+    let mut multiset = SplayTreeMultiSet::<u8>::new();
+
+    for _ in 0..50 {
+        let x = random();
+        multiset.insert(x);
+
+        println!("--- insert {} ---", x);
+        println!("{:#?}", multiset);
+    }
+}
+
+/*
+ERROR
+---- test_lb_ub_random stdout ----
+[49, 117, 24, 188, 64, 9, 189, 64, 105, 3]
+[3, 9, 24, 49, 64, 64, 105, 117, 188, 189]
+3
+  9
+        24
+          49
+      64
+        117
+    64
+      105
+        188
+          189
+*/

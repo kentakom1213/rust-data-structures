@@ -121,19 +121,21 @@ fn test_binary_search_complete() {
 }
 
 #[test]
-fn test_random() {
-    const ARRAY_SIZE: usize = 200;
-    const TEST_SIZE: usize = 1_000;
+fn test_lb_ub_random() {
+    const ARRAY_SIZE: usize = 2_000;
+    const TEST_SIZE: usize = 100_000;
 
     let mut array: Vec<u8> = (0..ARRAY_SIZE).map(|_| random()).collect();
+
+    // println!("{:?}", array);
 
     let mut multiset: SplayTreeMultiSet<u8> = array.iter().cloned().collect();
 
     // 配列をソート
     array.sort();
 
-    println!("{:?}", array);
-    println!("{:?}", multiset);
+    // println!("{:?}", array);
+    // println!("{:?}", multiset);
 
     for _ in 0..TEST_SIZE {
         let x: u8 = random();
