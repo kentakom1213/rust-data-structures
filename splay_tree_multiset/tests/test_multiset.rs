@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use splay_tree::splay_tree_multiset::*;
+use splay_tree_multiset::multiset::*;
 
 #[test]
 fn test_insert() {
