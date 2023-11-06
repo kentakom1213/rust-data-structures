@@ -1,5 +1,6 @@
 use rand::random;
 use splay_tree_multiset::multiset::*;
+use superslice::Ext;
 
 #[test]
 fn test_insert() {
@@ -59,22 +60,30 @@ fn test_insert_sorted_less() {
 }
 
 #[test]
-fn test_insert_random() {
+fn test_random_insert() {
+    const INSERT_SIZE: usize = 10_000;
+
+    let mut array: Vec<u8> = vec![];
     let mut multiset = SplayTreeMultiSet::<u8>::new();
 
-    for _ in 0..50 {
+    for _ in 0..INSERT_SIZE {
         let x = random();
+
+        // arrayにinsert
+        let idx = array.lower_bound(&x);
+        array.insert(idx, x);
+
+        // multisetにinsert
         multiset.insert(x);
 
-        println!("--- insert {} ---", x);
-        println!("{:#?}", multiset);
+        assert_eq!(array.len(), multiset.len());
     }
 }
 
 #[test]
 fn test_random_delete() {
     const INSERT_SIZE: usize = 10_000;
-    const QUERY_SIZE: usize = 5_000;
+    const QUERY_SIZE: usize = 10_000;
 
     let mut array = vec![];
     let mut multiset = SplayTreeMultiSet::<u8>::new();

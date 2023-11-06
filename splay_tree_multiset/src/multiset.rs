@@ -125,19 +125,8 @@ where
         // splay操作
         // tmp_root := keyより真に大きいノードのうち最小のもの
         let (mut tmp_root, _) = splay_rev(root, key, Self::ge);
-        // 値の存在判定
-        if &tmp_root.as_ref().unwrap().key == key {
-            // 値が根にあるとき（何もしない）
-        } else if tmp_root
-            .as_ref()
-            .unwrap()
-            .left
-            .as_deref()
-            .is_some_and(|k| &k.key == key)
-        {
-            // 値が左の子にあるとき（右回転）
-            tmp_root = rotate_right(tmp_root);
-        } else {
+        // 値が存在しないとき
+        if &tmp_root.as_ref().unwrap().key != key {
             // 値がないとき（Noneを返す）
             self.root = tmp_root;
             return None;
@@ -321,7 +310,11 @@ where
 /// ## splay_rev
 /// - 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
 /// - splayの逆向き
-fn splay_rev<T, C>(mut root: Option<Box<Node<T>>>, key: &T, compare: C) -> (Option<Box<Node<T>>>, bool)
+fn splay_rev<T, C>(
+    mut root: Option<Box<Node<T>>>,
+    key: &T,
+    compare: C,
+) -> (Option<Box<Node<T>>>, bool)
 where
     T: Ord + Debug,
     C: Fn(&T, &T) -> bool,
