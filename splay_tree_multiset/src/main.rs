@@ -1,4 +1,4 @@
-use splay_tree_multiset::multiset::SplayTreeMultiSet;
+use splay_tree_multiset::multiset::MultiSet;
 
 macro_rules! get {
     ($t:ty) => {
@@ -21,7 +21,7 @@ macro_rules! get {
 }
 
 fn main() {
-    let mut multiset = SplayTreeMultiSet::<i8>::new();
+    let mut multiset = MultiSet::<i8>::new();
 
     loop {
         let (t, x) = get!(i8, i8);

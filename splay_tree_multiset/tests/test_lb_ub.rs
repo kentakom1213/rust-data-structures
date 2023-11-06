@@ -14,7 +14,7 @@ fn test_lb_ub_random() {
 
     // println!("{:?}", array);
 
-    let mut multiset: SplayTreeMultiSet<u8> = array.iter().cloned().collect();
+    let mut multiset: MultiSet<u8> = array.iter().cloned().collect();
 
     // 配列をソート
     array.sort();
@@ -42,7 +42,7 @@ fn test_lb_ub_random() {
 #[test]
 fn test_binary_search_duplicate_splay() {
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 3 ---");
@@ -51,7 +51,7 @@ fn test_binary_search_duplicate_splay() {
     // assert_eq!(lb3.as_ref().unwrap().key, 3);
 
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 3 ---");
@@ -60,7 +60,7 @@ fn test_binary_search_duplicate_splay() {
     // assert_eq!(ub3.as_ref().unwrap().key, 4);
 
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 4 ---");
@@ -69,7 +69,7 @@ fn test_binary_search_duplicate_splay() {
     // assert_eq!(lb4.as_ref().unwrap().key, 4);
 
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [0, 1, 3, 3, 4, 4, 5].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 4 ---");
@@ -81,7 +81,7 @@ fn test_binary_search_duplicate_splay() {
 #[test]
 fn test_binary_search_duplicate_right_splay() {
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 3 ---");
@@ -90,7 +90,7 @@ fn test_binary_search_duplicate_right_splay() {
     // assert_eq!(lb3.as_ref().unwrap().key, 3);
 
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 3 ---");
@@ -99,7 +99,7 @@ fn test_binary_search_duplicate_right_splay() {
     // assert_eq!(ub3.as_ref().unwrap().key, 4);
 
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- lower_bound 4 ---");
@@ -108,7 +108,7 @@ fn test_binary_search_duplicate_right_splay() {
     // assert_eq!(lb4.as_ref().unwrap().key, 4);
 
     println!("### Reset ###");
-    let mut multiset: SplayTreeMultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
+    let mut multiset: MultiSet<usize> = [5, 4, 4, 3, 3, 1, 0].into_iter().collect();
     println!("{:?}", &multiset);
 
     println!("--- upper_bound 4 ---");
@@ -142,7 +142,7 @@ fn test_binary_search_complete_splay() {
     };
 
     println!("### Reset ###");
-    let mut multiset = SplayTreeMultiSet::<usize>::new();
+    let mut multiset = MultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
 
@@ -151,7 +151,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
-    let mut multiset = SplayTreeMultiSet::<usize>::new();
+    let mut multiset = MultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
 
@@ -160,7 +160,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
-    let mut multiset = SplayTreeMultiSet::<usize>::new();
+    let mut multiset = MultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
 
@@ -169,7 +169,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
-    let mut multiset = SplayTreeMultiSet::<usize>::new();
+    let mut multiset = MultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
 
@@ -178,7 +178,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
-    let mut multiset = SplayTreeMultiSet::<usize>::new();
+    let mut multiset = MultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
 
@@ -187,7 +187,7 @@ fn test_binary_search_complete_splay() {
     println!("{:#?}", multiset);
 
     println!("### Reset ###");
-    let mut multiset = SplayTreeMultiSet::<usize>::new();
+    let mut multiset = MultiSet::<usize>::new();
     multiset.root = complete.clone();
     println!("{:#?}", &multiset);
 

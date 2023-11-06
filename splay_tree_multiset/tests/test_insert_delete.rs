@@ -4,7 +4,7 @@ use superslice::Ext;
 
 #[test]
 fn test_insert() {
-    let mut multiset = SplayTreeMultiSet::new();
+    let mut multiset = MultiSet::new();
 
     assert_eq!(multiset.len(), 0);
 
@@ -47,14 +47,14 @@ fn test_insert() {
 
 #[test]
 fn test_insert_sorted_greater() {
-    let multiset: SplayTreeMultiSet<usize> = (0..20).collect();
+    let multiset: MultiSet<usize> = (0..20).collect();
 
     println!("{:#?}", multiset);
 }
 
 #[test]
 fn test_insert_sorted_less() {
-    let multiset: SplayTreeMultiSet<usize> = (0..20).rev().collect();
+    let multiset: MultiSet<usize> = (0..20).rev().collect();
 
     println!("{:#?}", multiset);
 }
@@ -64,7 +64,7 @@ fn test_random_insert() {
     const INSERT_SIZE: usize = 10_000;
 
     let mut array: Vec<u8> = vec![];
-    let mut multiset = SplayTreeMultiSet::<u8>::new();
+    let mut multiset = MultiSet::<u8>::new();
 
     for _ in 0..INSERT_SIZE {
         let x = random();
@@ -86,7 +86,7 @@ fn test_random_delete() {
     const QUERY_SIZE: usize = 10_000;
 
     let mut array = vec![];
-    let mut multiset = SplayTreeMultiSet::<u8>::new();
+    let mut multiset = MultiSet::<u8>::new();
 
     // random insert
     for _ in 0..INSERT_SIZE {

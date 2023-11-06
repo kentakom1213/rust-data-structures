@@ -5,7 +5,7 @@ use splay_tree_multiset::multiset::*;
 
 #[test]
 fn test_count_hand() {
-    let mut multiset = SplayTreeMultiSet::<u8>::new();
+    let mut multiset = MultiSet::<u8>::new();
 
     assert_eq!(multiset.count(&0), 0);
     assert_eq!(multiset.count(&10), 0);
@@ -58,7 +58,7 @@ fn test_random_insert() {
     const INSERT_SIZE: usize = 10_000;
 
     let mut map = BTreeMap::<u8, usize>::new();
-    let mut multiset = SplayTreeMultiSet::<u8>::new();
+    let mut multiset = MultiSet::<u8>::new();
 
     for _ in 0..INSERT_SIZE {
         let x = random();
@@ -78,7 +78,7 @@ fn test_random_insert_delete() {
     const QUERY_SIZE: usize = 10_000;
 
     let mut map = BTreeMap::<u8, usize>::new();
-    let mut multiset = SplayTreeMultiSet::<u8>::new();
+    let mut multiset = MultiSet::<u8>::new();
 
     for _ in 0..QUERY_SIZE {
         let x = random();

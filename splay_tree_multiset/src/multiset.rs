@@ -24,14 +24,14 @@ impl<T: Ord + Debug> Node<T> {
     }
 }
 
-/// # SplayTreeMultiSet
+/// # MultiSet
 /// スプレー木のクラス
-pub struct SplayTreeMultiSet<T: Ord + Debug> {
+pub struct MultiSet<T: Ord + Debug> {
     size: usize,
     pub root: Option<Box<Node<T>>>,
 }
 
-impl<T> SplayTreeMultiSet<T>
+impl<T> MultiSet<T>
 where
     T: Ord + Clone + Debug,
 {
@@ -329,9 +329,9 @@ fn rotate_left<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>
 }
 
 // ----- FromIterator -----
-impl<T: Ord + Clone + Debug> FromIterator<T> for SplayTreeMultiSet<T> {
+impl<T: Ord + Clone + Debug> FromIterator<T> for MultiSet<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let mut res = SplayTreeMultiSet::new();
+        let mut res = MultiSet::new();
         for item in iter {
             res.insert(item);
         }
@@ -340,7 +340,7 @@ impl<T: Ord + Clone + Debug> FromIterator<T> for SplayTreeMultiSet<T> {
 }
 
 // ----- Debug -----
-impl<T: Ord + Debug> Debug for SplayTreeMultiSet<T> {
+impl<T: Ord + Debug> Debug for MultiSet<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fmt_inner(f, &self.root, 0);
         Ok(())
