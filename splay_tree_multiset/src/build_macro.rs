@@ -6,6 +6,7 @@ macro_rules! tree {
     ( key: $key:expr, $(,)* ) => {
         Some(Box::new(Node {
             key: $key,
+            id: 0,
             left: None,
             right: None,
         }))
@@ -13,6 +14,7 @@ macro_rules! tree {
     ( key: $key:expr, left: $left:expr $(,)* ) => {
         Some(Box::new(Node {
             key: $key,
+            id: 0,
             left: $left,
             right: None,
         }))
@@ -20,6 +22,7 @@ macro_rules! tree {
     ( key: $key:expr, right: $right:expr $(,)* ) => {
         Some(Box::new(Node {
             key: $key,
+            id: 0,
             left: None,
             right: $right,
         }))
@@ -27,6 +30,7 @@ macro_rules! tree {
     ( key: $key:expr, left: $left:expr, right: $right:expr $(,)* ) => {
         Some(Box::new(Node {
             key: $key,
+            id: 0,
             left: $left,
             right: $right,
         }))

@@ -21,10 +21,10 @@ macro_rules! get {
 }
 
 fn main() {
-    let mut multiset = SplayTreeMultiSet::<u8>::new();
+    let mut multiset = SplayTreeMultiSet::<i8>::new();
 
     loop {
-        let (t, x) = get!(u8, u8);
+        let (t, x) = get!(i8, i8);
 
         if t == 0 {
             multiset.insert(x);
