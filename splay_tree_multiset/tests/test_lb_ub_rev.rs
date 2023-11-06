@@ -1,8 +1,5 @@
 #![cfg(test)]
 
-use std::array;
-use std::cmp::Reverse;
-
 use rand::*;
 use splay_tree_multiset::multiset::*;
 use splay_tree_multiset::tree;
@@ -88,15 +85,12 @@ fn test_binary_search_duplicate() {
 
 #[test]
 fn test_lb_ub_random() {
-    const ARRAY_SIZE: usize = 2_000;
-    const TEST_SIZE: usize = 100_000;
+    const ARRAY_SIZE: usize = 10_000;
+    const TEST_SIZE: usize = 10_000;
 
-    let array: Vec<u8> = (0..ARRAY_SIZE).map(|_| random()).collect();
+    let mut array: Vec<u8> = (0..ARRAY_SIZE).map(|_| random()).collect();
 
     let mut multiset: SplayTreeMultiSet<u8> = array.iter().cloned().collect();
-
-    // Reverseをかける
-    let mut array: Vec<Reverse<u8>> = array.into_iter().map(|v| Reverse(v)).collect();
 
     // 配列をソート
     array.sort();
@@ -105,16 +99,19 @@ fn test_lb_ub_random() {
         let x: u8 = random();
 
         // lower_bound
-        let lb_expected = array.lower_bound(&Reverse(x));
-        let lb_actual = multiset.lower_bound_rev(&x);
+        let lb_expected_idx = array.upper_bound(&x) - 1;
+        let lb_expected = array.get(lb_expected_idx).map(|v| *v);
+        let lb_actual = multiset.lower_bound_rev(&x).map(|v| *v);
 
-        assert_eq!(array.get(lb_expected).map(|v| &v.0), lb_actual);
+        assert_eq!(lb_expected, lb_actual);
 
         // upper_bound
-        let ub_expected = array.upper_bound(&Reverse(x));
-        let ub_actual = multiset.upper_bound_rev(&x);
+        if let Some(ub_expected_idx) = array.lower_bound(&x).checked_sub(1) {
+            let ub_expected = array.get(ub_expected_idx).map(|v| *v);
+            let ub_actual = multiset.upper_bound_rev(&x).map(|v| *v);
 
-        assert_eq!(array.get(ub_expected).map(|v| &v.0), ub_actual);
+            assert_eq!(ub_expected, ub_actual);
+        }
     }
 }
 
