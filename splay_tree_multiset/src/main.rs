@@ -26,12 +26,24 @@ fn main() {
     loop {
         let (t, x) = get!(i8, i8);
 
-        if t == 0 {
-            multiset.insert(x);
-            println!("--- insert {} ---", x);
-        } else {
-            multiset.delete(&x);
-            println!("--- delete {} ---", x);
+        match (t, x) {
+            (0, x) => {
+                multiset.insert(x);
+                println!("--- insert {} ---", x);
+            }
+            (1, x) => {
+                multiset.delete(&x);
+                println!("--- delete {} ---", x);
+            }
+            (2, x) => {
+                multiset.lower_bound(&x);
+                println!("--- lower bound {} ---", x);
+            }
+            (3, x) => {
+                multiset.upper_bound(&x);
+                println!("--- upper bound {} ---", x);
+            }
+            _ => (),
         }
 
         println!("{:#?}", multiset);

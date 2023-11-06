@@ -2,7 +2,6 @@
 
 use std::iter::FromIterator;
 use std::mem::swap;
-use std::ops::Deref;
 use std::{cmp::Ordering, fmt::Debug};
 
 /// # Node
@@ -144,6 +143,18 @@ where
         // 要素数の更新
         self.size -= 1;
         Some(deleted.unwrap().key)
+    }
+
+    /// ## count
+    /// - 値`key`の要素の個数
+    pub fn count(&mut self, key: &T) -> usize {
+        // lower_boundを実行
+        self.lower_bound(key);
+        // rootのidを調べる
+        self.root
+            .as_ref()
+            .filter(|node| &node.key == key)
+            .map_or(0, |node| node.id)
     }
 
     /// ## lower_bound
