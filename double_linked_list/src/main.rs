@@ -23,7 +23,7 @@ fn main() {
     {
         let ptr = list.nth(5).unwrap();
 
-        unsafe { list.delete(ptr) };
+        list.delete(ptr);
 
         println!("{:?}", &list);
     }
