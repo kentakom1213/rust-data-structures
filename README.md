@@ -19,7 +19,7 @@ Rustによるデータ構造の実装
   - [x] 2分探索木
   - 平衡2分探索木
     - [x] Treap
-    - [ ] SplayTree
+    - [x] SplayTree
     - [ ] AATree
     - [ ] AVLTree
     - [ ] Red-BlackTree

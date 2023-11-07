@@ -1,4 +1,4 @@
-use crate::splay_tree_map::*;
+use crate::map::*;
 use std::fmt::Debug;
 
 pub trait Encode {

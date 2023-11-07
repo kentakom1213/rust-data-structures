@@ -1,21 +1,21 @@
 #![cfg(test)]
 
-use splay_tree::{encode::Encode, splay_tree_map::*, tree};
+use splay_tree::{encode::Encode, map::*, tree_map};
 
 #[test]
 fn test_splay_left() {
     let mut tree = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 3,
         value: "3",
-        left: tree! {
+        left: tree_map! {
             key: 2,
             value: "2",
-            left: tree! {
+            left: tree_map! {
                 key: 1,
                 value: "1",
-                left: tree! {
+                left: tree_map! {
                     key: 0,
                     value: "0",
                 }
@@ -40,16 +40,16 @@ fn test_splay_left() {
 fn test_splay_left_left() {
     let mut tree = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 3,
         value: "3",
-        left: tree! {
+        left: tree_map! {
             key: 2,
             value: "2",
-            left: tree! {
+            left: tree_map! {
                 key: 1,
                 value: "1",
-                left: tree! {
+                left: tree_map! {
                     key: 0,
                     value: "0",
                 }
@@ -72,13 +72,13 @@ fn test_splay_left_left() {
 fn test_splay_right() {
     let mut tree = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 0,
         value: 0,
-        right: tree! {
+        right: tree_map! {
             key: 1,
             value: 1,
-            right: tree! {
+            right: tree_map! {
                 key: 2,
                 value: 2
             }
@@ -100,13 +100,13 @@ fn test_splay_right() {
 fn test_splay_right_left() {
     let mut tree = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 0,
         value: 0,
-        right: tree! {
+        right: tree_map! {
             key: 2,
             value: 2,
-            left: tree! {
+            left: tree_map! {
                 key: 1,
                 value: 1
             }
@@ -128,16 +128,16 @@ fn test_splay_right_left() {
 fn test_splay_right_right() {
     let mut tree = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 0,
         value: 0,
-        right: tree! {
+        right: tree_map! {
             key: 1,
             value: 1,
-            right: tree! {
+            right: tree_map! {
                 key: 3,
                 value: 3,
-                left: tree! {
+                left: tree_map! {
                     key: 2,
                     value: 2,
                 }
@@ -160,13 +160,13 @@ fn test_splay_right_right() {
 fn test_splay_left_right() {
     let mut tree = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 2,
         value: "2",
-        left: tree! {
+        left: tree_map! {
             key: 0,
             value: "0",
-            right: tree! {
+            right: tree_map! {
                 key: 1,
                 value: "1",
             }
@@ -188,22 +188,22 @@ fn test_splay_left_right() {
 fn test_from_path_left() {
     let mut tree: SplayTreeMap<u8, &str> = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 5,
         value: "alpha",
-        left: tree! {
+        left: tree_map! {
             key: 4,
             value: "beta",
-            left: tree! {
+            left: tree_map! {
                 key: 3,
                 value: "gamma",
-                left: tree! {
+                left: tree_map! {
                     key: 2,
                     value: "delta",
-                    left: tree! {
+                    left: tree_map! {
                         key: 1,
                         value: "epsilon",
-                        left: tree! {
+                        left: tree_map! {
                             key: 0,
                             value: "zeta",
                         }
@@ -229,25 +229,25 @@ fn test_from_path_left() {
 fn test_from_path_right() {
     let mut tree: SplayTreeMap<u8, &str> = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 0,
         value: "alpha",
-        right: tree! {
+        right: tree_map! {
             key: 1,
             value: "beta",
-            right: tree! {
+            right: tree_map! {
                 key: 2,
                 value: "gamma",
-                right: tree! {
+                right: tree_map! {
                     key: 3,
                     value: "delta",
-                    right: tree! {
+                    right: tree_map! {
                         key: 4,
                         value: "epsilon",
-                        right: tree! {
+                        right: tree_map! {
                             key: 5,
                             value: "zeta",
-                            right: tree! {
+                            right: tree_map! {
                                 key: 6,
                                 value: "eta",
                             }
@@ -274,25 +274,25 @@ fn test_from_path_right() {
 fn test_splay_not_found() {
     let mut tree: SplayTreeMap<u8, &str> = SplayTreeMap::new();
 
-    tree.root = tree! {
+    tree.root = tree_map! {
         key: 1,
         value: "alpha",
-        right: tree! {
+        right: tree_map! {
             key: 2,
             value: "beta",
-            right: tree! {
+            right: tree_map! {
                 key: 4,
                 value: "gamma",
-                right: tree! {
+                right: tree_map! {
                     key: 8,
                     value: "delta",
-                    right: tree! {
+                    right: tree_map! {
                         key: 16,
                         value: "epsilon",
-                        right: tree! {
+                        right: tree_map! {
                             key: 32,
                             value: "zeta",
-                            right: tree! {
+                            right: tree_map! {
                                 key: 64,
                                 value: "eta",
                             }

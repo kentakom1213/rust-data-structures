@@ -346,28 +346,28 @@ where
 #[cfg(test)]
 mod test_splay_tree_util {
     use super::*;
-    use crate::tree;
+    use crate::tree_map;
 
     #[test]
     fn test_rotate() {
         let mut tree = SplayTreeMap::new();
 
-        tree.root = tree! {
+        tree.root = tree_map! {
             key: 4,
             value: "1st",
-            left: tree! {
+            left: tree_map! {
                 key: 2,
                 value: "2nd",
-                left: tree! {
+                left: tree_map! {
                     key: 1,
                     value: "3rd",
                 },
-                right: tree! {
+                right: tree_map! {
                     key: 3,
                     value: "4th",
                 }
             },
-            right: tree! {
+            right: tree_map! {
                 key: 5,
                 value: "5th"
             }
@@ -419,17 +419,17 @@ mod test_splay_tree_util {
     fn test_traverse() {
         let mut tree = SplayTreeMap::new();
 
-        tree.root = tree! {
+        tree.root = tree_map! {
             key: 3,
             value: "1st",
-            left: tree! {
+            left: tree_map! {
                 key: 1,
                 value: "2nd",
             },
-            right: tree! {
+            right: tree_map! {
                 key: 4,
                 value: "3rd",
-                right: tree! {
+                right: tree_map! {
                     key: 5,
                     value: "5th"
                 }
