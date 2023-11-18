@@ -1,6 +1,6 @@
 //! 親へのポインタも持つスプレー木
 
-use std::fmt::Debug;
+use std::{cmp::Ordering, fmt::Debug};
 
 /// スプレー木のノード
 pub struct SplayTreeNode<T, U> {
@@ -12,6 +12,7 @@ pub struct SplayTreeNode<T, U> {
 }
 
 impl<T, U> SplayTreeNode<T, U> {
+    /// allocate memory and return pointer
     fn create(key: T, value: U) -> *mut Self {
         let node = Box::new(Self {
             key,
@@ -23,6 +24,7 @@ impl<T, U> SplayTreeNode<T, U> {
         Box::into_raw(node)
     }
 
+    /// free memory and return key, value
     fn destroy(node_pointer: *mut Self) -> (T, U) {
         let Self { key, value, .. } = unsafe { *Box::from_raw(node_pointer) };
         (key, value)
@@ -63,45 +65,53 @@ impl<T, U> SplayTree<T, U> {
     pub fn is_empty(&self) -> bool {
         self.size == 0
     }
+
+//     /// get child of parent
+//     unsafe fn parent_child<T: Ord, U>(
+//         &mut self,
+//         parent: *mut SplayTreeNode<T, U>,
+//     ) -> *mut SplayTreeNode<T, U> {
+//         if (*parent).parent.is_none() {
+//             self.root
+//         }
+//     }
 }
 
-// ----- Debug -----
-// impl<T, U> Debug for SplayTree<T, U>
-// where
-//     T: Ord + Debug,
-//     U: Debug,
-// {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         fmt_inner(f, &self.root, 0);
-//         Ok(())
-//     }
-// }
+/// rotate right
+/// ```not-rust
+///        Y                      X    
+///       / \       right        / \   
+///      X   C  === rotate ==>  A   Y  
+///     / \                        / \
+///    A   B                      B   C
+/// ```
+unsafe fn rotate_right<T: Ord, U>(
+    root: Option<*mut SplayTreeNode<T, U>>,
+) -> Option<*mut SplayTreeNode<T, U>> {
+    todo!()
+}
 
-// /// 再帰的に表示
-// #[allow(unused_must_use)]
-// fn fmt_inner<T, U>(
-//     f: &mut std::fmt::Formatter<'_>,
-//     node: &Option<*mut SplayTreeNode<T, U>>,
-//     depth: usize,
-// ) where
-//     T: Ord + Debug,
-//     U: Debug,
-// {
-//     match node {
-//         Some(node) => unsafe {
-//             fmt_inner(f, &(**node).left, depth + 1);
-//             writeln!(
-//                 f,
-//                 "{}(key:{:?}, value:{:?})",
-//                 " ".repeat(depth * 2),
-//                 (**node).key,
-//                 (**node).value
-//             );
-//             fmt_inner(f, &(**node).right, depth + 1);
-//         },
-//         None => {}
-//     }
-// }
+/// rotate left
+/// ```not-rust
+///      X                          Y  
+///     / \         left           / \
+///    A   Y    === rotate ==>    X   C
+///       / \                    / \   
+///      B   C                  A   B  
+/// ```
+unsafe fn rotate_left<T: Ord, U>(
+    root: Option<*mut SplayTreeNode<T, U>>,
+) -> Option<*mut SplayTreeNode<T, U>> {
+    todo!()
+}
+
+/// splay
+unsafe fn splay<T: Ord, U>(
+    root: Option<*mut SplayTreeNode<T, U>>,
+    key: &T,
+) -> (Option<*mut SplayTreeNode<T, U>>, bool) {
+    todo!()
+}
 
 impl<T, U> SplayTree<T, U>
 where
@@ -115,7 +125,7 @@ where
     }
 }
 
-/// 再帰的に表示
+/// print recursive
 fn fmt_inner<T, U>(node: &Option<*mut SplayTreeNode<T, U>>, depth: usize)
 where
     T: Ord + Debug,

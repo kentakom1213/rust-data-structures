@@ -1,5 +1,3 @@
-#![allow(unused_must_use)]
-
 use std::iter::FromIterator;
 use std::mem::swap;
 use std::{cmp::Ordering, fmt::Debug};
@@ -469,6 +467,7 @@ impl<T: Ord + Debug> Debug for MultiSet<T> {
 }
 
 /// 再帰的に表示
+#[allow(unused_must_use)]
 fn fmt_inner<T>(f: &mut std::fmt::Formatter<'_>, node: &Option<Box<Node<T>>>, depth: usize)
 where
     T: Ord + Debug,

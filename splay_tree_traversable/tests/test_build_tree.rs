@@ -1,4 +1,4 @@
-use splay_tree_traversable::splay_tree::SplayTree;
+use splay_tree_traversable::splay_tree_safely::SplayTree;
 
 #[test]
 fn test_node() {
@@ -6,7 +6,9 @@ fn test_node() {
 
     tree.pretty_print();
 
-    tree.insert(0, 20);
+    let old = tree.insert(0, 20);
+
+    assert!(old.is_none());
 
     tree.pretty_print();
 
