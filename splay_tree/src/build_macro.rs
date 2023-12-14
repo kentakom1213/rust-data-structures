@@ -75,3 +75,46 @@ macro_rules! tree_multiset {
         }))
     };
 }
+
+#[macro_export]
+macro_rules! tree_multiset_with_index {
+    () => {
+        None
+    };
+    ( key: $key:expr, size: $size:expr $(,)* ) => {
+        Some(Box::new(Node {
+            key: $key,
+            id: 0,
+            size: $size,
+            left: None,
+            right: None,
+        }))
+    };
+    ( key: $key:expr, size: $size:expr, left: $left:expr $(,)* ) => {
+        Some(Box::new(Node {
+            key: $key,
+            id: 0,
+            size: $size,
+            left: $left,
+            right: None,
+        }))
+    };
+    ( key: $key:expr, size: $size:expr, right: $right:expr $(,)* ) => {
+        Some(Box::new(Node {
+            key: $key,
+            id: 0,
+            size: $size,
+            left: None,
+            right: $right,
+        }))
+    };
+    ( key: $key:expr, size: $size:expr, left: $left:expr, right: $right:expr $(,)* ) => {
+        Some(Box::new(Node {
+            key: $key,
+            id: 0,
+            size: $size,
+            left: $left,
+            right: $right,
+        }))
+    };
+}
