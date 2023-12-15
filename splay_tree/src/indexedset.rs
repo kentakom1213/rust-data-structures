@@ -1,5 +1,5 @@
 use std::iter::FromIterator;
-use std::mem::swap;
+use std::mem::{replace, swap};
 use std::{cmp::Ordering, fmt::Debug};
 
 /// # Node
@@ -8,32 +8,29 @@ pub struct Node<T: Ord + Debug> {
     pub key: T,
     pub left: Option<Box<Node<T>>>,
     pub right: Option<Box<Node<T>>>,
-    /// 同じ値を持つノードの個数
-    pub id: usize,
     /// 部分木のサイズ
     pub size: usize,
 }
 
 impl<T: Ord + Debug> Node<T> {
-    pub fn new(key: T, id: usize) -> Self {
+    pub fn new(key: T) -> Self {
         Self {
             key,
             left: None,
             right: None,
-            id,
             size: 1,
         }
     }
 }
 
-/// # MultiSet
+/// # IndexedSet
 /// スプレー木のクラス
-pub struct MultiSet<T: Ord + Debug> {
+pub struct IndexedSet<T: Ord + Debug> {
     size: usize,
     pub root: Option<Box<Node<T>>>,
 }
 
-impl<T> MultiSet<T>
+impl<T> IndexedSet<T>
 where
     T: Ord + Clone + Debug,
 {
@@ -89,20 +86,20 @@ where
         }
     }
 
-    /// ## insert
     /// 値の挿入を行う。
-    pub fn insert(&mut self, key: T) {
+    /// ### 戻り値
+    /// - `bool`: 挿入が行われたか
+    pub fn insert(&mut self, key: T) -> Option<T> {
         // rootの取り出し
         let root = self.root.take();
         // splay操作（一番右の要素）
         let (mut tmp_root, _) = splay(root, &key, Self::le);
-        // 挿入
-        let new_id = if tmp_root.is_some() && tmp_root.as_ref().unwrap().key == key {
-            tmp_root.as_ref().unwrap().id + 1
-        } else {
-            1
-        };
-        self.root = Some(Box::new(Node::new(key.clone(), new_id)));
+        if tmp_root.is_some() && tmp_root.as_ref().unwrap().key == key {
+            self.root = tmp_root;
+            let res = replace(&mut self.root.as_deref_mut().unwrap().key, key);
+            return Some(res);
+        }
+        self.root = Some(Box::new(Node::new(key.clone())));
         if tmp_root.is_some() {
             match key.cmp(&tmp_root.as_ref().unwrap().key) {
                 Ordering::Less | Ordering::Equal => {
@@ -123,6 +120,7 @@ where
         update_size(&mut self.root);
         // 要素数の更新
         self.size += 1;
+        None
     }
 
     /// ## delete
@@ -139,8 +137,7 @@ where
         // tmp_root := keyより真に大きいノードのうち最小のもの
         let (mut tmp_root, _) = splay(root, key, Self::le);
         // 値が存在しないとき
-        if &tmp_root.as_ref().unwrap().key != key {
-            // 値がないとき（Noneを返す）
+        if tmp_root.is_none() || &tmp_root.as_ref().unwrap().key != key {
             self.root = tmp_root;
             return None;
         }
@@ -165,16 +162,10 @@ where
         Some(deleted.unwrap().key)
     }
 
-    /// ## count
-    /// - 値`key`の要素の個数
-    pub fn count(&mut self, key: &T) -> usize {
-        // lower_boundを実行
-        self.lower_bound(key);
-        // rootのidを調べる
-        self.root
-            .as_ref()
-            .filter(|node| &node.key == key)
-            .map_or(0, |node| node.id)
+    /// ## contains_key
+    /// - 値`key`を含むか
+    pub fn contains_key(&mut self, key: &T) -> bool {
+        self.get(key).is_some_and(|k| k == key)
     }
 
     /// ## lower_bound
@@ -465,9 +456,9 @@ fn rotate_left<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>
 }
 
 // ----- FromIterator -----
-impl<T: Ord + Clone + Debug> FromIterator<T> for MultiSet<T> {
+impl<T: Ord + Clone + Debug> FromIterator<T> for IndexedSet<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let mut res = MultiSet::new();
+        let mut res = IndexedSet::new();
         for item in iter {
             res.insert(item);
         }
@@ -476,7 +467,7 @@ impl<T: Ord + Clone + Debug> FromIterator<T> for MultiSet<T> {
 }
 
 // ----- Debug -----
-impl<T: Ord + Debug> Debug for MultiSet<T> {
+impl<T: Ord + Debug> Debug for IndexedSet<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fmt_inner(f, &self.root, 0);
         Ok(())
@@ -494,10 +485,9 @@ where
             fmt_inner(f, &node.left, depth + 1);
             writeln!(
                 f,
-                "{}({:?}, id:{}, size:{})",
+                "{}({:?}, size:{})",
                 " ".repeat(depth * 2),
                 node.key,
-                node.id,
                 node.size
             );
             fmt_inner(f, &node.right, depth + 1);
