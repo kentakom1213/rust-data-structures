@@ -228,6 +228,16 @@ where
         }
     }
 
+    /// ## nth
+    /// - 先頭からn番目の値を取得する（0-indexed）
+    pub fn nth(&self, n: usize) -> Option<&T> {
+        if n > self.size {
+            None
+        } else {
+            get_nth(&self.root, n + 1)
+        }
+    }
+
     /// ## to_vec
     /// 要素を順にVecとして取り出す
     pub fn to_vec(&self) -> Vec<&T> {
@@ -249,6 +259,20 @@ fn traverse<'a, T: Ord + Debug>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'
     res.push(&root.as_ref().unwrap().key);
     // 右の子を探索
     traverse(&root.as_ref().unwrap().right, res);
+}
+
+/// ## get_nth
+fn get_nth<T: Ord + Debug>(root: &Option<Box<Node<T>>>, n: usize) -> Option<&T> {
+    if let Some(root) = root {
+        let left_size = root.left.as_ref().map_or(0, |node| node.size);
+        match n.cmp(&(left_size + 1)) {
+            Ordering::Less => get_nth(&root.left, n),
+            Ordering::Equal => Some(&root.key),
+            Ordering::Greater => get_nth(&root.right, n - left_size - 1),
+        }
+    } else {
+        None
+    }
 }
 
 /// ## splay
