@@ -4,14 +4,14 @@ use std::{cmp::Ordering, fmt::Debug};
 
 /// # Node
 #[derive(Debug, Clone)]
-pub struct Node<T: Ord + Debug> {
+pub struct Node<T: Ord> {
     pub key: T,
     pub left: Option<Box<Node<T>>>,
     pub right: Option<Box<Node<T>>>,
     pub id: usize,
 }
 
-impl<T: Ord + Debug> Node<T> {
+impl<T: Ord> Node<T> {
     pub fn new(key: T, id: usize) -> Self {
         Self {
             key,
@@ -24,14 +24,14 @@ impl<T: Ord + Debug> Node<T> {
 
 /// # MultiSet
 /// スプレー木のクラス
-pub struct MultiSet<T: Ord + Debug> {
+pub struct MultiSet<T: Ord> {
     size: usize,
     pub root: Option<Box<Node<T>>>,
 }
 
 impl<T> MultiSet<T>
 where
-    T: Ord + Clone + Debug,
+    T: Ord + Clone,
 {
     /// `a <= b`の値を返す
     #[inline]
@@ -238,7 +238,7 @@ where
 
 /// ## traverse
 /// 順に取り出す
-fn traverse<'a, T: Ord + Debug>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
+fn traverse<'a, T: Ord>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'a T>) {
     if root.is_none() {
         return;
     }
@@ -254,7 +254,7 @@ fn traverse<'a, T: Ord + Debug>(root: &'a Option<Box<Node<T>>>, res: &mut Vec<&'
 /// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
 fn splay<T, C>(mut root: Option<Box<Node<T>>>, key: &T, compare: C) -> (Option<Box<Node<T>>>, bool)
 where
-    T: Ord + Debug,
+    T: Ord,
     C: Fn(&T, &T) -> bool,
 {
     if root.is_none() {
@@ -333,7 +333,7 @@ fn splay_rev<T, C>(
     compare: C,
 ) -> (Option<Box<Node<T>>>, bool)
 where
-    T: Ord + Debug,
+    T: Ord,
     C: Fn(&T, &T) -> bool,
 {
     if root.is_none() {
@@ -411,7 +411,7 @@ where
 ///     / \                        / \
 ///    A   B                      B   C
 /// ```
-fn rotate_right<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
+fn rotate_right<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.left {
             root.left = new_root.right;
@@ -433,7 +433,7 @@ fn rotate_right<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T
 ///       / \                    / \
 ///      B   C                  A   B
 /// ```
-fn rotate_left<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
+fn rotate_left<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
     if let Some(mut root) = root {
         if let Some(mut new_root) = root.right {
             root.right = new_root.left;
@@ -448,7 +448,7 @@ fn rotate_left<T: Ord + Debug>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>
 }
 
 // ----- FromIterator -----
-impl<T: Ord + Clone + Debug> FromIterator<T> for MultiSet<T> {
+impl<T: Ord + Clone> FromIterator<T> for MultiSet<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut res = MultiSet::new();
         for item in iter {
