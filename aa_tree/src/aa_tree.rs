@@ -16,10 +16,10 @@ pub type AATreeNode<K, V> = Option<Box<AATreeNodeInner<K, V>>>;
 
 /// ノードの逆転
 /// ```text
-///       ⇓           ⇓       
-///   L ← T           L → T   
-///  ↙ ↘   ↘   ==>   ↙   ↙ ↘  
-/// A   B   R       A   B   R
+///   |        ⇓           ⇓       
+/// 2 |    L ← T           L → T   
+///   |   ↙ ↘   ↘   ==>   ↙   ↙ ↘  
+/// 1 |  A   B   R       A   B   R
 /// ```
 fn skew<K: Ord, V>(mut node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     let Some(mut T) = node else {
@@ -40,13 +40,26 @@ fn skew<K: Ord, V>(mut node: AATreeNode<K, V>) -> AATreeNode<K, V> {
 
 /// ノードの分割操作
 /// ```text
-///                       ⇓    
-///   ⇓                   R    
-///   T → R → X          ↙ ↘   
-///  ↙   ↙       ==>    T   X  
-/// A   B              ↙ ↘     
-///                   A   B    
+///   |                         ⇓    
+/// 3 |                         R    
+///   |    ⇓                   ↙ ↘   
+/// 2 |    T → R → X   ==>    T   X  
+///   |   ↙   ↙              ↙ ↘     
+/// 1 |  A   B              A   B    
 /// ```
 fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
-    todo!()
+    let Some(mut T) = node else {
+        return None;
+    };
+    if T.right.is_none() || T.right.as_ref().unwrap().right.is_none() {
+        Some(T)
+    } else if T.level == T.right.as_ref().unwrap().right.as_ref().unwrap().level {
+        let mut R = T.right.unwrap();
+        T.right = R.left;
+        R.left = Some(T);
+        R.level += 1; // Rのレベルを1上げる
+        Some(R)
+    } else {
+        Some(T)
+    }
 }
