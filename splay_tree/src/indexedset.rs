@@ -1,10 +1,11 @@
+//! インデックスのアクセスに対応した集合型（SplayTree）
+
 use std::iter::FromIterator;
 use std::mem::{replace, swap};
 use std::{cmp::Ordering, fmt::Debug};
 
 use crate::multiset::MultiSet;
 
-/// # Node
 #[derive(Debug, Clone)]
 pub struct Node<T: Ord> {
     pub key: T,
@@ -25,7 +26,6 @@ impl<T: Ord> Node<T> {
     }
 }
 
-/// # IndexedSet
 /// スプレー木のクラス
 pub struct IndexedSet<T: Ord> {
     size: usize,
@@ -75,9 +75,7 @@ where
         self.size == 0
     }
 
-    /// ## get
     /// 値の検索を行う
-    /// ### 戻り値
     /// - `Option<&T>`: キーに紐づいた値
     pub fn get(&mut self, key: &T) -> Option<&T> {
         let lb = self.lower_bound(key);
@@ -89,7 +87,6 @@ where
     }
 
     /// 値の挿入を行う。
-    /// ### 戻り値
     /// - `bool`: 挿入が行われたか
     pub fn insert(&mut self, key: T) -> Option<T> {
         // rootの取り出し
@@ -125,9 +122,7 @@ where
         None
     }
 
-    /// ## delete
     /// 値の削除
-    /// ### 戻り値
     /// - `Option<T>`: 削除された値
     pub fn delete(&mut self, key: &T) -> Option<T> {
         if self.is_empty() {
@@ -164,13 +159,11 @@ where
         Some(deleted.unwrap().key)
     }
 
-    /// ## contains_key
     /// - 値`key`を含むか
     pub fn contains_key(&mut self, key: &T) -> bool {
         self.get(key).is_some_and(|k| k == key)
     }
 
-    /// ## lower_bound
     /// - `key`以上の最小の値を返す
     pub fn lower_bound(&mut self, key: &T) -> Option<&T> {
         // 根の取り出し
@@ -185,7 +178,6 @@ where
         }
     }
 
-    /// ## upper_bound
     /// - `key`より大きい最小の値を返す
     pub fn upper_bound(&mut self, key: &T) -> Option<&T> {
         // 根の取り出し
@@ -200,7 +192,6 @@ where
         }
     }
 
-    /// ## lower_bound_rev
     /// - `key`以下の最大の値を返す
     pub fn lower_bound_rev(&mut self, key: &T) -> Option<&T> {
         // 根の取り出し
@@ -215,7 +206,6 @@ where
         }
     }
 
-    /// ## upper_bound_rev
     /// - `key`未満の最大の値を返す
     pub fn upper_bound_rev(&mut self, key: &T) -> Option<&T> {
         // 根の取り出し
@@ -230,7 +220,6 @@ where
         }
     }
 
-    /// ## get_by_index
     /// - 先頭からn番目の値を取得する（0-indexed）
     pub fn get_by_index(&self, n: usize) -> Option<&T> {
         if n > self.size {
@@ -240,7 +229,6 @@ where
         }
     }
 
-    /// ## index
     /// - 要素`key`のインデックスを取得する（0-indexed）
     pub fn index(&mut self, key: &T) -> Option<usize> {
         // keyでsplayを行う
@@ -259,7 +247,6 @@ where
     }
 }
 
-/// ## get_nth
 fn get_nth<T: Ord>(root: &Option<Box<Node<T>>>, n: usize) -> Option<&T> {
     if let Some(root) = root {
         let left_size = root.left.as_ref().map_or(0, |node| node.size);
@@ -273,7 +260,6 @@ fn get_nth<T: Ord>(root: &Option<Box<Node<T>>>, n: usize) -> Option<&T> {
     }
 }
 
-/// ## splay
 /// 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
 fn splay<T, C>(mut root: Option<Box<Node<T>>>, key: &T, compare: C) -> (Option<Box<Node<T>>>, bool)
 where
@@ -347,7 +333,6 @@ where
     }
 }
 
-/// ## splay_rev
 /// - 比較関数`compare`を引数にとり、条件を満たす最小のノードを返す
 /// - splayの逆向き
 fn splay_rev<T, C>(
@@ -435,7 +420,7 @@ fn update_size<T: Ord>(node: &mut Option<Box<Node<T>>>) {
     }
 }
 
-/// ## 右回転
+/// 右回転
 /// ```not-rust
 ///        Y                      X
 ///       / \       right        / \
@@ -456,7 +441,7 @@ fn rotate_right<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
     res
 }
 
-/// ## 左回転
+/// 左回転
 /// ```not-rust
 ///      X                          Y
 ///     / \         left           / \
