@@ -248,7 +248,7 @@ fn splay_inner<T: Ord>(mut root: Option<Box<Node<T>>>, key: &T) -> (Option<Box<N
 }
 
 /// ## 右回転
-/// ```not-rust
+/// ```text
 ///        Y                      X
 ///       / \       right        / \
 ///      X   C  === rotate ==>  A   Y
@@ -270,7 +270,7 @@ fn rotate_right<T: Ord>(root: Option<Box<Node<T>>>) -> Option<Box<Node<T>>> {
 }
 
 /// ## 左回転
-/// ```not-rust
+/// ```text
 ///      X                          Y
 ///     / \         left           / \
 ///    A   Y    === rotate ==>    X   C
