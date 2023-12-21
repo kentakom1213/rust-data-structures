@@ -8,9 +8,9 @@ where
     K: Ord + Debug,
     V: Debug,
 {
-    println!("┌─ Tree ──────────");
+    println!("┌─ Tree ───────────────");
     fmt_inner(root, root.as_ref().map_or(0, |node| node.level));
-    println!("└─────────────────");
+    println!("└──────────────────────");
 }
 
 /// print recursive

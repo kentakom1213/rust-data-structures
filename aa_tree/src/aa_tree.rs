@@ -136,8 +136,14 @@ fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> (AATreeNode<K, V>, Opti
         }
     };
     // バランスの修正
-    let Some(mut T) = new_root else {
-        return (None, old_key_value);
+    let rebalanced = rebarance(new_root);
+    (rebalanced, old_key_value)
+}
+
+/// 削除後の頂点を再平衡化
+fn rebarance<K: Ord, V>(root: AATreeNode<K, V>) -> AATreeNode<K, V> {
+    let Some(mut T) = root else {
+        return None;
     };
     let left_level = T.left.as_ref().map_or(0, |node| node.level);
     let right_level = T.right.as_ref().map_or(0, |node| node.level);
@@ -147,18 +153,18 @@ fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> (AATreeNode<K, V>, Opti
         if right_level > T.level {
             T.right.as_mut().unwrap().level = T.level;
         }
-        // 右のノードをskew
+        // 同じレベルのノードをskew
         T = skew(Some(T)).unwrap();
         T.right = skew(T.right);
         if let Some(mut right) = T.right.take() {
             right.right = skew(right.right);
             T.right.replace(right);
         }
-        // 右のノードをsplit
+        // 同じレベルのノードをsplit
         T = split(Some(T)).unwrap();
         T.right = split(T.right);
     }
-    (Some(T), old_key_value)
+    Some(T)
 }
 
 /// nodeを根とする木のうち，値が最大のものを削除する
