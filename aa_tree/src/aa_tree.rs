@@ -125,15 +125,13 @@ fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> (AATreeNode<K, V>, Opti
             } else {
                 // 左右の子を持つ場合，左の子の最大値を現在のノードに代入
                 let (new_root, right_most) = delete_and_get_max(T.left);
-                let AATreeNodeInner {
-                    key: new_key,
-                    value: new_value,
-                    ..
-                } = right_most.unwrap();
+                let right_most = right_most.unwrap();
                 let mut T = new_root.unwrap();
-                let old_key = replace(&mut T.key, new_key);
-                let old_value = replace(&mut T.value, new_value);
-                (Some(T), Some((old_key, old_value)))
+                let old_key_value = (
+                    replace(&mut T.key, right_most.key),
+                    replace(&mut T.value, right_most.value),
+                );
+                (Some(T), Some(old_key_value))
             }
         }
     };

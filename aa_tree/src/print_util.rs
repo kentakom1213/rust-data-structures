@@ -19,17 +19,14 @@ where
     K: Ord + Debug,
     V: Debug,
 {
-    match node.as_ref() {
-        Some(node) => {
-            fmt_inner(&node.left, depth);
-            println!(
-                "│{}({:?}, {:?})",
-                "    ".repeat(depth - node.level),
-                node.key,
-                node.value
-            );
-            fmt_inner(&node.right, depth);
-        }
-        None => {}
+    if let Some(node) = node.as_ref() {
+        fmt_inner(&node.left, depth);
+        println!(
+            "│{}({:?}, {:?})",
+            "    ".repeat(depth - node.level),
+            node.key,
+            node.value
+        );
+        fmt_inner(&node.right, depth);
     }
 }
