@@ -1,4 +1,8 @@
-use aa_tree::{aa_tree::{AATreeNodeInner, AATreeNode}, print_util::pretty_print, tree};
+use aa_tree::{
+    aa_tree::{AATreeNode, AATreeNodeInner},
+    print_util::pretty_print,
+    tree,
+};
 
 #[test]
 fn test_tree() {
