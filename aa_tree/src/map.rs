@@ -2,23 +2,26 @@
 
 use std::fmt::Debug;
 
-use crate::{
-    node::{delete, insert, AATreeNode},
-    print_util::pretty_print,
-};
+use crate::{node::*, print_util::pretty_print};
 
 pub struct AATreeMap<K: Ord, V> {
     pub root: AATreeNode<K, V>,
-    size: usize,
 }
 
 impl<K: Ord, V> AATreeMap<K, V> {
     /// mapの初期化
     pub fn new() -> Self {
-        Self {
-            root: None,
-            size: 0,
-        }
+        Self { root: None }
+    }
+
+    /// キーに対応する値の参照を取得する
+    pub fn get(&self, key: &K) -> Option<&V> {
+        get(&self.root, key)
+    }
+
+    /// キーに対応する値の**可変**参照を取得する
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
+        get_mut(&mut self.root, key)
     }
 
     /// キーに対応する値を挿入する

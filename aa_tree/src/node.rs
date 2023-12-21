@@ -76,6 +76,30 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     }
 }
 
+/// 値`key`の値の参照を取得する
+pub fn get<'a, K: Ord, V>(root: &'a AATreeNode<K, V>, key: &K) -> Option<&'a V> {
+    let Some(T) = root else {
+        return None;
+    };
+    match key.cmp(&T.key) {
+        Ordering::Less => get(&T.left, key),
+        Ordering::Greater => get(&T.right, key),
+        Ordering::Equal => Some(&T.value),
+    }
+}
+
+/// 値`key`の値の可変参照を取得する
+pub fn get_mut<'a, K: Ord, V>(root: &'a mut AATreeNode<K, V>, key: &K) -> Option<&'a mut V> {
+    let Some(T) = root else {
+        return None;
+    };
+    match key.cmp(&T.key) {
+        Ordering::Less => get_mut(&mut T.left, key),
+        Ordering::Greater => get_mut(&mut T.right, key),
+        Ordering::Equal => Some(&mut T.value),
+    }
+}
+
 /// 値`key`に`value`を挿入する
 /// - `root`: 挿入する木の根
 pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, V> {
@@ -89,7 +113,9 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
         Ordering::Greater => {
             T.right = insert(T.right, key, value);
         }
-        Ordering::Equal => (),
+        Ordering::Equal => {
+            T.value = value;
+        }
     }
     let mut root = Some(T);
     root = skew(root);
