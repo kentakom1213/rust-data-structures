@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
 
+use std::cmp::Ordering;
+
 /// AA木のノード
 #[derive(Debug)]
 pub struct AATreeNodeInner<K, V>
@@ -11,6 +13,18 @@ where
     pub level: usize,
     pub left: Option<Box<AATreeNodeInner<K, V>>>,
     pub right: Option<Box<AATreeNodeInner<K, V>>>,
+}
+
+impl<K: Ord, V> AATreeNodeInner<K, V> {
+    pub fn new(key: K, value: V) -> AATreeNode<K, V> {
+        Some(Box::new(AATreeNodeInner {
+            key,
+            value,
+            level: 1,
+            left: None,
+            right: None,
+        }))
+    }
 }
 
 pub type AATreeNode<K, V> = Option<Box<AATreeNodeInner<K, V>>>;
@@ -65,10 +79,36 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     }
 }
 
+/// 値の挿入
+/// - `root`: 挿入する木の根
+fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, V> {
+    let Some(mut T) = root else {
+        return AATreeNodeInner::new(key, value);
+    };
+    match key.cmp(&T.key) {
+        Ordering::Less => {
+            T.left = insert(T.left, key, value);
+        }
+        Ordering::Greater => {
+            T.right = insert(T.right, key, value);
+        }
+        Ordering::Equal => (),
+    }
+    let mut root = Some(T);
+    root = skew(root);
+    root = split(root);
+    root
+}
+
+/// 値の削除
+fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> AATreeNode<K, V> {
+    todo!()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tree;
+    use crate::{print_util::pretty_print, tree};
 
     #[test]
     fn test_skew() {
@@ -144,5 +184,20 @@ mod test {
 
         println!("----- after split -----");
         println!("{:#?}", &tree);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut tree = None;
+
+        println!("----- default -----");
+        pretty_print(&tree);
+
+        for (i, c) in ('A'..='Z').enumerate() {
+            tree = insert(tree, c, i);
+
+            println!("----- insert {c} -----");
+            pretty_print(&tree);
+        }
     }
 }
