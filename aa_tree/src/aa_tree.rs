@@ -5,11 +5,11 @@ pub struct AATreeNodeInner<K, V>
 where
     K: Ord,
 {
-    key: K,
-    value: V,
-    level: usize,
-    left: Option<Box<AATreeNodeInner<K, V>>>,
-    right: Option<Box<AATreeNodeInner<K, V>>>,
+    pub key: K,
+    pub value: V,
+    pub level: usize,
+    pub left: Option<Box<AATreeNodeInner<K, V>>>,
+    pub right: Option<Box<AATreeNodeInner<K, V>>>,
 }
 
 pub type AATreeNode<K, V> = Option<Box<AATreeNodeInner<K, V>>>;
@@ -21,7 +21,7 @@ pub type AATreeNode<K, V> = Option<Box<AATreeNodeInner<K, V>>>;
 ///   |   ↙ ↘   ↘   ==>   ↙   ↙ ↘  
 /// 1 |  A   B   R       A   B   R
 /// ```
-fn skew<K: Ord, V>(mut node: AATreeNode<K, V>) -> AATreeNode<K, V> {
+fn skew<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     let Some(mut T) = node else {
         return None;
     };
