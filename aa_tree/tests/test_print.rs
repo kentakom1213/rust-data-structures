@@ -1,5 +1,5 @@
 use aa_tree::{
-    aa_tree::{AATreeNode, AATreeNodeInner},
+    node::{AATreeNode, AATreeNodeInner},
     print_util::pretty_print,
     tree,
 };

@@ -4,10 +4,7 @@ use std::{cmp::Ordering, fmt::Debug, mem::replace};
 
 /// AA木のノード
 #[derive(Debug)]
-pub struct AATreeNodeInner<K, V>
-where
-    K: Ord,
-{
+pub struct AATreeNodeInner<K: Ord, V> {
     pub key: K,
     pub value: V,
     pub level: usize,
@@ -81,7 +78,7 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
 
 /// 値`key`に`value`を挿入する
 /// - `root`: 挿入する木の根
-fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, V> {
+pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, V> {
     let Some(mut T) = root else {
         return AATreeNodeInner::new(key, value);
     };
@@ -102,7 +99,7 @@ fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, 
 
 /// 値`key`を削除し，削除されたノードの`value`を返す
 /// - `root`: 削除する木の根
-fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> (AATreeNode<K, V>, Option<(K, V)>) {
+pub fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> (AATreeNode<K, V>, Option<(K, V)>) {
     let Some(mut T) = root else {
         return (None, None);
     };
@@ -191,7 +188,7 @@ fn delete_and_get_max<K: Ord, V>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{print_util::pretty_print, tree};
+    use crate::tree;
 
     #[test]
     fn test_skew() {
@@ -267,55 +264,5 @@ mod test {
 
         println!(" after split ");
         println!("{:#?}", &tree);
-    }
-
-    #[test]
-    fn test_insert() {
-        let mut tree = None;
-
-        println!("  default ");
-        pretty_print(&tree);
-
-        for (i, c) in ('A'..='Z').enumerate() {
-            tree = insert(tree, c, i);
-
-            println!("> insert {c}");
-            pretty_print(&tree);
-        }
-    }
-
-    #[test]
-    fn test_insert_rev() {
-        let mut tree = None;
-
-        println!("  default");
-        pretty_print(&tree);
-
-        for (i, c) in ('A'..='Z').rev().enumerate() {
-            tree = insert(tree, c, i);
-
-            println!("> insert {c}");
-            pretty_print(&tree);
-        }
-    }
-
-    #[test]
-    fn test_delete() {
-        let mut tree = None;
-
-        for (i, c) in ('A'..='H').enumerate() {
-            tree = insert(tree, c, i);
-        }
-
-        println!("  default ");
-        pretty_print(&tree);
-
-        for c in 'A'..='J' {
-            println!("> delete {c}");
-
-            tree = delete(tree, &c).0;
-
-            pretty_print(&tree);
-        }
     }
 }

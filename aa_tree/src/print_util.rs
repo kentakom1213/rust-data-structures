@@ -1,6 +1,6 @@
 //! 木を整形して表示するための関数
 
-use crate::aa_tree::AATreeNode;
+use crate::node::AATreeNode;
 use std::fmt::Debug;
 
 pub fn pretty_print<K, V>(root: &AATreeNode<K, V>)
