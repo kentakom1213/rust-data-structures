@@ -26,3 +26,4 @@ AA木は各ノードに**レベル**という値を持ち，それぞれのノ�
 ## 参考
 
 - [AA木 - wikiedia](https://ja.wikipedia.org/wiki/AA%E6%9C%A8)
+- [AA 木 (Arne Andersson tree) - Algorithms with Python](http://www.nct9.ne.jp/m_hiroi/light/pyalgo53.html)
