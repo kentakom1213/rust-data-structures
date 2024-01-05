@@ -1,15 +1,15 @@
 use aa_tree_traversable::{
-    node::{AATreeNodeChild, AATreeNodeInner},
-    print_util::pretty_print,
+    node::{AATreeNode, AATreeNodeInner},
+    print_util::print_as_btree,
     tree,
 };
 use std::{cell::RefCell, rc::Rc};
 
 #[test]
 fn test_tree() {
-    let null_tree: AATreeNodeChild<&str, i32> = None;
+    let null_tree: AATreeNode<&str, i32> = None;
 
-    pretty_print(&null_tree);
+    print_as_btree(&null_tree);
 
     let mono_tree = tree! {
         key: "root",
@@ -17,7 +17,7 @@ fn test_tree() {
         level: 1,
     };
 
-    pretty_print(&mono_tree);
+    print_as_btree(&mono_tree);
 
     /*
 
@@ -53,5 +53,5 @@ fn test_tree() {
         }
     };
 
-    pretty_print(&tree);
+    print_as_btree(&tree);
 }

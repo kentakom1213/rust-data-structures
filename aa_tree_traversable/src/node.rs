@@ -2,10 +2,11 @@
 
 use std::{
     cell::RefCell,
+    cmp::Ordering,
     rc::{Rc, Weak},
 };
 
-pub type AATreeNodeChild<K, V> = Option<Rc<RefCell<AATreeNodeInner<K, V>>>>;
+pub type AATreeNode<K, V> = Option<Rc<RefCell<AATreeNodeInner<K, V>>>>;
 pub type AATreeNodeParent<K, V> = Weak<RefCell<AATreeNodeInner<K, V>>>;
 
 /// AA木のノード
@@ -15,12 +16,12 @@ pub struct AATreeNodeInner<K: Ord, V> {
     pub value: V,
     pub level: usize,
     // pub parent: AATreeNodeParent<K, V>,
-    pub left: AATreeNodeChild<K, V>,
-    pub right: AATreeNodeChild<K, V>,
+    pub left: AATreeNode<K, V>,
+    pub right: AATreeNode<K, V>,
 }
 
 impl<K: Ord, V> AATreeNodeInner<K, V> {
-    pub fn new(key: K, value: V) -> AATreeNodeChild<K, V> {
+    pub fn new(key: K, value: V) -> AATreeNode<K, V> {
         Some(Rc::new(RefCell::new(AATreeNodeInner {
             key,
             value,
@@ -39,7 +40,7 @@ impl<K: Ord, V> AATreeNodeInner<K, V> {
 ///   |   ↙ ↘   ↘   ==>   ↙   ↙ ↘   
 /// 1 |  A   B   R       A   B   R  
 /// ```
-fn skew<K: Ord, V>(node: AATreeNodeChild<K, V>) -> AATreeNodeChild<K, V> {
+fn skew<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     let Some(T) = node else {
         return node;
     };
@@ -66,7 +67,7 @@ fn skew<K: Ord, V>(node: AATreeNodeChild<K, V>) -> AATreeNodeChild<K, V> {
 ///   |   ↙   ↙              ↙ ↘
 /// 1 |  A   B              A   B
 /// ```
-fn split<K: Ord, V>(node: AATreeNodeChild<K, V>) -> AATreeNodeChild<K, V> {
+fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     let Some(T) = node else {
         return None;
     };
@@ -85,15 +86,45 @@ fn split<K: Ord, V>(node: AATreeNodeChild<K, V>) -> AATreeNodeChild<K, V> {
             .level
     {
         let R = T.borrow_mut().right.take().unwrap();
-        T.borrow_mut()
-            .right
-            .replace(R.borrow_mut().left.take().unwrap());
+        if let Some(new_right) = R.borrow_mut().left.take() {
+            T.borrow_mut().right.replace(new_right);
+        }
         R.borrow_mut().left.replace(T);
         R.borrow_mut().level += 1; // Rのレベルを1上げる
         Some(R)
     } else {
         Some(T)
     }
+}
+
+/// 値`key`に`value`を挿入する
+/// - `root`: 挿入する木の根
+pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, V> {
+    let Some(T) = root else {
+        return AATreeNodeInner::new(key, value);
+    };
+    let order = key.cmp(&T.borrow().key);
+    match order {
+        Ordering::Less => {
+            let left = T.borrow_mut().left.take();
+            if let Some(new_left) = insert(left, key, value) {
+                T.borrow_mut().left.replace(new_left);
+            }
+        }
+        Ordering::Greater => {
+            let right = T.borrow_mut().right.take();
+            if let Some(new_right) = insert(right, key, value) {
+                T.borrow_mut().right.replace(new_right);
+            }
+        }
+        Ordering::Equal => {
+            T.borrow_mut().value = value;
+        }
+    }
+    let mut root = Some(T);
+    root = skew(root);
+    root = split(root);
+    root
 }
 
 #[cfg(test)]
