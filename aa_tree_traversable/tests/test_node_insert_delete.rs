@@ -56,6 +56,16 @@ fn test_insert_shuffle() {
     }
 }
 
+#[test]
+fn test_int_increment() {
+    let mut tree = None;
+
+    for i in 1..=15 {
+        tree = insert(tree, i, i);
+        print_as_binary_tree(&tree);
+    }
+}
+
 // #[test]
 // fn test_delete() {
 //     let mut tree = None;
@@ -75,3 +85,17 @@ fn test_insert_shuffle() {
 //         print_as_btree(&tree);
 //     }
 // }
+
+
+/*
+
+     ┌─ [  ]
+ ┌─ [  ]
+ │   └─ [  ]
+[  ]
+ │   ┌─ [  ]
+ └─ [  ]
+     └─ [  ]
+
+
+*/

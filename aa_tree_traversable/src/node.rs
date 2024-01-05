@@ -75,15 +75,15 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
         Some(T)
     } else if T.borrow().level
         == T.borrow()
-            .right
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .right
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .level
+        .right
+        .as_ref()
+        .unwrap()
+        .borrow()
+        .right
+        .as_ref()
+        .unwrap()
+        .borrow()
+        .level
     {
         let R = T.borrow_mut().right.take().unwrap();
         if let Some(new_right) = R.borrow_mut().left.take() {
