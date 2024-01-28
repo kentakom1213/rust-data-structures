@@ -7,7 +7,7 @@ use std::{
 };
 
 pub type AATreeNode<K, V> = Option<Rc<RefCell<AATreeNodeInner<K, V>>>>;
-pub type AATreeNodeParent<K, V> = Weak<RefCell<AATreeNodeInner<K, V>>>;
+pub type AATreeNodeParent<K, V> = Option<Weak<RefCell<AATreeNodeInner<K, V>>>>;
 
 /// AA木のノード
 #[derive(Debug)]
@@ -15,7 +15,7 @@ pub struct AATreeNodeInner<K: Ord, V> {
     pub key: K,
     pub value: V,
     pub level: usize,
-    // pub parent: AATreeNodeParent<K, V>,
+    pub parent: AATreeNodeParent<K, V>,
     pub left: AATreeNode<K, V>,
     pub right: AATreeNode<K, V>,
 }
@@ -26,7 +26,7 @@ impl<K: Ord, V> AATreeNodeInner<K, V> {
             key,
             value,
             level: 1,
-            // parent: None,
+            parent: None,
             left: None,
             right: None,
         })))
@@ -56,6 +56,7 @@ fn skew<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     } else {
         Some(T)
     }
+    // TODO: 親を組み替える処理
 }
 
 /// ノードの分割操作
@@ -95,6 +96,7 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     } else {
         Some(T)
     }
+    // TODO: 親を組み替える処理
 }
 
 /// 値`key`に`value`を挿入する
@@ -108,12 +110,22 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
         Ordering::Less => {
             let left = T.borrow_mut().left.take();
             if let Some(new_left) = insert(left, key, value) {
+                if new_left.borrow().parent.is_none() {
+                    new_left.borrow_mut().parent.replace(
+                        Rc::downgrade(&T)
+                    );
+                }
                 T.borrow_mut().left.replace(new_left);
             }
         }
         Ordering::Greater => {
             let right = T.borrow_mut().right.take();
             if let Some(new_right) = insert(right, key, value) {
+                if new_right.borrow().parent.is_none() {
+                    new_right.borrow_mut().parent.replace(
+                        Rc::downgrade(&T)
+                    );
+                }
                 T.borrow_mut().right.replace(new_right);
             }
         }
@@ -130,7 +142,7 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tree;
+    use crate::{tree, print_util::print_as_binary_tree};
 
     #[test]
     fn test_skew() {
@@ -161,13 +173,15 @@ mod test {
         };
 
         println!("--- before skew ---");
-        println!("{:#?}", &tree);
+        // println!("{:#?}", &tree);
+        print_as_binary_tree(&tree);
 
         // skew
         tree = skew(tree);
 
         println!("--- after skew ---");
-        println!("{:#?}", &tree);
+        // println!("{:#?}", &tree);
+        print_as_binary_tree(&tree);
     }
 
     #[test]
@@ -209,12 +223,14 @@ mod test {
         };
 
         println!("--- before split ---");
-        println!("{:#?}", &tree);
+        // println!("{:#?}", &tree);
+        print_as_binary_tree(&tree);
 
         // split
         tree = split(tree);
 
         println!("--- after split ---");
-        println!("{:#?}", &tree);
+        // println!("{:#?}", &tree);
+        print_as_binary_tree(&tree);
     }
 }

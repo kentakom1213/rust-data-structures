@@ -7,6 +7,7 @@ macro_rules! tree {
             key: $key,
             value: $value,
             level: $level,
+            parent: None,
             left: None,
             right: None,
         })))
@@ -16,6 +17,7 @@ macro_rules! tree {
             key: $key,
             value: $value,
             level: $level,
+            parent: None,
             left: $left,
             right: None,
         })))
@@ -25,6 +27,7 @@ macro_rules! tree {
             key: $key,
             value: $value,
             level: $level,
+            parent: None,
             left: None,
             right: $right,
         })))
@@ -34,6 +37,7 @@ macro_rules! tree {
             key: $key,
             value: $value,
             level: $level,
+            parent: None,
             left: $left,
             right: $right,
         })))
