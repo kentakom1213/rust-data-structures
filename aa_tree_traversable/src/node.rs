@@ -61,12 +61,12 @@ fn skew<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
 
 /// ノードの分割操作
 /// ```text
-///   |                         ⇓
-/// 3 |                         R
-///   |    ⇓                   ↙ ↘
-/// 2 |    T → R → X   ==>    T   X
-///   |   ↙   ↙              ↙ ↘
-/// 1 |  A   B              A   B
+///   |                         ⇓    
+/// 3 |                         R    
+///   |    ⇓                   ↙ ↘   
+/// 2 |    T → R → X   ==>    T   X  
+///   |   ↙   ↙              ↙ ↘     
+/// 1 |  A   B              A   B    
 /// ```
 fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
     let Some(T) = node else {
@@ -76,15 +76,15 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
         Some(T)
     } else if T.borrow().level
         == T.borrow()
-        .right
-        .as_ref()
-        .unwrap()
-        .borrow()
-        .right
-        .as_ref()
-        .unwrap()
-        .borrow()
-        .level
+            .right
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .right
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .level
     {
         let R = T.borrow_mut().right.take().unwrap();
         if let Some(new_right) = R.borrow_mut().left.take() {
@@ -111,9 +111,7 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
             let left = T.borrow_mut().left.take();
             if let Some(new_left) = insert(left, key, value) {
                 if new_left.borrow().parent.is_none() {
-                    new_left.borrow_mut().parent.replace(
-                        Rc::downgrade(&T)
-                    );
+                    new_left.borrow_mut().parent.replace(Rc::downgrade(&T));
                 }
                 T.borrow_mut().left.replace(new_left);
             }
@@ -122,9 +120,7 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
             let right = T.borrow_mut().right.take();
             if let Some(new_right) = insert(right, key, value) {
                 if new_right.borrow().parent.is_none() {
-                    new_right.borrow_mut().parent.replace(
-                        Rc::downgrade(&T)
-                    );
+                    new_right.borrow_mut().parent.replace(Rc::downgrade(&T));
                 }
                 T.borrow_mut().right.replace(new_right);
             }
@@ -142,7 +138,7 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{tree, print_util::print_as_binary_tree};
+    use crate::{print_util::print_as_binary_tree, tree};
 
     #[test]
     fn test_skew() {
