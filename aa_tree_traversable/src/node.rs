@@ -33,7 +33,8 @@ impl<K: Ord, V> AATreeNodeInner<K, V> {
     }
 }
 
-/// ノードの逆転
+/// skew操作
+///
 /// ```text
 ///   |        ⇓           ⇓        
 /// 2 |    L ← T           L → T    
@@ -48,18 +49,25 @@ fn skew<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
         Some(T)
     } else if T.borrow().level == T.borrow().left.as_ref().unwrap().borrow().level {
         let L = T.borrow_mut().left.take().unwrap();
+        // Bがあるときの処理
         if let Some(B) = L.borrow_mut().right.take() {
+            // Bの親をTに
+            B.borrow_mut().parent.replace(Rc::downgrade(&T));
+            // Tの左の子をBに
             T.borrow_mut().left.replace(B);
         }
+        // Tの親をLに
+        T.borrow_mut().parent.replace(Rc::downgrade(&L));
+        // Lの右の子をTに
         L.borrow_mut().right.replace(T);
         Some(L)
     } else {
         Some(T)
     }
-    // TODO: 親を組み替える処理
 }
 
-/// ノードの分割操作
+/// split操作
+///
 /// ```text
 ///   |                         ⇓    
 /// 3 |                         R    
@@ -87,20 +95,34 @@ fn split<K: Ord, V>(node: AATreeNode<K, V>) -> AATreeNode<K, V> {
             .level
     {
         let R = T.borrow_mut().right.take().unwrap();
-        if let Some(new_right) = R.borrow_mut().left.take() {
-            T.borrow_mut().right.replace(new_right);
+        // Bがあるときの処理
+        if let Some(B) = R.borrow_mut().left.take() {
+            // Bの親をTに
+            B.borrow_mut().parent.replace(Rc::downgrade(&T));
+            // Tの右の子をBに
+            T.borrow_mut().right.replace(B);
         }
+        // Tの親をRに
+        T.borrow_mut().parent.replace(Rc::downgrade(&R));
+        // Rの左の子をTに
         R.borrow_mut().left.replace(T);
-        R.borrow_mut().level += 1; // Rのレベルを1上げる
+        // Rのレベルを1上げる
+        R.borrow_mut().level += 1;
         Some(R)
     } else {
         Some(T)
     }
-    // TODO: 親を組み替える処理
 }
 
 /// 値`key`に`value`を挿入する
 /// - `root`: 挿入する木の根
+///
+/// ```text
+///    ⇓    
+///    T    
+///   ↙ ↘   
+///  A   B  
+/// ```
 pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode<K, V> {
     let Some(T) = root else {
         return AATreeNodeInner::new(key, value);
@@ -109,20 +131,20 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
     match order {
         Ordering::Less => {
             let left = T.borrow_mut().left.take();
-            if let Some(new_left) = insert(left, key, value) {
-                if new_left.borrow().parent.is_none() {
-                    new_left.borrow_mut().parent.replace(Rc::downgrade(&T));
+            if let Some(A) = insert(left, key, value) {
+                if A.borrow().parent.is_none() {
+                    A.borrow_mut().parent.replace(Rc::downgrade(&T));
                 }
-                T.borrow_mut().left.replace(new_left);
+                T.borrow_mut().left.replace(A);
             }
         }
         Ordering::Greater => {
             let right = T.borrow_mut().right.take();
-            if let Some(new_right) = insert(right, key, value) {
-                if new_right.borrow().parent.is_none() {
-                    new_right.borrow_mut().parent.replace(Rc::downgrade(&T));
+            if let Some(B) = insert(right, key, value) {
+                if B.borrow().parent.is_none() {
+                    B.borrow_mut().parent.replace(Rc::downgrade(&T));
                 }
-                T.borrow_mut().right.replace(new_right);
+                T.borrow_mut().right.replace(B);
             }
         }
         Ordering::Equal => {
@@ -136,7 +158,7 @@ pub fn insert<K: Ord, V>(root: AATreeNode<K, V>, key: K, value: V) -> AATreeNode
 }
 
 #[cfg(test)]
-mod test {
+mod test_aatree_traverse {
     use super::*;
     use crate::{print_util::print_as_binary_tree, tree};
 
@@ -228,5 +250,42 @@ mod test {
         println!("--- after split ---");
         // println!("{:#?}", &tree);
         print_as_binary_tree(&tree);
+    }
+
+    #[test]
+    fn test_insert_and_traverse() {
+        let mut tree = None;
+
+        for (v, k) in ('a'..='e').enumerate() {
+            tree = insert(tree, k, v);
+        }
+
+        print_as_binary_tree(&tree);
+
+        // traverse
+        let mut iter = &tree;
+
+        let key = iter.as_ref().unwrap().borrow().key;
+        let value = iter.as_ref().unwrap().borrow().value;
+        println!("key: {}, value: {}", key, value);
+
+        // next
+        let bind = &iter.as_ref().unwrap().borrow();
+        let tmp = &bind.left;
+
+        println!("{:?}", iter);
+
+        // // traverse
+        // let key = iter.as_ref().unwrap().borrow().key;
+        // let value = iter.as_ref().unwrap().borrow().value;
+        // println!("key: {}, value: {}", key, value);
+
+        // // next
+        // iter = &iter.as_ref().unwrap().clone().borrow().left;
+
+        // // traverse
+        // let key = iter.as_ref().unwrap().borrow().key;
+        // let value = iter.as_ref().unwrap().borrow().value;
+        // println!("key: {}, value: {}", key, value);
     }
 }
