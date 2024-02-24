@@ -436,7 +436,7 @@ fn random_deq_delete_str() {
     }
 
     for (key, val) in arr.iter() {
-        seg = insert(seg, key.clone(), *val);
+        (seg, _) = insert(seg, key.clone(), *val);
     }
 
     println!("{:?}", arr);
