@@ -1,11 +1,12 @@
-use std::collections::BTreeSet;
-
 use aa_tree_segment::{
     alg::{monoids::Add, Monoid},
     node::*,
     print_util::{print_as_binary_tree, print_as_btree},
 };
-use rand::prelude::*;
+use rand::{
+    distributions::{Alphanumeric, DistString},
+    prelude::*,
+};
 
 #[test]
 fn test_insert() {
@@ -324,6 +325,79 @@ fn random_delete() {
                     .map(|&(_, v)| v)
                     .sum::<isize>(),
                 get_range(&seg, &l, &r, &isize::MIN, &isize::MAX)
+            );
+        }
+    }
+}
+
+#[test]
+fn random_delete_str() {
+    const ITER: usize = 200;
+    const QUERY: usize = 200;
+    const SIZE: usize = 10;
+
+    let mut rng = rand::thread_rng();
+
+    // 配列
+    let mut arr: Vec<(String, isize)> = vec![];
+
+    // セグ木
+    let mut seg: Node<String, Add> = None;
+
+    // ランダムな値を追加
+    for _ in 0..ITER {
+        let key = Alphanumeric.sample_string(&mut rng, SIZE);
+        let val = rng.gen_range(-1_000_000_000..1_000_000_000);
+
+        let idx_insert = arr.partition_point(|(k, _)| k < &key);
+
+        // 同じキーのときの処理
+        if idx_insert < arr.len() && arr[idx_insert].0 == key {
+            continue;
+        }
+
+        // 配列に追加
+        arr.insert(idx_insert, (key.clone(), val));
+
+        // セグ木に追加
+        seg = insert(seg, key, val);
+    }
+
+    println!("{:?}", arr);
+    print_as_binary_tree(&seg);
+
+    for _ in 0..ITER {
+        // 一点更新クエリ
+        // ランダムな値
+        let idx_delete = rng.gen_range(0..arr.len());
+        let (key, arr_delete_val) = arr.remove(idx_delete);
+
+        // セグ木の更新
+        let (new_seg, seg_delete_val) = delete(seg, &key);
+        seg = new_seg;
+
+        // 削除した値は等しいか
+        assert_eq!(arr_delete_val, seg_delete_val.unwrap().1);
+
+        // 表示
+        // println!("{:?}", arr);
+        // print_as_binary_tree(&seg);
+
+        // 区間取得クエリ
+        for _ in 0..QUERY {
+            // ランダムな区間
+            let mut l = Alphanumeric.sample_string(&mut rng, SIZE);
+            let mut r = Alphanumeric.sample_string(&mut rng, SIZE);
+            if l > r {
+                (l, r) = (r, l);
+            }
+
+            assert_eq!(
+                arr.iter()
+                    .filter(|(k, _)| &l <= k && k < &r)
+                    .map(|&(_, v)| v)
+                    .sum::<isize>(),
+                get_range(&seg, &l, &r, &"0".repeat(SIZE), &"z".repeat(SIZE))
             );
         }
     }
