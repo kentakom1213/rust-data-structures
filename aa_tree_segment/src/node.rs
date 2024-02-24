@@ -2,8 +2,8 @@
 
 #![allow(non_snake_case)]
 
-use crate::{alg::Monoid, print_util::print_as_binary_tree};
-use std::{cmp::Ordering, f32::consts::TAU, fmt::Debug, mem};
+use crate::alg::Monoid;
+use std::{cmp::Ordering, fmt::Debug, mem};
 
 /// AA木のノード
 pub type Node<K, M> = Option<Box<NodeInner<K, M>>>;
@@ -171,38 +171,44 @@ pub fn get_range<K: Ord, M: Monoid>(root: &Node<K, M>, l: &K, r: &K, begin: &K, 
 }
 
 /// 値 `key` に `value` を挿入する
-/// - 値がすでに存在する場合には更新する
-pub fn insert<K: Ord, M: Monoid>(root: Node<K, M>, key: K, value: M::Val) -> Node<K, M> {
+/// - 値がすでに存在する場合には更新し，もとの値を返す
+pub fn insert<K: Ord, M: Monoid>(
+    root: Node<K, M>,
+    key: K,
+    value: M::Val,
+) -> (Node<K, M>, Option<(K, M::Val)>) {
     let Some(mut T) = root else {
-        return NodeInner::new(key, value);
+        return (NodeInner::new(key, value), None);
     };
     // 挿入
-    match key.cmp(&T.key) {
+    let old_key_value = match key.cmp(&T.key) {
         Ordering::Less => {
-            T.left = insert(T.left, key, value);
+            let (new_left, old_key_value) = insert(T.left, key, value);
+            T.left = new_left;
+            old_key_value
         }
         Ordering::Greater => {
-            T.right = insert(T.right, key, value);
+            let (new_right, old_key_value) = insert(T.right, key, value);
+            T.right = new_right;
+            old_key_value
         }
-        Ordering::Equal => {
-            T.value = value;
-        }
-    }
+        Ordering::Equal => Some((
+            mem::replace(&mut T.key, key),
+            mem::replace(&mut T.value, value),
+        )),
+    };
     // ノードの評価
     T.eval();
     // 再平衡化
     let mut root = Some(T);
     root = skew(root);
     root = split(root);
-    root
+    (root, old_key_value)
 }
 
 /// 値 `key` をもつノードを削除し，削除されたノードを返す
-/// - `root`: 削除する木の根
-pub fn delete<K: Ord + Debug, M: Monoid>(
-    root: Node<K, M>,
-    key: &K,
-) -> (Node<K, M>, Option<(K, M::Val)>) {
+/// - `root`：削除する木の根
+pub fn delete<K: Ord, M: Monoid>(root: Node<K, M>, key: &K) -> (Node<K, M>, Option<(K, M::Val)>) {
     let Some(mut T) = root else {
         return (None, None);
     };
@@ -278,7 +284,7 @@ fn rebarance<K: Ord, M: Monoid>(root: Node<K, M>) -> Node<K, M> {
 }
 
 /// nodeを根とする木のうち，値が最大のものを削除する
-/// - 戻り値: (新しい根, 削除されたノード)
+/// - 戻り値：(新しい根, 削除されたノード)
 fn delete_and_get_max<K: Ord, M: Monoid>(
     root: Node<K, M>,
 ) -> (Node<K, M>, Option<NodeInner<K, M>>) {

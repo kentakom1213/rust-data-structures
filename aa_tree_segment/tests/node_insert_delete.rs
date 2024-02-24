@@ -20,7 +20,7 @@ fn test_insert() {
     assert_eq!(get_range(&seg, &4, &9, &0, &10), 0);
 
     // [(2: 5)]
-    seg = insert(seg, 2, 5);
+    (seg, _) = insert(seg, 2, 5);
     print_as_binary_tree(&seg);
 
     assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
@@ -31,7 +31,7 @@ fn test_insert() {
     assert_eq!(get_range(&seg, &4, &9, &0, &10), 0);
 
     // [(2: 5), (5: 8)]
-    seg = insert(seg, 5, 8);
+    (seg, _) = insert(seg, 5, 8);
     print_as_binary_tree(&seg);
 
     assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
@@ -42,7 +42,7 @@ fn test_insert() {
     assert_eq!(get_range(&seg, &4, &9, &0, &10), 8);
 
     // [(2: 5), (3: 3), (5: 8)]
-    seg = insert(seg, 3, 3);
+    (seg, _) = insert(seg, 3, 3);
     print_as_binary_tree(&seg);
 
     assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
@@ -53,7 +53,7 @@ fn test_insert() {
     assert_eq!(get_range(&seg, &4, &9, &0, &10), 8);
 
     // [(2: 5), (3: 3), (5: 8), (8: 1)]
-    seg = insert(seg, 8, 1);
+    (seg, _) = insert(seg, 8, 1);
     print_as_binary_tree(&seg);
 
     assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
@@ -64,7 +64,7 @@ fn test_insert() {
     assert_eq!(get_range(&seg, &4, &9, &0, &10), 9);
 
     // [(2: 5), (3: 3), (4: 6), (5: 8), (8: 1)]
-    seg = insert(seg, 4, 6);
+    (seg, _) = insert(seg, 4, 6);
     print_as_binary_tree(&seg);
 
     assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
@@ -90,7 +90,7 @@ fn test_noncommutative() {
     let mut seg: Node<usize, Str> = None;
 
     for (i, c) in ('A'..='G').enumerate() {
-        seg = insert(seg, i, c.to_string());
+        (seg, _) = insert(seg, i, c.to_string());
         print_as_binary_tree(&seg);
     }
 
@@ -107,7 +107,7 @@ fn test_delete_mini() {
     let mut seg: Node<_, Add> = None;
 
     for i in 1..=3 {
-        seg = insert(seg, i, i);
+        (seg, _) = insert(seg, i, i);
     }
 
     print_as_binary_tree(&seg);
@@ -122,7 +122,7 @@ fn test_insert_delete() {
     let mut seg: Node<_, Add> = None;
 
     for i in 1..=7 {
-        seg = insert(seg, i, i);
+        (seg, _) = insert(seg, i, i);
     }
 
     print_as_binary_tree(&seg);
@@ -188,7 +188,7 @@ fn test_random_insert() {
         arr[idx] = new_val;
 
         // セグ木の更新
-        seg = insert(seg, idx, new_val);
+        (seg, _) = insert(seg, idx, new_val);
 
         // 表示
         // println!("{:?}", arr);
@@ -236,7 +236,7 @@ fn random_insert_delete() {
         arr[idx_delete] = 0;
 
         // セグ木の更新
-        seg = insert(seg, idx_insert, new_val);
+        (seg, _) = insert(seg, idx_insert, new_val);
         (seg, _) = delete(seg, &idx_delete);
 
         // 表示
@@ -288,7 +288,7 @@ fn random_delete() {
         arr.insert(idx_insert, (key, val));
 
         // セグ木に追加
-        seg = insert(seg, key, val);
+        (seg, _) = insert(seg, key, val);
     }
 
     // println!("{:?}", arr);
@@ -360,7 +360,7 @@ fn random_delete_str() {
         arr.insert(idx_insert, (key.clone(), val));
 
         // セグ木に追加
-        seg = insert(seg, key, val);
+        (seg, _) = insert(seg, key, val);
     }
 
     println!("{:?}", arr);
