@@ -32,11 +32,9 @@ where
     if let Some(node) = node.as_ref() {
         fmt_inner_btree(&node.left, depth);
         println!(
-            "{GREEN}│{END}{} Node {{ key:{:?}, value:{:?}, size:{} }}",
+            "{GREEN}│{END}{} {:?}",
             "    ".repeat(depth - node.level),
-            node.key,
-            node.value,
-            node.size
+            node
         );
         fmt_inner_btree(&node.right, depth);
     }
@@ -77,11 +75,9 @@ fn fmt_inner_binary_tree<K, M: Monoid>(
         fmt_inner_binary_tree(&node.left, fill, LEFT);
         // 自分を出力
         println!(
-            "{BLUE}│{END}{} Node {{ key:{:?}, value:{:?}, size:{} }}",
+            "{BLUE}│{END}{} {:?}",
             fill.iter().fold(String::new(), |s, x| s + x),
-            node.key,
-            node.value,
-            node.size
+            node
         );
         // 右の子
         fmt_inner_binary_tree(&node.right, fill, RIGHT);
