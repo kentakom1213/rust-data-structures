@@ -44,10 +44,7 @@ fn test_random_insert() {
                 (l, r) = (r, l);
             }
 
-            assert_eq!(
-                arr[l..r].iter().sum::<isize>(),
-                seg.get_range(&l, &r, &0, &SIZE)
-            );
+            assert_eq!(arr[l..r].iter().sum::<isize>(), seg.get_range(l..r));
         }
     }
 }
@@ -93,10 +90,7 @@ fn random_insert_delete() {
                 (l, r) = (r, l);
             }
 
-            assert_eq!(
-                arr[l..r].iter().sum::<isize>(),
-                seg.get_range(&l, &r, &0, &SIZE)
-            );
+            assert_eq!(arr[l..r].iter().sum::<isize>(), seg.get_range(l..r));
         }
     }
 }
@@ -165,7 +159,7 @@ fn random_delete() {
                     .filter(|&&(k, _)| l <= k && k < r)
                     .map(|&(_, v)| v)
                     .sum::<isize>(),
-                seg.get_range(&l, &r, &isize::MIN, &isize::MAX)
+                seg.get_range(l..r)
             );
         }
     }
@@ -237,7 +231,7 @@ fn random_delete_str() {
                     .filter(|(k, _)| &l <= k && k < &r)
                     .map(|&(_, v)| v)
                     .sum::<isize>(),
-                seg.get_range(&l, &r, &"0".repeat(SIZE), &"z".repeat(SIZE))
+                seg.get_range(l..r)
             );
         }
     }

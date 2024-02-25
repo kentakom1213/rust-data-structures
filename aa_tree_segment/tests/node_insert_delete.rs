@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, ops::Bound::*};
 
 use aa_tree_segment::{
     alg::{
@@ -14,70 +14,71 @@ use rand::{
 };
 
 #[test]
+#[rustfmt::skip]
 fn test_insert() {
     let mut seg: Option<Box<NodeInner<i32, Add>>> = None;
 
-    assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &10, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &1, &0, &10), 0);
-    assert_eq!(get_range(&seg, &2, &8, &0, &10), 0);
-    assert_eq!(get_range(&seg, &3, &6, &0, &10), 0);
-    assert_eq!(get_range(&seg, &4, &9, &0, &10), 0);
+    assert_eq!(get_range(&seg, Included(&10), Excluded(&0), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&10), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&2), Excluded(&8), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&3), Excluded(&6), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&4), Excluded(&9), Unbounded, Unbounded), 0);
 
     // [(2: 5)]
     (seg, _) = insert(seg, 2, 5);
     print_as_binary_tree(&seg);
 
-    assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &10, &0, &10), 5);
-    assert_eq!(get_range(&seg, &0, &1, &0, &10), 0);
-    assert_eq!(get_range(&seg, &2, &8, &0, &10), 5);
-    assert_eq!(get_range(&seg, &3, &6, &0, &10), 0);
-    assert_eq!(get_range(&seg, &4, &9, &0, &10), 0);
+    assert_eq!(get_range(&seg, Included(&10), Excluded(&0), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&10), Unbounded, Unbounded), 5);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&2), Excluded(&8), Unbounded, Unbounded), 5);
+    assert_eq!(get_range(&seg, Included(&3), Excluded(&6), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&4), Excluded(&9), Unbounded, Unbounded), 0);
 
     // [(2: 5), (5: 8)]
     (seg, _) = insert(seg, 5, 8);
     print_as_binary_tree(&seg);
 
-    assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &10, &0, &10), 13);
-    assert_eq!(get_range(&seg, &0, &1, &0, &10), 0);
-    assert_eq!(get_range(&seg, &2, &8, &0, &10), 13);
-    assert_eq!(get_range(&seg, &3, &6, &0, &10), 8);
-    assert_eq!(get_range(&seg, &4, &9, &0, &10), 8);
+    assert_eq!(get_range(&seg, Included(&10), Excluded(&0), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&10), Unbounded, Unbounded), 13);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&2), Excluded(&8), Unbounded, Unbounded), 13);
+    assert_eq!(get_range(&seg, Included(&3), Excluded(&6), Unbounded, Unbounded), 8);
+    assert_eq!(get_range(&seg, Included(&4), Excluded(&9), Unbounded, Unbounded), 8);
 
     // [(2: 5), (3: 3), (5: 8)]
     (seg, _) = insert(seg, 3, 3);
     print_as_binary_tree(&seg);
 
-    assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &10, &0, &10), 16);
-    assert_eq!(get_range(&seg, &0, &1, &0, &10), 0);
-    assert_eq!(get_range(&seg, &2, &8, &0, &10), 16);
-    assert_eq!(get_range(&seg, &3, &6, &0, &10), 11);
-    assert_eq!(get_range(&seg, &4, &9, &0, &10), 8);
+    assert_eq!(get_range(&seg, Included(&10), Excluded(&0), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&10), Unbounded, Unbounded), 16);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&2), Excluded(&8), Unbounded, Unbounded), 16);
+    assert_eq!(get_range(&seg, Included(&3), Excluded(&6), Unbounded, Unbounded), 11);
+    assert_eq!(get_range(&seg, Included(&4), Excluded(&9), Unbounded, Unbounded), 8);
 
     // [(2: 5), (3: 3), (5: 8), (8: 1)]
     (seg, _) = insert(seg, 8, 1);
     print_as_binary_tree(&seg);
 
-    assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &10, &0, &10), 17);
-    assert_eq!(get_range(&seg, &0, &1, &0, &10), 0);
-    assert_eq!(get_range(&seg, &2, &8, &0, &10), 16);
-    assert_eq!(get_range(&seg, &3, &6, &0, &10), 11);
-    assert_eq!(get_range(&seg, &4, &9, &0, &10), 9);
+    assert_eq!(get_range(&seg, Included(&10), Excluded(&0), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&10), Unbounded, Unbounded), 17);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&2), Excluded(&8), Unbounded, Unbounded), 16);
+    assert_eq!(get_range(&seg, Included(&3), Excluded(&6), Unbounded, Unbounded), 11);
+    assert_eq!(get_range(&seg, Included(&4), Excluded(&9), Unbounded, Unbounded), 9);
 
     // [(2: 5), (3: 3), (4: 6), (5: 8), (8: 1)]
     (seg, _) = insert(seg, 4, 6);
     print_as_binary_tree(&seg);
 
-    assert_eq!(get_range(&seg, &10, &0, &0, &10), 0);
-    assert_eq!(get_range(&seg, &0, &10, &0, &10), 23);
-    assert_eq!(get_range(&seg, &0, &1, &0, &10), 0);
-    assert_eq!(get_range(&seg, &2, &8, &0, &10), 22);
-    assert_eq!(get_range(&seg, &3, &6, &0, &10), 17);
-    assert_eq!(get_range(&seg, &4, &9, &0, &10), 15);
+    assert_eq!(get_range(&seg, Included(&10), Excluded(&0), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&10), Unbounded, Unbounded), 23);
+    assert_eq!(get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded), 0);
+    assert_eq!(get_range(&seg, Included(&2), Excluded(&8), Unbounded, Unbounded), 22);
+    assert_eq!(get_range(&seg, Included(&3), Excluded(&6), Unbounded, Unbounded), 17);
+    assert_eq!(get_range(&seg, Included(&4), Excluded(&9), Unbounded, Unbounded), 15);
 }
 
 #[test]
@@ -89,12 +90,30 @@ fn test_noncommutative() {
         print_as_binary_tree(&seg);
     }
 
-    assert_eq!(&get_range(&seg, &5, &6, &0, &7), "F");
-    assert_eq!(&get_range(&seg, &4, &20, &0, &100), "EFG");
-    assert_eq!(&get_range(&seg, &0, &7, &0, &9), "ABCDEFG");
-    assert_eq!(&get_range(&seg, &1, &5, &0, &9), "BCDE");
-    assert_eq!(&get_range(&seg, &0, &1, &0, &9), "A");
-    assert_eq!(&get_range(&seg, &6, &7, &0, &9), "G");
+    assert_eq!(
+        &get_range(&seg, Included(&5), Excluded(&6), Unbounded, Unbounded),
+        "F"
+    );
+    assert_eq!(
+        &get_range(&seg, Included(&4), Excluded(&20), Unbounded, Unbounded),
+        "EFG"
+    );
+    assert_eq!(
+        &get_range(&seg, Included(&0), Excluded(&7), Unbounded, Unbounded),
+        "ABCDEFG"
+    );
+    assert_eq!(
+        &get_range(&seg, Included(&1), Excluded(&5), Unbounded, Unbounded),
+        "BCDE"
+    );
+    assert_eq!(
+        &get_range(&seg, Included(&0), Excluded(&1), Unbounded, Unbounded),
+        "A"
+    );
+    assert_eq!(
+        &get_range(&seg, Included(&6), Excluded(&7), Unbounded, Unbounded),
+        "G"
+    );
 }
 
 #[test]
@@ -199,7 +218,7 @@ fn test_random_insert() {
 
             assert_eq!(
                 arr[l..r].iter().sum::<isize>(),
-                get_range(&seg, &l, &r, &0, &SIZE)
+                get_range(&seg, Included(&l), Excluded(&r), Unbounded, Unbounded)
             );
         }
     }
@@ -248,7 +267,7 @@ fn random_insert_delete() {
 
             assert_eq!(
                 arr[l..r].iter().sum::<isize>(),
-                get_range(&seg, &l, &r, &0, &SIZE)
+                get_range(&seg, Included(&l), Excluded(&r), Unbounded, Unbounded)
             );
         }
     }
@@ -319,7 +338,7 @@ fn random_delete() {
                     .filter(|&&(k, _)| l <= k && k < r)
                     .map(|&(_, v)| v)
                     .sum::<isize>(),
-                get_range(&seg, &l, &r, &isize::MIN, &isize::MAX)
+                get_range(&seg, Included(&l), Excluded(&r), Unbounded, Unbounded)
             );
         }
     }
@@ -392,7 +411,7 @@ fn random_delete_str() {
                     .filter(|(k, _)| &l <= k && k < &r)
                     .map(|&(_, v)| v)
                     .sum::<isize>(),
-                get_range(&seg, &l, &r, &"0".repeat(SIZE), &"z".repeat(SIZE))
+                get_range(&seg, Included(&l), Excluded(&r), Unbounded, Unbounded)
             );
         }
     }
@@ -465,7 +484,7 @@ fn random_deq_delete_str() {
                     .filter(|(k, _)| &l <= k && k < &r)
                     .map(|&(_, v)| v)
                     .sum::<isize>(),
-                get_range(&seg, &l, &r, &"0".repeat(SIZE), &"z".repeat(SIZE))
+                get_range(&seg, Included(&l), Excluded(&r), Unbounded, Unbounded)
             );
         }
     }

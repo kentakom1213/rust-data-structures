@@ -3,7 +3,7 @@
 
 use std::{
     fmt::{self, Debug},
-    ops::{Deref, DerefMut},
+    ops::{Bound::Unbounded, Deref, DerefMut, RangeBounds},
 };
 
 use crate::{
@@ -89,9 +89,11 @@ impl<K: Ord, M: Monoid> DynamicSegmentTree<K, M> {
     }
 
     /// 区間の取得
-    /// - `[l,r)` の要素を集約する
-    pub fn get_range(&self, l: &K, r: &K, begin: &K, end: &K) -> M::Val {
-        get_range(&self.root, l, r, begin, end)
+    /// - 区間 `range` の要素を集約する
+    pub fn get_range<R: RangeBounds<K>>(&self, range: R) -> M::Val {
+        let l = range.start_bound();
+        let r = range.end_bound();
+        get_range(&self.root, l, r, Unbounded, Unbounded)
     }
 
     /// 要素数を取得

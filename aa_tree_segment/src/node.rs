@@ -3,7 +3,12 @@
 #![allow(non_snake_case)]
 
 use crate::alg::Monoid;
-use std::{cmp::Ordering, fmt::Debug, mem};
+use std::{
+    cmp::Ordering,
+    fmt::Debug,
+    mem,
+    ops::Bound::{self, *},
+};
 
 /// AA木のノード
 pub type Node<K, M> = Option<Box<NodeInner<K, M>>>;
@@ -130,38 +135,75 @@ pub fn get<'a, K: Ord, M: Monoid>(root: &'a Node<K, M>, key: &K) -> Option<&'a N
     }
 }
 
+/// 区間
+type Segment<K> = (Bound<K>, Bound<K>);
+
+/// 区間 `x` と `y` が共通部分を持たないか判定
+fn has_no_intersection<K: Ord>((l, r): Segment<&K>, (begin, end): Segment<&K>) -> bool {
+    (match (r, begin) {
+        (Included(r), Included(b)) => r < b,
+        (Included(r), Excluded(b)) => r <= b,
+        (Excluded(r), Included(b)) => r <= b,
+        (Excluded(r), Excluded(b)) => r <= b,
+        _ => false,
+    } || match (end, l) {
+        (Included(e), Included(l)) => e < l,
+        (Included(e), Excluded(l)) => e <= l,
+        (Excluded(e), Included(l)) => e <= l,
+        (Excluded(e), Excluded(l)) => e <= l,
+        _ => false,
+    })
+}
+
+/// 区間 `x`（引数1） が区間 `y`（引数2） を包含するか
+fn includes<K: Ord>((l, r): Segment<&K>, (begin, end): Segment<&K>) -> bool {
+    (match (l, begin) {
+        (Unbounded, _) => true,
+        (_, Unbounded) => false,
+        (Included(l), Included(b)) => l <= b,
+        (Included(l), Excluded(b)) => l <= b,
+        (Excluded(l), Included(b)) => l < b,
+        (Excluded(l), Excluded(b)) => l <= b,
+    } && match (end, r) {
+        (_, Unbounded) => true,
+        (Unbounded, _) => false,
+        (Included(e), Included(r)) => e <= r,
+        (Included(e), Excluded(r)) => e < r,
+        (Excluded(e), Included(r)) => e <= r,
+        (Excluded(e), Excluded(r)) => e <= r,
+    })
+}
+
 /// 区間 `[l,r)` 中のノードの値を集約する
-pub fn get_range<K: Ord, M: Monoid>(root: &Node<K, M>, l: &K, r: &K, begin: &K, end: &K) -> M::Val {
+pub fn get_range<K: Ord, M: Monoid>(
+    root: &Node<K, M>,
+    l: Bound<&K>,
+    r: Bound<&K>,
+    begin: Bound<&K>,
+    end: Bound<&K>,
+) -> M::Val {
     let Some(T) = root else {
         return M::E;
     };
     // 区間を含まない
-    if end <= l || r <= begin {
+    if has_no_intersection((l, r), (begin, end)) {
         M::E
     }
     // 区間を包含する
-    else if l <= begin && end <= r {
+    else if includes((l, r), (begin, end)) {
         T.sum.clone()
     }
     // 区間が一部重なる
     else {
         let mid = &T.key;
-
-        // 右の子だけ範囲内
-        if mid < l {
-            get_range(&T.right, l, r, mid, end)
-        }
-        // 自分も範囲内
-        else if mid < r {
-            let l_val = &get_range(&T.left, l, r, begin, mid);
-            let m_val = &T.value;
-            let r_val = &get_range(&T.right, l, r, mid, end);
-            M::op(&M::op(l_val, m_val), r_val)
-        }
-        // 左の子だけ範囲内
-        else {
-            get_range(&T.left, l, r, begin, mid)
-        }
+        let l_val = get_range(&T.left, l, r, begin, Excluded(mid));
+        let m_val = if includes((l, r), (Included(mid), Included(mid))) {
+            T.value.clone()
+        } else {
+            M::E
+        };
+        let r_val = get_range(&T.right, l, r, Excluded(mid), end);
+        M::op(&M::op(&l_val, &m_val), &r_val)
     }
 }
 
