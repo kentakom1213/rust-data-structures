@@ -52,3 +52,19 @@ fn test_delete() {
         pretty_print(&tree);
     }
 }
+
+#[test]
+fn test_complete() {
+    let mut tree = None;
+
+    for i in 1..=7 {
+        tree = insert(tree, i, i);
+    }
+
+    pretty_print(&tree);
+
+    // 4を削除
+    (tree, _) = delete(tree, &2);
+
+    pretty_print(&tree);
+}
