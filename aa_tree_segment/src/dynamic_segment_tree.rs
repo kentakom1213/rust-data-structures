@@ -54,6 +54,8 @@ impl<K: Ord, M: Monoid> DynamicSegmentTree<K, M> {
                 value: Some(value),
             }
         } else {
+            // ノードの新規作成
+            self.size += 1;
             NodeEntry {
                 root: &mut self.root,
                 key: Some(key),

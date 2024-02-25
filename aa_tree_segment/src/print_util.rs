@@ -1,30 +1,48 @@
 //! 木を整形して表示するための関数
 
-use crate::{alg::Monoid, dynamic_segment_tree::DynamicSegmentTree, node::Node};
+use crate::{
+    alg::Monoid,
+    dynamic_segment_tree::DynamicSegmentTree,
+    node::{Node, NodeInner},
+};
 use std::fmt::Debug;
 
 const GREEN: &str = "\x1b[92m";
 const BLUE: &str = "\x1b[94m";
 const END: &str = "\x1b[0m";
 const LEFT: &str = " ┌──";
+const LEFTRIGHT: &str = " ├──";
 const MID: &str = " │  ";
 const RIGHT: &str = " └──";
 const NULL: &str = "";
 const BLANK: &str = "    ";
 
-impl<K: Ord + Debug, M: Monoid> DynamicSegmentTree<K, M> {
+impl<K: Ord + Clone, M: Monoid + Clone> Clone for NodeInner<K, M> {
+    fn clone(&self) -> Self {
+        NodeInner {
+            key: self.key.clone(),
+            value: self.value.clone(),
+            sum: self.sum.clone(),
+            level: self.level.clone(),
+            left: self.left.clone(),
+            right: self.right.clone(),
+        }
+    }
+}
+
+impl<K: Ord + Clone + Debug, M: Monoid + Clone> DynamicSegmentTree<K, M> {
     /// 2分木として出力する
     pub fn print_as_binary_tree(&self) {
-        println!("{BLUE}┌─ BinaryTree ──────────{END}");
+        println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
         fmt_inner_binary_tree(&self.root, &mut vec![], NULL);
-        println!("{BLUE}└───────────────────────{END}");
+        println!("{BLUE}└───────────────────────────────────{END}");
     }
 
     /// B木（2-3木）として出力する
     pub fn print_as_btree(&self) {
-        println!("{GREEN}┌─ BTree ───────────────{END}");
+        println!("{GREEN}┌─ BTree ───────────────────────────{END}");
         fmt_inner_btree(&self.root, self.root.as_ref().map_or(0, |node| node.level));
-        println!("{GREEN}└───────────────────────{END}");
+        println!("{GREEN}└───────────────────────────────────{END}");
     }
 }
 
@@ -34,9 +52,9 @@ where
     K: Ord + Debug,
     M::Val: Debug,
 {
-    println!("{GREEN}┌─ BTree ───────────────{END}");
+    println!("{GREEN}┌─ BTree ───────────────────────────{END}");
     fmt_inner_btree(root, root.as_ref().map_or(0, |node| node.level));
-    println!("{GREEN}└───────────────────────{END}");
+    println!("{GREEN}└───────────────────────────────────{END}");
 }
 
 /// print recursive
@@ -62,9 +80,9 @@ where
     K: Ord + Debug,
     M::Val: Debug,
 {
-    println!("{BLUE}┌─ BinaryTree ──────────{END}");
+    println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
     fmt_inner_binary_tree(root, &mut vec![], NULL);
-    println!("{BLUE}└───────────────────────{END}");
+    println!("{BLUE}└───────────────────────────────────{END}");
 }
 
 /// print recursive

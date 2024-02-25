@@ -1,6 +1,4 @@
-use aa_tree_segment::{
-    alg::monoids::Add, dynamic_segment_tree::DynamicSegmentTree, print_util::print_as_binary_tree,
-};
+use aa_tree_segment::{alg::monoids::Add, dynamic_segment_tree::DynamicSegmentTree};
 use rand::{
     distributions::{Alphanumeric, DistString},
     prelude::*,

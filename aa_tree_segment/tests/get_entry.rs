@@ -59,6 +59,7 @@ fn test_entry() {
         assert_eq!(*ent, 200);
     }
     seg.print_as_binary_tree();
+    assert_eq!(seg.get_range(..), 200);
 
     // {-1: 3, 200: 200}
     {
@@ -69,6 +70,7 @@ fn test_entry() {
         assert_eq!(*ent, 3);
     }
     seg.print_as_binary_tree();
+    assert_eq!(seg.get_range(..), 203);
 
     // {-1: 3, 55: 700, 200: 200}
     {
@@ -79,6 +81,7 @@ fn test_entry() {
         assert_eq!(*ent, 700);
     }
     seg.print_as_binary_tree();
+    assert_eq!(seg.get_range(..), 903);
 
     // {-1: 3, 55: 700, 200: 20}
     {
@@ -89,6 +92,7 @@ fn test_entry() {
         assert_eq!(*ent, 20);
     }
     seg.print_as_binary_tree();
+    assert_eq!(seg.get_range(..), 723);
 
     // {-1: 303, 55: 700, 200: 20}
     {
@@ -99,4 +103,5 @@ fn test_entry() {
         assert_eq!(*ent, 303);
     }
     seg.print_as_binary_tree();
+    assert_eq!(seg.get_range(..), 1023);
 }

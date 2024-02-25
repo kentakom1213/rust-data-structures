@@ -16,6 +16,7 @@ pub mod monoids {
     use super::Monoid;
 
     /// 和
+    #[derive(Debug, Clone)]
     pub struct Add;
     impl Monoid for Add {
         type Val = isize;
@@ -26,6 +27,7 @@ pub mod monoids {
     }
 
     /// 文字列
+    #[derive(Debug, Clone)]
     pub struct Str;
     impl Monoid for Str {
         type Val = String;

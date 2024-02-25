@@ -1,12 +1,9 @@
 use std::{collections::VecDeque, ops::Bound::*};
 
 use aa_tree_segment::{
-    alg::{
-        monoids::{Add, Str},
-        Monoid,
-    },
+    alg::monoids::{Add, Str},
     node::*,
-    print_util::{print_as_binary_tree, print_as_btree},
+    print_util::print_as_binary_tree,
 };
 use rand::{
     distributions::{Alphanumeric, DistString},
