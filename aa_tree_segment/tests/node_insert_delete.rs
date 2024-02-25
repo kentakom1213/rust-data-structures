@@ -1,7 +1,10 @@
 use std::collections::VecDeque;
 
 use aa_tree_segment::{
-    alg::{monoids::Add, Monoid},
+    alg::{
+        monoids::{Add, Str},
+        Monoid,
+    },
     node::*,
     print_util::{print_as_binary_tree, print_as_btree},
 };
@@ -75,16 +78,6 @@ fn test_insert() {
     assert_eq!(get_range(&seg, &2, &8, &0, &10), 22);
     assert_eq!(get_range(&seg, &3, &6, &0, &10), 17);
     assert_eq!(get_range(&seg, &4, &9, &0, &10), 15);
-}
-
-/// 文字列
-struct Str;
-impl Monoid for Str {
-    type Val = String;
-    const E: Self::Val = String::new();
-    fn op(left: &Self::Val, right: &Self::Val) -> Self::Val {
-        left.to_string() + right
-    }
 }
 
 #[test]

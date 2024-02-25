@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use aa_tree_segment::{
     alg::monoids::Add, dynamic_segment_tree::DynamicSegmentTree, print_util::print_as_binary_tree,
 };
@@ -32,7 +30,7 @@ fn test_random_insert() {
         arr[idx] = new_val;
 
         // セグ木の更新
-        seg.update(idx, new_val);
+        seg.insert(idx, new_val);
 
         // 表示
         // println!("{:?}", arr);
@@ -80,7 +78,7 @@ fn random_insert_delete() {
         arr[idx_delete] = 0;
 
         // セグ木の更新
-        seg.update(idx_insert, new_val);
+        seg.insert(idx_insert, new_val);
         seg.remove(&idx_delete);
 
         // 表示
@@ -132,7 +130,7 @@ fn random_delete() {
         arr.insert(idx_insert, (key, val));
 
         // セグ木に追加
-        seg.update(key, val);
+        seg.insert(key, val);
     }
 
     // println!("{:?}", arr);
@@ -203,11 +201,11 @@ fn random_delete_str() {
         arr.insert(idx_insert, (key.clone(), val));
 
         // セグ木に追加
-        seg.update(key, val);
+        seg.insert(key, val);
     }
 
     println!("{:?}", arr);
-    print_as_binary_tree(&seg.root);
+    seg.print_as_binary_tree();
 
     for _ in 0..ITER {
         // 一点更新クエリ

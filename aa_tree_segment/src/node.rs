@@ -130,11 +130,6 @@ pub fn get<'a, K: Ord, M: Monoid>(root: &'a Node<K, M>, key: &K) -> Option<&'a N
     }
 }
 
-/// 値 `key` を持つノードの可変参照を取得する
-pub fn get_mut<K: Ord, M: Monoid>(root: Node<K, M>, key: &K) {
-    todo!()
-}
-
 /// 区間 `[l,r)` 中のノードの値を集約する
 pub fn get_range<K: Ord, M: Monoid>(root: &Node<K, M>, l: &K, r: &K, begin: &K, end: &K) -> M::Val {
     let Some(T) = root else {

@@ -24,4 +24,14 @@ pub mod monoids {
             left + right
         }
     }
+
+    /// 文字列
+    pub struct Str;
+    impl Monoid for Str {
+        type Val = String;
+        const E: Self::Val = String::new();
+        fn op(left: &Self::Val, right: &Self::Val) -> Self::Val {
+            left.to_string() + right
+        }
+    }
 }
