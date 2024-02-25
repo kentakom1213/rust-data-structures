@@ -1,6 +1,6 @@
 use std::ops::Bound::*;
 
-use aa_tree_segment::{
+use dynamic_segment_tree::{
     alg::monoids::{Add, Str},
     node::{get_range, insert, Node},
     print_util::print_as_binary_tree,

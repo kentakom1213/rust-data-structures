@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, ops::Bound::*};
 
-use aa_tree_segment::{
+use dynamic_segment_tree::{
     lazy_alg::extmonoids::{RMQandRUQ, RSQandRAQ},
     lazy_node::*,
     lazy_print_util::print_as_binary_tree,
