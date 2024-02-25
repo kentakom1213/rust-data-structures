@@ -1,10 +1,6 @@
 //! 木を整形して表示するための関数
 
-use crate::{
-    alg::Monoid,
-    dynamic_segment_tree::DynamicSegmentTree,
-    node::{Node, NodeInner},
-};
+use crate::{lazy_alg::ExtMonoid, lazy_node::*};
 use std::fmt::Debug;
 
 const GREEN: &str = "\x1b[92m";
@@ -16,27 +12,28 @@ const RIGHT: &str = " └──";
 const NULL: &str = "";
 const BLANK: &str = "    ";
 
-impl<K: Ord + Clone + Debug, M: Monoid + Clone> DynamicSegmentTree<K, M> {
-    /// 2分木として出力する
-    pub fn print_as_binary_tree(&self) {
-        println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
-        fmt_inner_binary_tree(&self.root, &mut vec![], NULL);
-        println!("{BLUE}└───────────────────────────────────{END}");
-    }
+// impl<K: Ord + Clone + Debug, E: ExtMonoid + Clone> DynamicSegmentTree<K, E> {
+//     /// 2分木として出力する
+//     pub fn print_as_binary_tree(&self) {
+//         println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
+//         fmt_inner_binary_tree(&self.root, &mut vec![], NULL);
+//         println!("{BLUE}└───────────────────────────────────{END}");
+//     }
 
-    /// B木（2-3木）として出力する
-    pub fn print_as_btree(&self) {
-        println!("{GREEN}┌─ BTree ───────────────────────────{END}");
-        fmt_inner_btree(&self.root, self.root.as_ref().map_or(0, |node| node.level));
-        println!("{GREEN}└───────────────────────────────────{END}");
-    }
-}
+//     /// B木（2-3木）として出力する
+//     pub fn print_as_btree(&self) {
+//         println!("{GREEN}┌─ BTree ───────────────────────────{END}");
+//         fmt_inner_btree(&self.root, self.root.as_ref().map_or(0, |node| node.level));
+//         println!("{GREEN}└───────────────────────────────────{END}");
+//     }
+// }
 
 /// B木（2-3木）として出力する
-pub fn print_as_btree<K, M: Monoid>(root: &Node<K, M>)
+pub fn print_as_btree<K, E: ExtMonoid>(root: &LazyNode<K, E>)
 where
     K: Ord + Debug,
-    M::Val: Debug,
+    E::X: Debug,
+    E::M: Debug,
 {
     println!("{GREEN}┌─ BTree ───────────────────────────{END}");
     fmt_inner_btree(root, root.as_ref().map_or(0, |node| node.level));
@@ -44,10 +41,11 @@ where
 }
 
 /// print recursive
-fn fmt_inner_btree<K, M: Monoid>(node: &Node<K, M>, depth: usize)
+fn fmt_inner_btree<K, E: ExtMonoid>(node: &LazyNode<K, E>, depth: usize)
 where
     K: Ord + Debug,
-    M::Val: Debug,
+    E::X: Debug,
+    E::M: Debug,
 {
     if let Some(node) = node.as_ref() {
         fmt_inner_btree(&node.left, depth);
@@ -61,10 +59,11 @@ where
 }
 
 /// 2分木として出力する
-pub fn print_as_binary_tree<K, M: Monoid>(root: &Node<K, M>)
+pub fn print_as_binary_tree<K, E: ExtMonoid>(root: &LazyNode<K, E>)
 where
     K: Ord + Debug,
-    M::Val: Debug,
+    E::X: Debug,
+    E::M: Debug,
 {
     println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
     fmt_inner_binary_tree(root, &mut vec![], NULL);
@@ -72,13 +71,14 @@ where
 }
 
 /// print recursive
-fn fmt_inner_binary_tree<K, M: Monoid>(
-    node: &Node<K, M>,
+fn fmt_inner_binary_tree<K, E: ExtMonoid>(
+    node: &LazyNode<K, E>,
     fill: &mut Vec<&'static str>,
     last: &'static str,
 ) where
     K: Ord + Debug,
-    M::Val: Debug,
+    E::X: Debug,
+    E::M: Debug,
 {
     if let Some(node) = node.as_ref() {
         // 表示の調整

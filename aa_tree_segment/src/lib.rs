@@ -1,7 +1,11 @@
+// セグ木
 pub mod alg;
-pub mod alg_lazy;
-pub mod dynamic_lazy_segment_tree;
 pub mod dynamic_segment_tree;
 pub mod node;
-pub mod node_lazy;
 pub mod print_util;
+
+// 遅延セグ木
+pub mod lazy_alg;
+pub mod lazy_dynamic_segment_tree;
+pub mod lazy_node;
+pub mod lazy_print_util;

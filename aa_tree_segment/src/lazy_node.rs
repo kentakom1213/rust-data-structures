@@ -2,7 +2,7 @@
 
 #![allow(non_snake_case)]
 
-use crate::alg::Monoid;
+use crate::lazy_alg::ExtMonoid;
 use std::{
     cmp::Ordering,
     fmt::Debug,
@@ -11,28 +11,31 @@ use std::{
 };
 
 /// AA木のノード
-pub type Node<K, M> = Option<Box<NodeInner<K, M>>>;
+pub type LazyNode<K, E> = Option<Box<LazyNodeInner<K, E>>>;
 
-pub struct NodeInner<K: Ord, M: Monoid> {
+pub struct LazyNodeInner<K: Ord, E: ExtMonoid> {
     /// キー
     pub key: K,
     /// ノードが持つ値
-    pub value: M::Val,
+    pub value: E::X,
     /// 部分木を集約した値
-    pub sum: M::Val,
+    pub sum: E::X,
+    /// 遅延値
+    pub lazy: E::M,
     /// ノードの高さ
     pub level: usize,
-    pub left: Node<K, M>,
-    pub right: Node<K, M>,
+    pub left: LazyNode<K, E>,
+    pub right: LazyNode<K, E>,
 }
 
-impl<K: Ord, M: Monoid> NodeInner<K, M> {
+impl<K: Ord, E: ExtMonoid> LazyNodeInner<K, E> {
     /// ノードの作成
-    pub fn new(key: K, value: M::Val) -> Node<K, M> {
-        Some(Box::new(NodeInner {
+    pub fn new(key: K, value: E::X) -> LazyNode<K, E> {
+        Some(Box::new(LazyNodeInner {
             key,
             value: value.clone(),
             sum: value,
+            lazy: E::IM,
             level: 1,
             left: None,
             right: None,
@@ -43,25 +46,27 @@ impl<K: Ord, M: Monoid> NodeInner<K, M> {
     fn eval(&mut self) {
         // ノードの値を再計算
         self.sum = match (&self.left, &self.right) {
-            (Some(l), Some(r)) => M::op(&M::op(&l.sum, &self.value), &r.sum),
-            (Some(l), _) => M::op(&l.sum, &self.value),
-            (_, Some(r)) => M::op(&self.value, &r.sum),
+            (Some(l), Some(r)) => E::operate_x(&E::operate_x(&l.sum, &self.value), &r.sum),
+            (Some(l), _) => E::operate_x(&l.sum, &self.value),
+            (_, Some(r)) => E::operate_x(&self.value, &r.sum),
             _ => self.value.clone(),
         };
     }
 }
 
-impl<K, M> Debug for NodeInner<K, M>
+impl<K, E> Debug for LazyNodeInner<K, E>
 where
     K: Ord + Debug,
-    M: Monoid,
-    M::Val: Debug,
+    E: ExtMonoid,
+    E::X: Debug,
+    E::M: Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LazyNode")
             .field("key", &self.key)
             .field("value", &self.value)
             .field("sum", &self.sum)
+            .field("lazy", &self.lazy)
             .finish()
     }
 }
@@ -73,7 +78,7 @@ where
 ///   |   ↙ ↘   ↘   ==>   ↙   ↙ ↘   
 /// 1 |  A   B   R       A   B   R  
 /// ```
-fn skew<K: Ord, M: Monoid>(node: Node<K, M>) -> Node<K, M> {
+fn skew<K: Ord, E: ExtMonoid>(node: LazyNode<K, E>) -> LazyNode<K, E> {
     let Some(mut T) = node else {
         return None;
     };
@@ -102,7 +107,7 @@ fn skew<K: Ord, M: Monoid>(node: Node<K, M>) -> Node<K, M> {
 ///   |   ↙   ↙              ↙ ↘     
 /// 1 |  A   B              A   B    
 /// ```
-fn split<K: Ord, M: Monoid>(node: Node<K, M>) -> Node<K, M> {
+fn split<K: Ord, E: ExtMonoid>(node: LazyNode<K, E>) -> LazyNode<K, E> {
     let Some(mut T) = node else {
         return None;
     };
@@ -124,7 +129,10 @@ fn split<K: Ord, M: Monoid>(node: Node<K, M>) -> Node<K, M> {
 }
 
 /// 値 `key` を持つノードの不変参照を取得する
-pub fn get<'a, K: Ord, M: Monoid>(root: &'a Node<K, M>, key: &K) -> Option<&'a NodeInner<K, M>> {
+pub fn get<'a, K: Ord, E: ExtMonoid>(
+    root: &'a LazyNode<K, E>,
+    key: &K,
+) -> Option<&'a LazyNodeInner<K, E>> {
     let Some(T) = root else {
         return None;
     };
@@ -175,19 +183,19 @@ fn includes<K: Ord>((l, r): Segment<&K>, (begin, end): Segment<&K>) -> bool {
 }
 
 /// 区間 `[l,r)` 中のノードの値を集約する
-pub fn get_range<K: Ord, M: Monoid>(
-    root: &Node<K, M>,
+pub fn get_range<K: Ord, E: ExtMonoid>(
+    root: &LazyNode<K, E>,
     l: Bound<&K>,
     r: Bound<&K>,
     begin: Bound<&K>,
     end: Bound<&K>,
-) -> M::Val {
+) -> E::X {
     let Some(T) = root else {
-        return M::E;
+        return E::IX;
     };
     // 区間を含まない
     if has_no_intersection((l, r), (begin, end)) {
-        M::E
+        E::IX
     }
     // 区間を包含する
     else if includes((l, r), (begin, end)) {
@@ -200,22 +208,22 @@ pub fn get_range<K: Ord, M: Monoid>(
         let m_val = if includes((l, r), (Included(mid), Included(mid))) {
             T.value.clone()
         } else {
-            M::E
+            E::IX
         };
         let r_val = get_range(&T.right, l, r, Excluded(mid), end);
-        M::op(&M::op(&l_val, &m_val), &r_val)
+        E::operate_x(&E::operate_x(&l_val, &m_val), &r_val)
     }
 }
 
 /// 値 `key` に `value` を挿入する
 /// - 値がすでに存在する場合には更新し，もとの値を返す
-pub fn insert<K: Ord, M: Monoid>(
-    root: Node<K, M>,
+pub fn insert<K: Ord, E: ExtMonoid>(
+    root: LazyNode<K, E>,
     key: K,
-    value: M::Val,
-) -> (Node<K, M>, Option<(K, M::Val)>) {
+    value: E::X,
+) -> (LazyNode<K, E>, Option<(K, E::X)>) {
     let Some(mut T) = root else {
-        return (NodeInner::new(key, value), None);
+        return (LazyNodeInner::new(key, value), None);
     };
     // 挿入
     let old_key_value = match key.cmp(&T.key) {
@@ -245,7 +253,10 @@ pub fn insert<K: Ord, M: Monoid>(
 
 /// 値 `key` をもつノードを削除し，削除されたノードを返す
 /// - `root`：削除する木の根
-pub fn delete<K: Ord, M: Monoid>(root: Node<K, M>, key: &K) -> (Node<K, M>, Option<(K, M::Val)>) {
+pub fn delete<K: Ord, E: ExtMonoid>(
+    root: LazyNode<K, E>,
+    key: &K,
+) -> (LazyNode<K, E>, Option<(K, E::X)>) {
     let Some(mut T) = root else {
         return (None, None);
     };
@@ -292,7 +303,7 @@ pub fn delete<K: Ord, M: Monoid>(root: Node<K, M>, key: &K) -> (Node<K, M>, Opti
 }
 
 /// 削除後の頂点を再平衡化
-fn rebarance<K: Ord, M: Monoid>(root: Node<K, M>) -> Node<K, M> {
+fn rebarance<K: Ord, E: ExtMonoid>(root: LazyNode<K, E>) -> LazyNode<K, E> {
     let Some(mut T) = root else {
         return None;
     };
@@ -322,9 +333,9 @@ fn rebarance<K: Ord, M: Monoid>(root: Node<K, M>) -> Node<K, M> {
 
 /// nodeを根とする木のうち，値が最大のものを削除する
 /// - 戻り値：(新しい根, 削除されたノード)
-fn delete_and_get_max<K: Ord, M: Monoid>(
-    root: Node<K, M>,
-) -> (Node<K, M>, Option<NodeInner<K, M>>) {
+fn delete_and_get_max<K: Ord, E: ExtMonoid>(
+    root: LazyNode<K, E>,
+) -> (LazyNode<K, E>, Option<LazyNodeInner<K, E>>) {
     let Some(mut T) = root else {
         return (None, None);
     };
