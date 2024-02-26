@@ -1,10 +1,6 @@
 //! 木を整形して表示するための関数
 
-use crate::{
-    alg::Monoid,
-    dynamic_segment_tree::DynamicSegmentTree,
-    node::{Node, NodeInner},
-};
+use crate::{alg::Monoid, dynamic_segment_tree::DynamicSegmentTree, node::Node};
 use std::fmt::Debug;
 
 const GREEN: &str = "\x1b[92m";
@@ -16,7 +12,7 @@ const RIGHT: &str = " └──";
 const NULL: &str = "";
 const BLANK: &str = "    ";
 
-impl<K: Ord + Clone + Debug, M: Monoid + Clone> DynamicSegmentTree<K, M> {
+impl<K: Ord + Debug, M: Monoid> DynamicSegmentTree<K, M> {
     /// 2分木として出力する
     pub fn print_as_binary_tree(&self) {
         println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");

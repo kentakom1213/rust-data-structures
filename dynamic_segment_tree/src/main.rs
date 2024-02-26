@@ -4,13 +4,13 @@ use rand::{
     random, thread_rng,
 };
 
-const ITER: usize = 20;
+const ITER: usize = 50;
 const SIZE: usize = 5;
 
 fn main() {
     let mut rng = thread_rng();
 
-    let mut seg = DynamicSegmentTree::<String, Add>::new();
+    let mut seg = DynamicSegmentTree::<_, Add>::new();
 
     for _ in 0..ITER {
         let val = random::<i32>() as isize;
@@ -22,5 +22,5 @@ fn main() {
 
     // 表示
     seg.print_as_binary_tree();
-    seg.print_as_btree();
+    // seg.print_as_btree();
 }
