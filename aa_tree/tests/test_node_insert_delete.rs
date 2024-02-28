@@ -64,7 +64,7 @@ fn test_complete() {
     pretty_print(&tree);
 
     // 4を削除
-    (tree, _) = delete(tree, &2);
+    (tree, _) = delete(tree, &4);
 
     pretty_print(&tree);
 }
