@@ -58,7 +58,7 @@ where
     M::Val: Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LazyNode")
+        f.debug_struct("Node")
             .field("key", &self.key)
             .field("value", &self.value)
             .field("sum", &self.sum)
