@@ -19,7 +19,7 @@ pub struct NodeInner<K: Ord, M: Monoid> {
     /// ノードが持つ値
     pub value: M::Val,
     /// 部分木を集約した値
-    pub sum: M::Val,
+    acc: M::Val,
     /// ノードの高さ
     pub level: usize,
     pub left: Node<K, M>,
@@ -32,7 +32,7 @@ impl<K: Ord, M: Monoid> NodeInner<K, M> {
         Some(Box::new(NodeInner {
             key,
             value: value.clone(),
-            sum: value,
+            acc: value,
             level: 1,
             left: None,
             right: None,
@@ -42,10 +42,10 @@ impl<K: Ord, M: Monoid> NodeInner<K, M> {
     /// ノードの値を再計算する
     fn eval(&mut self) {
         // ノードの値を再計算
-        self.sum = match (&self.left, &self.right) {
-            (Some(l), Some(r)) => M::op(&M::op(&l.sum, &self.value), &r.sum),
-            (Some(l), _) => M::op(&l.sum, &self.value),
-            (_, Some(r)) => M::op(&self.value, &r.sum),
+        self.acc = match (&self.left, &self.right) {
+            (Some(l), Some(r)) => M::op(&M::op(&l.acc, &self.value), &r.acc),
+            (Some(l), _) => M::op(&l.acc, &self.value),
+            (_, Some(r)) => M::op(&self.value, &r.acc),
             _ => self.value.clone(),
         };
     }
@@ -61,7 +61,7 @@ where
         f.debug_struct("Node")
             .field("key", &self.key)
             .field("value", &self.value)
-            .field("sum", &self.sum)
+            .field("acc", &self.acc)
             .finish()
     }
 }
@@ -191,7 +191,7 @@ pub fn get_range<K: Ord, M: Monoid>(
     }
     // 区間を包含する
     else if includes((l, r), (begin, end)) {
-        T.sum.clone()
+        T.acc.clone()
     }
     // 区間が一部重なる
     else {
