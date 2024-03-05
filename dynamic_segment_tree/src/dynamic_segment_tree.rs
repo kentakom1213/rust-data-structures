@@ -17,8 +17,6 @@ use crate::{
 pub struct DynamicSegmentTree<K: Ord, M: Monoid> {
     pub root: Node<K, M>,
     size: usize,
-    /// getメソッドで返すための一時的な単位元
-    tmp_e: M::Val,
 }
 
 impl<K: Ord, M: Monoid> DynamicSegmentTree<K, M> {
@@ -27,17 +25,16 @@ impl<K: Ord, M: Monoid> DynamicSegmentTree<K, M> {
         Self {
             root: None,
             size: 0,
-            tmp_e: M::E,
         }
     }
 
     /// 1点取得（不変参照）
     /// - 値 `key` を持つノードの不変参照を取得する
-    pub fn get(&self, key: &K) -> &M::Val {
+    pub fn get(&self, key: &K) -> M::Val {
         if let Some(NodeInner { value, .. }) = get(&self.root, key) {
-            value
+            value.clone()
         } else {
-            &self.tmp_e
+            M::E
         }
     }
 

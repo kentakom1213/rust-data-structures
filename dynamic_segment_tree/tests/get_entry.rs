@@ -8,41 +8,41 @@ fn test_get() {
     seg.insert(0, -700);
     seg.print_as_binary_tree();
 
-    assert_eq!(seg.get(&-200_000), &0);
-    assert_eq!(seg.get(&0), &-700);
-    assert_eq!(seg.get(&1_000_000), &0);
-    assert_eq!(seg.get(&998244353), &0);
-    assert_eq!(seg.get(&1_000_000_007), &0);
+    assert_eq!(seg.get(&-200_000), 0);
+    assert_eq!(seg.get(&0), -700);
+    assert_eq!(seg.get(&1_000_000), 0);
+    assert_eq!(seg.get(&998244353), 0);
+    assert_eq!(seg.get(&1_000_000_007), 0);
 
     // {0: -700, 1000000: 15}
     seg.insert(1_000_000, 15);
     seg.print_as_binary_tree();
 
-    assert_eq!(seg.get(&-200_000), &0);
-    assert_eq!(seg.get(&0), &-700);
-    assert_eq!(seg.get(&1_000_000), &15);
-    assert_eq!(seg.get(&998244353), &0);
-    assert_eq!(seg.get(&1_000_000_007), &0);
+    assert_eq!(seg.get(&-200_000), 0);
+    assert_eq!(seg.get(&0), -700);
+    assert_eq!(seg.get(&1_000_000), 15);
+    assert_eq!(seg.get(&998244353), 0);
+    assert_eq!(seg.get(&1_000_000_007), 0);
 
     // {-200000: 77, 0: -700, 1000000: 15}
     seg.insert(-200_000, 77);
     seg.print_as_binary_tree();
 
-    assert_eq!(seg.get(&-200_000), &77);
-    assert_eq!(seg.get(&0), &-700);
-    assert_eq!(seg.get(&1_000_000), &15);
-    assert_eq!(seg.get(&998244353), &0);
-    assert_eq!(seg.get(&1_000_000_007), &0);
+    assert_eq!(seg.get(&-200_000), 77);
+    assert_eq!(seg.get(&0), -700);
+    assert_eq!(seg.get(&1_000_000), 15);
+    assert_eq!(seg.get(&998244353), 0);
+    assert_eq!(seg.get(&1_000_000_007), 0);
 
     // {-200000: 77, 0: -700, 1000000: 15, 998244353: 400}
     seg.insert(998244353, 400);
     seg.print_as_binary_tree();
 
-    assert_eq!(seg.get(&-200_000), &77);
-    assert_eq!(seg.get(&0), &-700);
-    assert_eq!(seg.get(&1_000_000), &15);
-    assert_eq!(seg.get(&998244353), &400);
-    assert_eq!(seg.get(&1_000_000_007), &0);
+    assert_eq!(seg.get(&-200_000), 77);
+    assert_eq!(seg.get(&0), -700);
+    assert_eq!(seg.get(&1_000_000), 15);
+    assert_eq!(seg.get(&998244353), 400);
+    assert_eq!(seg.get(&1_000_000_007), 0);
 }
 
 #[test]
