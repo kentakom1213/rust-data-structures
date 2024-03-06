@@ -15,16 +15,18 @@ const BLANK: &str = "    ";
 impl<K: Ord + Debug, M: Monoid> DynamicSegmentTree<K, M> {
     /// 2分木として出力する
     pub fn print_as_binary_tree(&self) {
-        println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
+        #![cfg(debug_assertions)]
+        eprintln!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
         fmt_inner_binary_tree(&self.root, &mut vec![], NULL);
-        println!("{BLUE}└───────────────────────────────────{END}");
+        eprintln!("{BLUE}└───────────────────────────────────{END}");
     }
 
     /// B木（2-3木）として出力する
     pub fn print_as_btree(&self) {
-        println!("{GREEN}┌─ BTree ───────────────────────────{END}");
+        #![cfg(debug_assertions)]
+        eprintln!("{GREEN}┌─ BTree ───────────────────────────{END}");
         fmt_inner_btree(&self.root, self.root.as_ref().map_or(0, |node| node.level));
-        println!("{GREEN}└───────────────────────────────────{END}");
+        eprintln!("{GREEN}└───────────────────────────────────{END}");
     }
 }
 
@@ -34,9 +36,9 @@ where
     K: Ord + Debug,
     M::Val: Debug,
 {
-    println!("{GREEN}┌─ BTree ───────────────────────────{END}");
+    eprintln!("{GREEN}┌─ BTree ───────────────────────────{END}");
     fmt_inner_btree(root, root.as_ref().map_or(0, |node| node.level));
-    println!("{GREEN}└───────────────────────────────────{END}");
+    eprintln!("{GREEN}└───────────────────────────────────{END}");
 }
 
 /// print recursive
@@ -47,7 +49,7 @@ where
 {
     if let Some(node) = node.as_ref() {
         fmt_inner_btree(&node.left, depth);
-        println!(
+        eprintln!(
             "{GREEN}│{END}{} {:?}",
             "    ".repeat(depth - node.level),
             node
@@ -62,9 +64,9 @@ where
     K: Ord + Debug,
     M::Val: Debug,
 {
-    println!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
+    eprintln!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
     fmt_inner_binary_tree(root, &mut vec![], NULL);
-    println!("{BLUE}└───────────────────────────────────{END}");
+    eprintln!("{BLUE}└───────────────────────────────────{END}");
 }
 
 /// print recursive
@@ -90,7 +92,7 @@ fn fmt_inner_binary_tree<K, M: Monoid>(
         // 左の子
         fmt_inner_binary_tree(&node.left, fill, LEFT);
         // 自分を出力
-        println!(
+        eprintln!(
             "{BLUE}│{END}{} {:?}",
             fill.iter().fold(String::new(), |s, x| s + x),
             node
