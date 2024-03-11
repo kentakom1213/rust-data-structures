@@ -35,6 +35,11 @@ impl<K: Ord, V> AATreeMap<K, V> {
         self.root = new_root;
         old.map(|old| old.1)
     }
+
+    /// mapのすべての要素を削除する
+    pub fn clear(&mut self) -> AATreeNode<K, V> {
+        self.root.take()
+    }
 }
 
 impl<K: Ord + Debug, V: Debug> AATreeMap<K, V> {

@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use std::{cmp::Ordering, fmt::Debug, mem::replace};
+use std::{cmp::Ordering, fmt::Debug, mem};
 
 /// AA木のノード
 #[derive(Debug)]
@@ -147,12 +147,16 @@ pub fn delete<K: Ord, V>(root: AATreeNode<K, V>, key: &K) -> (AATreeNode<K, V>, 
                 (T.left, Some((T.key, T.value)))
             } else {
                 // 左右の子を持つ場合，左の子の最大値を現在のノードに代入
-                let (new_root, right_most) = delete_and_get_max(T.left);
-                let right_most = right_most.unwrap();
-                let mut T = new_root.unwrap();
+                let (new_left, right_most) = delete_and_get_max(T.left.take());
+                if let Some(L) = new_left {
+                    T.left.replace(L);
+                }
+                let Some(right_most) = right_most else {
+                    unreachable!("T.left is not None");
+                };
                 let old_key_value = (
-                    replace(&mut T.key, right_most.key),
-                    replace(&mut T.value, right_most.value),
+                    mem::replace(&mut T.key, right_most.key),
+                    mem::replace(&mut T.value, right_most.value),
                 );
                 (Some(T), Some(old_key_value))
             }
@@ -191,24 +195,25 @@ fn rebarance<K: Ord, V>(root: AATreeNode<K, V>) -> AATreeNode<K, V> {
 }
 
 /// nodeを根とする木のうち，値が最大のものを削除する
-/// - 戻り値: (新しい根, 削除されたノード)
+/// - 戻り値：(新しい根, 削除されたノード)
 fn delete_and_get_max<K: Ord, V>(
     root: AATreeNode<K, V>,
 ) -> (AATreeNode<K, V>, Option<AATreeNodeInner<K, V>>) {
     let Some(mut T) = root else {
         return (None, None);
     };
-    if T.right.is_none() {
+    // 右の子の取り出し
+    let (new_right, right_most) = delete_and_get_max(T.right.take());
+    let Some(right_most) = right_most else {
         return (None, Some(*T));
-    }
-    let right_most = {
-        let mut par = T.right.as_deref_mut().unwrap();
-        while par.right.as_ref().unwrap().right.is_some() {
-            par = par.right.as_deref_mut().unwrap();
-        }
-        *par.right.take().unwrap()
     };
-    (Some(T), Some(right_most))
+    if let Some(R) = new_right {
+        T.right.replace(R);
+    }
+    let mut new_root = Some(T);
+    // 削除したので，再平衡化
+    new_root = rebarance(new_root);
+    (new_root, Some(right_most))
 }
 
 #[cfg(test)]
