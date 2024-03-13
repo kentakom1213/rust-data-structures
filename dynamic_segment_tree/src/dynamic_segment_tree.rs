@@ -40,6 +40,7 @@ impl<K: Ord, M: Monoid> DynamicSegmentTree<K, M> {
 
     /// 1点取得（可変参照）
     /// - 値 `key` を持つノードの可変参照を取得する
+    /// - **定数倍が重いので極力 `insert` をつかう**
     pub fn get_mut(&mut self, key: K) -> NodeEntry<'_, K, M> {
         let (new_root, old_key_val) = delete(self.root.take(), &key);
         self.root = new_root;

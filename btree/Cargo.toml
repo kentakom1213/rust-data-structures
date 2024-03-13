@@ -1,5 +1,5 @@
 [package]
-name = "segment_tree_2d_sparse"
+name = "btree"
 version = "0.1.0"
 edition = "2021"
 

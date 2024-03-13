@@ -139,6 +139,7 @@ pub fn get<'a, K: Ord, M: Monoid>(root: &'a Node<K, M>, key: &K) -> Option<&'a N
 type Segment<K> = (Bound<K>, Bound<K>);
 
 /// 区間 `x` と `y` が共通部分を持たないか判定
+#[inline]
 fn has_no_intersection<K: Ord>((l, r): Segment<&K>, (begin, end): Segment<&K>) -> bool {
     (match (r, begin) {
         (Included(r), Included(b)) => r < b,
@@ -156,6 +157,7 @@ fn has_no_intersection<K: Ord>((l, r): Segment<&K>, (begin, end): Segment<&K>) -
 }
 
 /// 区間 `x`（引数1） が区間 `y`（引数2） を包含するか
+#[inline]
 fn includes<K: Ord>((l, r): Segment<&K>, (begin, end): Segment<&K>) -> bool {
     (match (l, begin) {
         (Unbounded, _) => true,
