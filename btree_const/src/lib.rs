@@ -1,4 +1,4 @@
-#![feature(generic_const_exprs)]
+#![allow(non_snake_case)]
 
 pub mod build_macro;
 pub mod debug_util;
