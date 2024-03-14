@@ -1,28 +1,33 @@
 //! デバッグ用関数群
 
 use crate::node::{BTreeNode, Node};
-use std::{cell::Ref, fmt::Debug};
+use std::fmt::Debug;
 
 const GREEN: &str = "\x1b[92m";
 const END: &str = "\x1b[0m";
 
-// pub trait MyDebug {
-//     fn dbg(&self);
-// }
-
-// impl<K, V> MyDebug for Node<K, V>
-// where
-//     K: Debug,
-//     V: Debug,
-// {
-//     /// 木の形でデバッグ出力を行う
-//     fn dbg(&self) {
-//         #![cfg(debug_assertions)]
-//         eprintln!("{GREEN}┌─ BTree ───────────────────────────{END}");
-//         dbg_inner(&self, 0);
-//         eprintln!("{GREEN}└───────────────────────────────────{END}");
-//     }
-// }
+impl<K: Debug, V: Debug> Debug for Node<K, V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Node::Internal {
+                keys,
+                vals,
+                children,
+                ..
+            } => f
+                .debug_struct("Internal")
+                .field("keys", &keys)
+                .field("vals", &vals)
+                .field("children", &children)
+                .finish(),
+            Node::Leaf { keys, vals, .. } => f
+                .debug_struct("Leaf")
+                .field("keys", &keys)
+                .field("vals", &vals)
+                .finish(),
+        }
+    }
+}
 
 /// 再帰的に表示
 pub fn dbg_inner<K, V>(root: &BTreeNode<K, V>, depth: usize)
