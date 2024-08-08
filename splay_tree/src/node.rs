@@ -1,7 +1,6 @@
 //! ノードの構造体
 
 use std::{
-    borrow::BorrowMut,
     cell::RefCell,
     cmp::Ordering,
     fmt::Debug,
@@ -59,7 +58,7 @@ fn insert<K: Ord, V: Clone>(node: NodePtr<K, V>, key: K, value: V) -> (NodePtr<K
     };
 
     // キーの比較
-    let comp = key.cmp(&node.borrow().key);
+    let comp = key.cmp(&node.as_ref().borrow().key);
 
     match comp {
         Ordering::Less => {
@@ -99,6 +98,78 @@ fn insert<K: Ord, V: Clone>(node: NodePtr<K, V>, key: K, value: V) -> (NodePtr<K
     }
 }
 
+/// rootを根とする木で，xに一致するキーをもつノードの参照を返す
+pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
+    let mut node = root.clone();
+    while let Some(inner) = node.clone() {
+        let comp = x.cmp(&inner.borrow().key);
+        match comp {
+            Ordering::Less => node = inner.borrow().left.clone(),
+            Ordering::Equal => break,
+            Ordering::Greater => node = inner.borrow().right.clone(),
+        }
+    }
+    (root, node)
+}
+
+/// rootを根として左回転
+/// ```text
+///      X                          Y
+///     / \         left           / \
+///    A   Y    === rotate ==>    X   C
+///       / \                    / \
+///      B   C                  A   B
+/// ```
+#[allow(non_snake_case)]
+fn rotate_left<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
+    let X = root?;
+    let Some(Y) = X.as_ref().borrow_mut().right.take() else {
+        return Some(X);
+    };
+
+    // X.right <- Y.left
+    let mut B = Y.as_ref().borrow_mut().left.take();
+    if let Some(ref mut B) = B {
+        B.as_ref().borrow_mut().parent = Some(Rc::downgrade(&X));
+    }
+    X.as_ref().borrow_mut().right = B;
+
+    // Y.left <- X
+    X.as_ref().borrow_mut().parent = Some(Rc::downgrade(&Y));
+    Y.as_ref().borrow_mut().left = Some(X);
+
+    Some(Y)
+}
+
+/// rootを根として右回転
+/// ```text
+///        Y                      X
+///       / \       right        / \
+///      X   C  === rotate ==>  A   Y
+///     / \                        / \
+///    A   B                      B   C
+/// ```
+#[allow(non_snake_case)]
+fn rotate_right<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
+    let Y = root?;
+    let Some(X) = Y.as_ref().borrow_mut().left.take() else {
+        return Some(Y);
+    };
+
+    // Y.left <- X.right
+    let mut B = X.as_ref().borrow_mut().right.take();
+    if let Some(ref mut B) = B {
+        B.as_ref().borrow_mut().parent = Some(Rc::downgrade(&Y));
+    }
+    Y.as_ref().borrow_mut().left = B;
+
+    // X.right <- Y
+    Y.as_ref().borrow_mut().parent = Some(Rc::downgrade(&X));
+    X.as_ref().borrow_mut().right = Some(Y);
+
+    Some(X)
+}
+
 impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match (&self.left, &self.right) {
@@ -132,9 +203,12 @@ impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
 
 #[cfg(test)]
 mod test {
-    use crate::{node::insert, util::print_as_binary_tree};
+    use crate::{
+        node::{insert, rotate_right},
+        print_util::print_as_binary_tree,
+    };
 
-    use super::Node;
+    use super::{find, rotate_left, Node};
 
     #[test]
     fn test_create_tree() {
@@ -161,6 +235,122 @@ mod test {
         print_as_binary_tree(&root);
 
         (root, _) = insert(root, 30, "fifth");
+        print_as_binary_tree(&root);
+
+        (root, _) = insert(root, 15, "sixth");
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_find() {
+        let mut root = None;
+        (root, _) = insert(root, 5, "first");
+        (root, _) = insert(root, 15, "second");
+        (root, _) = insert(root, 1, "third");
+        (root, _) = insert(root, 3, "forth");
+        (root, _) = insert(root, 30, "fifth");
+
+        let find_5;
+        (root, find_5) = find(root, &5);
+        print_as_binary_tree(&root);
+        println!("{:?}", &find_5);
+
+        let find_2;
+        (root, find_2) = find(root, &2);
+        print_as_binary_tree(&root);
+        println!("{:?}", &find_2);
+
+        let find_15;
+        print_as_binary_tree(&root);
+        (root, find_15) = find(root, &15);
+        println!("{:?}", &find_15);
+
+        (root, _) = insert(root, 20, "sixth");
+        print_as_binary_tree(&root);
+        println!("{:?}", &find_15);
+    }
+
+    #[test]
+    fn test_rotate_left() {
+        let mut root = None;
+        print_as_binary_tree(&root);
+
+        println!("> rotate left");
+        root = rotate_left(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 10");
+        (root, _) = insert(root, 10, "first");
+        print_as_binary_tree(&root);
+
+        println!("> rotate left");
+        root = rotate_left(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 20");
+        (root, _) = insert(root, 20, "second");
+        print_as_binary_tree(&root);
+
+        println!("> rotate left");
+        root = rotate_left(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 0");
+        (root, _) = insert(root, 0, "therd");
+        print_as_binary_tree(&root);
+
+        println!("> rotate left");
+        root = rotate_left(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 30");
+        (root, _) = insert(root, 30, "forth");
+        print_as_binary_tree(&root);
+
+        println!("> rotate left");
+        root = rotate_left(root);
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_rotate_right() {
+        let mut root = None;
+        print_as_binary_tree(&root);
+
+        println!("> rotate right");
+        root = rotate_right(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 40");
+        (root, _) = insert(root, 40, "first");
+        print_as_binary_tree(&root);
+
+        println!("> rotate right");
+        root = rotate_right(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 20");
+        (root, _) = insert(root, 20, "second");
+        print_as_binary_tree(&root);
+
+        println!("> rotate right");
+        root = rotate_right(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 0");
+        (root, _) = insert(root, 0, "therd");
+        print_as_binary_tree(&root);
+
+        println!("> rotate right");
+        root = rotate_right(root);
+        print_as_binary_tree(&root);
+
+        println!("> insert 30");
+        (root, _) = insert(root, 30, "forth");
+        print_as_binary_tree(&root);
+
+        println!("> rotate right");
+        root = rotate_right(root);
         print_as_binary_tree(&root);
     }
 }

@@ -3,7 +3,6 @@
 use crate::node::NodePtr;
 use std::fmt::Debug;
 
-const GREEN: &str = "\x1b[92m";
 const BLUE: &str = "\x1b[94m";
 const END: &str = "\x1b[0m";
 const LEFT: &str = " ┌──";
@@ -14,9 +13,9 @@ const BLANK: &str = "    ";
 
 /// 2分木として出力する
 pub fn print_as_binary_tree<K: Ord + Debug, V: Debug>(root: &NodePtr<K, V>) {
-    eprintln!("{BLUE}┌─ BinaryTree ──────────────────────{END}");
+    eprintln!("{BLUE}┌─ BinaryTree ──────────────────────────────────────────{END}");
     fmt_inner_binary_tree(root, &mut vec![], NULL);
-    eprintln!("{BLUE}└───────────────────────────────────{END}");
+    eprintln!("{BLUE}└───────────────────────────────────────────────────────{END}");
 }
 
 /// print recursive
