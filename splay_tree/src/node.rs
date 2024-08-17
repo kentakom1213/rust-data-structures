@@ -112,62 +112,53 @@ pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K,
     (root, node)
 }
 
-/// rootを根として左回転
-/// ```text
-///      X                          Y
-///     / \         left           / \
-///    A   Y    === rotate ==>    X   C
-///       / \                    / \
-///      B   C                  A   B
-/// ```
-#[allow(non_snake_case)]
-fn rotate_left<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
-    let X = root?;
-    let Some(Y) = X.as_ref().borrow_mut().right.take() else {
-        return Some(X);
+/// nodeを1つ上に持ってくるように回転する
+fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
+    let mut node = node?;
+    // 親
+    let Some(par) = node.as_ref().borrow_mut().parent.take() else {
+        return Some(node);
     };
 
-    // X.right <- Y.left
-    let mut B = Y.as_ref().borrow_mut().left.take();
-    if let Some(ref mut B) = B {
-        B.as_ref().borrow_mut().parent = Some(Rc::downgrade(&X));
-    }
-    X.as_ref().borrow_mut().right = B;
-
-    // Y.left <- X
-    X.as_ref().borrow_mut().parent = Some(Rc::downgrade(&Y));
-    Y.as_ref().borrow_mut().left = Some(X);
-
-    Some(Y)
+    todo!()
 }
 
-/// rootを根として右回転
-/// ```text
-///        Y                      X
-///       / \       right        / \
-///      X   C  === rotate ==>  A   Y
-///     / \                        / \
-///    A   B                      B   C
-/// ```
-#[allow(non_snake_case)]
-fn rotate_right<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
-    let Y = root?;
-    let Some(X) = Y.as_ref().borrow_mut().left.take() else {
-        return Some(Y);
-    };
+/// ノードの状態を調べる
+#[derive(Debug, PartialEq)]
+pub enum NodeState {
+    /// ノードが存在しない
+    Nil,
+    /// 根ノード（親を持たない）
+    Root,
+    /// 親の左の子
+    LeftChild,
+    /// 親の右の子
+    RightChild,
+}
 
-    // Y.left <- X.right
-    let mut B = X.as_ref().borrow_mut().right.take();
-    if let Some(ref mut B) = B {
-        B.as_ref().borrow_mut().parent = Some(Rc::downgrade(&Y));
+impl NodeState {
+    /// 与えられたノードが
+    /// - 空のノード
+    /// - 根ノード
+    /// - 親の左の子
+    /// - 親の右の子
+    ///
+    /// のどれかを判定する．
+    fn get<K: Ord, V>(node: &NodePtr<K, V>) -> Self {
+        let Some(inner) = node else {
+            return NodeState::Nil;
+        };
+        let Some(par) = inner.borrow().parent.clone() else {
+            return NodeState::Root;
+        };
+        // 左の子である場合
+        let par = par.upgrade().unwrap();
+        if Rc::ptr_eq(par.borrow().left.as_ref().unwrap(), &inner) {
+            NodeState::LeftChild
+        } else {
+            NodeState::RightChild
+        }
     }
-    Y.as_ref().borrow_mut().left = B;
-
-    // X.right <- Y
-    Y.as_ref().borrow_mut().parent = Some(Rc::downgrade(&X));
-    X.as_ref().borrow_mut().right = Some(Y);
-
-    Some(X)
 }
 
 impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
@@ -204,11 +195,11 @@ impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
 #[cfg(test)]
 mod test {
     use crate::{
-        node::{insert, rotate_right},
+        node::{insert, NodeState},
         print_util::print_as_binary_tree,
     };
 
-    use super::{find, rotate_left, Node};
+    use super::{find, Node};
 
     #[test]
     fn test_create_tree() {
@@ -255,10 +246,10 @@ mod test {
         print_as_binary_tree(&root);
         println!("{:?}", &find_5);
 
-        let find_2;
-        (root, find_2) = find(root, &2);
+        let find_20;
+        (root, find_20) = find(root, &2);
         print_as_binary_tree(&root);
-        println!("{:?}", &find_2);
+        println!("{:?}", &find_20);
 
         let find_15;
         print_as_binary_tree(&root);
@@ -271,86 +262,33 @@ mod test {
     }
 
     #[test]
-    fn test_rotate_left() {
+    fn test_nodestate() {
         let mut root = None;
+        (root, _) = insert(root, 5, "first");
+        (root, _) = insert(root, 15, "second");
+        (root, _) = insert(root, 1, "third");
+        (root, _) = insert(root, 3, "forth");
+        (root, _) = insert(root, 30, "fifth");
+
         print_as_binary_tree(&root);
 
-        println!("> rotate left");
-        root = rotate_left(root);
+        let find_5;
+        (root, find_5) = find(root, &5);
+        println!("find_5 = {:?}", NodeState::get(&find_5));
+
+        let find_20;
+        (root, find_20) = find(root, &20);
+        println!("find_20 = {:?}", NodeState::get(&find_20));
+
+        let find_15;
+        (root, find_15) = find(root, &15);
+        println!("find_15 = {:?}", NodeState::get(&find_15));
+
+        (root, _) = insert(root, 20, "sixth");
         print_as_binary_tree(&root);
 
-        println!("> insert 10");
-        (root, _) = insert(root, 10, "first");
-        print_as_binary_tree(&root);
-
-        println!("> rotate left");
-        root = rotate_left(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 20");
-        (root, _) = insert(root, 20, "second");
-        print_as_binary_tree(&root);
-
-        println!("> rotate left");
-        root = rotate_left(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 0");
-        (root, _) = insert(root, 0, "therd");
-        print_as_binary_tree(&root);
-
-        println!("> rotate left");
-        root = rotate_left(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 30");
-        (root, _) = insert(root, 30, "forth");
-        print_as_binary_tree(&root);
-
-        println!("> rotate left");
-        root = rotate_left(root);
-        print_as_binary_tree(&root);
-    }
-
-    #[test]
-    fn test_rotate_right() {
-        let mut root = None;
-        print_as_binary_tree(&root);
-
-        println!("> rotate right");
-        root = rotate_right(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 40");
-        (root, _) = insert(root, 40, "first");
-        print_as_binary_tree(&root);
-
-        println!("> rotate right");
-        root = rotate_right(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 20");
-        (root, _) = insert(root, 20, "second");
-        print_as_binary_tree(&root);
-
-        println!("> rotate right");
-        root = rotate_right(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 0");
-        (root, _) = insert(root, 0, "therd");
-        print_as_binary_tree(&root);
-
-        println!("> rotate right");
-        root = rotate_right(root);
-        print_as_binary_tree(&root);
-
-        println!("> insert 30");
-        (root, _) = insert(root, 30, "forth");
-        print_as_binary_tree(&root);
-
-        println!("> rotate right");
-        root = rotate_right(root);
-        print_as_binary_tree(&root);
+        let find_20;
+        (root, find_20) = find(root, &20);
+        println!("find_20 = {:?}", NodeState::get(&find_20));
     }
 }
