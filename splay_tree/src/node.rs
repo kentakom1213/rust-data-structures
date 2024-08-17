@@ -8,8 +8,6 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::print_util::print_as_binary_tree;
-
 /// ノードの構造体
 pub struct Node<K: Ord, V> {
     pub key: K,
@@ -65,35 +63,35 @@ fn insert<K: Ord, V: Clone>(node: NodePtr<K, V>, key: K, value: V) -> (NodePtr<K
     match comp {
         Ordering::Less => {
             // 左の子に挿入
-            let left = node.as_ref().borrow_mut().left.take();
+            let left = node.borrow_mut().left.take();
             let (mut new_left, old_value) = insert(left, key, value);
 
             // new_leftの親の更新
             let node_ptr_weak = Rc::downgrade(&node);
-            new_left.as_mut().unwrap().as_ref().borrow_mut().parent = Some(node_ptr_weak);
+            new_left.as_mut().unwrap().borrow_mut().parent = Some(node_ptr_weak);
 
             // 子を戻す
-            node.as_ref().borrow_mut().left = new_left;
+            node.borrow_mut().left = new_left;
 
             (Some(node), old_value)
         }
         Ordering::Equal => {
             // valueを置き換える
-            let old_value = mem::replace(&mut node.as_ref().borrow_mut().value, value);
+            let old_value = mem::replace(&mut node.borrow_mut().value, value);
 
             (Some(node), Some(old_value))
         }
         Ordering::Greater => {
             // 左の子に挿入
-            let right = node.as_ref().borrow_mut().right.take();
+            let right = node.borrow_mut().right.take();
             let (mut new_right, old_value) = insert(right, key, value);
 
             // new_rightの親の更新
             let node_ptr_weak = Rc::downgrade(&node);
-            new_right.as_mut().unwrap().as_ref().borrow_mut().parent = Some(node_ptr_weak);
+            new_right.as_mut().unwrap().borrow_mut().parent = Some(node_ptr_weak);
 
             // 子を戻す
-            node.as_ref().borrow_mut().right = new_right;
+            node.borrow_mut().right = new_right;
 
             (Some(node), old_value)
         }
@@ -120,8 +118,8 @@ fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
         NodeState::Nil | NodeState::Root => node,
         NodeState::LeftChild => {
             let inner = node?;
-            let mut right = inner.as_ref().borrow_mut().right.take();
-            let par = inner.as_ref().borrow().parent.clone()?;
+            let mut right = inner.borrow_mut().right.take();
+            let par = inner.borrow().parent.clone()?;
 
             // 親の左の子←自分の右の子
             if let Some(right) = &mut right {
@@ -155,7 +153,7 @@ fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
         NodeState::RightChild => {
             let inner = node?;
             let mut left = inner.as_ref().borrow_mut().left.take();
-            let par = inner.as_ref().borrow().parent.clone()?;
+            let par = inner.borrow().parent.clone()?;
 
             // 親の右の子←自分の左の子
             if let Some(left) = &mut left {
@@ -279,6 +277,32 @@ impl NodeState {
     fn is_child(&self) -> bool {
         matches!(self, Self::LeftChild | Self::RightChild)
     }
+}
+
+/// 次に大きい値をもつノードを返す
+fn next<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
+    if node.is_none() {
+        return None;
+    }
+
+    // 右の子がいる ⇒ 右の子孫の最小値
+    if let Some(mut nxt) = node.as_ref()?.borrow().right.clone() {
+        while nxt.borrow().left.is_some() {
+            let left = nxt.borrow().left.clone()?;
+            nxt = left;
+        }
+        return Some(nxt);
+    }
+
+    // 自分が親の左の子である
+    let state = NodeState::get(&node);
+    if state == NodeState::LeftChild {
+        let par = node.as_ref()?.clone();
+
+        todo!()
+    }
+
+    None
 }
 
 impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
