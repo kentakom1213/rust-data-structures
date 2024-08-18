@@ -11,15 +11,15 @@ pub fn rotate<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     match node.get_state() {
         NodeState::Nil | NodeState::Root => node,
         NodeState::LeftChild => {
-            let mut right = node.get_right_mut()?.take();
-            let par = node.get_parent()?.clone();
+            let mut right = node.right_mut()?.take();
+            let par = node.parent()?.clone();
 
             // 親の左の子←自分の右の子
-            if let Some(mut right_parent) = right.get_parent_mut() {
+            if let Some(mut right_parent) = right.parent_mut() {
                 *right_parent = par.clone();
             }
             let mut par = par.to_strong_ptr();
-            *par.get_left_mut()? = right;
+            *par.left_mut()? = right;
 
             // 自分の親←親の親
             let par_state = par.get_state();
@@ -27,32 +27,32 @@ pub fn rotate<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 
             match par_state {
                 NodeState::LeftChild => {
-                    *parpar.get_left_mut()? = node.clone();
+                    *parpar.left_mut()? = node.clone();
                 }
                 NodeState::RightChild => {
-                    *parpar.get_right_mut()? = node.clone();
+                    *parpar.right_mut()? = node.clone();
                 }
                 _ => (),
             }
 
-            *node.get_parent_mut()? = parpar.map(|f| Rc::downgrade(&f));
+            *node.parent_mut()? = parpar.map(|f| Rc::downgrade(&f));
 
             // 自分の右の子←親
-            *par.get_parent_mut()? = node.to_weak_ptr();
-            node.get_right_mut()?.replace(par?);
+            *par.parent_mut()? = node.to_weak_ptr();
+            node.right_mut()?.replace(par?);
 
             node
         }
         NodeState::RightChild => {
-            let mut left = node.get_left_mut()?.take();
-            let par = node.get_parent()?.clone();
+            let mut left = node.left_mut()?.take();
+            let par = node.parent()?.clone();
 
             // 親の右の子←自分の左の子
-            if let Some(mut left_parent) = left.get_parent_mut() {
+            if let Some(mut left_parent) = left.parent_mut() {
                 *left_parent = par.clone();
             }
             let mut par = par.to_strong_ptr();
-            *par.get_right_mut()? = left;
+            *par.right_mut()? = left;
 
             // 自分の親←親の親
             let par_state = par.get_state();
@@ -60,19 +60,19 @@ pub fn rotate<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 
             match par_state {
                 NodeState::LeftChild => {
-                    *parpar.get_left_mut()? = node.clone();
+                    *parpar.left_mut()? = node.clone();
                 }
                 NodeState::RightChild => {
-                    *parpar.get_right_mut()? = node.clone();
+                    *parpar.right_mut()? = node.clone();
                 }
                 _ => (),
             }
 
-            *node.get_parent_mut()? = parpar.map(|f| Rc::downgrade(&f));
+            *node.parent_mut()? = parpar.map(|f| Rc::downgrade(&f));
 
             // 自分の左の子←親
-            *par.get_parent_mut()? = node.to_weak_ptr();
-            node.get_left_mut()?.replace(par?);
+            *par.parent_mut()? = node.to_weak_ptr();
+            node.left_mut()?.replace(par?);
 
             node
         }

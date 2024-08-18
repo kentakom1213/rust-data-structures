@@ -1,9 +1,6 @@
 use std::{cmp::Ordering, mem, rc::Rc};
 
-use super::{
-    node_pointer::{Node, NodeOps},
-    NodePtr,
-};
+use super::{node_pointer::Node, NodePtr};
 
 /// nodeを根とする木に(key, value)を挿入する
 /// - すでに同じキーが存在した場合，その値を置き換える
@@ -64,6 +61,11 @@ pub fn insert<K: Ord, V: Clone>(
             (Some(node), old_value)
         }
     }
+}
+
+/// nodeの左側に子を追加し，追加された子のポインタを返す
+pub fn insert_left<K: Ord, V>(node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
+    todo!()
 }
 
 #[cfg(test)]

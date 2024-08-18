@@ -6,8 +6,8 @@ use super::{node_pointer::NodeOps, state::NodeState, NodePtr};
 ///
 /// - 計算量： `O(1) amotized`
 pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    if let Some(mut prv) = node.get_left().map(|node| node.clone())? {
-        while let Some(right) = Some(prv.clone()).get_right().map(|node| node.clone())? {
+    if let Some(mut prv) = node.left().map(|node| node.clone())? {
+        while let Some(right) = Some(prv.clone()).right().map(|node| node.clone())? {
             prv = right;
         }
         return Some(prv);
@@ -33,8 +33,8 @@ pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 ///
 /// - 計算量： `O(1) amotized`
 pub fn next<K: Ord + Debug, V: Debug>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    if let Some(mut nxt) = node.get_right().map(|node| node.clone())? {
-        while let Some(left) = Some(nxt.clone()).get_left().map(|node| node.clone())? {
+    if let Some(mut nxt) = node.right().map(|node| node.clone())? {
+        while let Some(left) = Some(nxt.clone()).left().map(|node| node.clone())? {
             nxt = left;
         }
         return Some(nxt);
@@ -85,7 +85,7 @@ mod test_prev_next {
         items.sort();
 
         for i in items.iter().rev() {
-            assert_eq!(*prv.get_key().unwrap(), *i);
+            assert_eq!(*prv.key().unwrap(), *i);
 
             prv = prev(prv);
         }
@@ -110,7 +110,7 @@ mod test_prev_next {
         items.sort();
 
         for i in items {
-            assert_eq!(*nxt.get_key().unwrap(), i);
+            assert_eq!(*nxt.key().unwrap(), i);
 
             nxt = next(nxt);
         }
@@ -129,9 +129,9 @@ mod test_prev_next {
 
         let mut nxt = lower_bound(root.clone(), &1);
 
-        assert_eq!(*nxt.get_key().unwrap(), 1);
+        assert_eq!(*nxt.key().unwrap(), 1);
 
         nxt = next(nxt);
-        assert_eq!(*nxt.get_key().unwrap(), 2);
+        assert_eq!(*nxt.key().unwrap(), 2);
     }
 }

@@ -116,24 +116,24 @@ pub trait NodeOps<K: Ord, V> {
     fn take_right(&mut self) -> NodePtr<K, V>;
 
     /// 親の参照を取得する
-    fn get_parent(&self) -> Option<Ref<ParentPtr<K, V>>>;
+    fn parent(&self) -> Option<Ref<ParentPtr<K, V>>>;
     /// 親の可変参照を取得する
-    fn get_parent_mut(&mut self) -> Option<RefMut<ParentPtr<K, V>>>;
+    fn parent_mut(&mut self) -> Option<RefMut<ParentPtr<K, V>>>;
     /// 左の子への参照を取得する
-    fn get_left(&self) -> Option<Ref<NodePtr<K, V>>>;
+    fn left(&self) -> Option<Ref<NodePtr<K, V>>>;
     /// 左の子への可変参照を取得する
-    fn get_left_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
+    fn left_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
     /// 右の子への参照を取得する
-    fn get_right(&self) -> Option<Ref<NodePtr<K, V>>>;
+    fn right(&self) -> Option<Ref<NodePtr<K, V>>>;
     /// 右の子への可変参照を取得する
-    fn get_right_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
+    fn right_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
 
     /// キーへの参照を取得する
-    fn get_key(&self) -> Option<Ref<K>>;
+    fn key(&self) -> Option<Ref<K>>;
     /// バリューへの参照を取得する
-    fn get_value(&self) -> Option<Ref<V>>;
+    fn value(&self) -> Option<Ref<V>>;
     /// バリューへの可変参照を取得する
-    fn get_value_mut(&mut self) -> Option<RefMut<V>>;
+    fn value_mut(&mut self) -> Option<RefMut<V>>;
 
     /// 親ポインタに変換する
     fn to_weak_ptr(&self) -> ParentPtr<K, V>;
@@ -141,7 +141,7 @@ pub trait NodeOps<K: Ord, V> {
 
 impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     fn is_child(&self) -> bool {
-        self.get_parent().is_some_and(|node| node.is_some())
+        self.parent().is_some_and(|node| node.is_some())
     }
 
     fn get_state(&self) -> NodeState {
@@ -155,7 +155,7 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
             return NodeState::Root;
         }
 
-        if par.get_left().is_some_and(|left| {
+        if par.left().is_some_and(|left| {
             left.as_ref()
                 .zip(self.as_ref())
                 .is_some_and(|(l, s)| Rc::ptr_eq(l, s))
@@ -167,7 +167,7 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     }
 
     fn get_parent_ptr(&self) -> Self {
-        self.get_parent()?.to_strong_ptr()
+        self.parent()?.to_strong_ptr()
     }
 
     fn take_parent(&mut self) -> ParentPtr<K, V> {
@@ -195,17 +195,17 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     }
 
     // 不変参照用のgetterを生成
-    generate_getters!(get_parent, parent, Ref<ParentPtr<K, V>>);
-    generate_getters!(get_left, left, Ref<NodePtr<K, V>>);
-    generate_getters!(get_right, right, Ref<NodePtr<K, V>>);
-    generate_getters!(get_key, key, Ref<K>);
-    generate_getters!(get_value, value, Ref<V>);
+    generate_getters!(parent, parent, Ref<ParentPtr<K, V>>);
+    generate_getters!(left, left, Ref<NodePtr<K, V>>);
+    generate_getters!(right, right, Ref<NodePtr<K, V>>);
+    generate_getters!(key, key, Ref<K>);
+    generate_getters!(value, value, Ref<V>);
 
     // 可変参照用のgetterを生成
-    generate_getters!(get_parent_mut, parent, RefMut<ParentPtr<K, V>>, mut);
-    generate_getters!(get_left_mut, left, RefMut<NodePtr<K, V>>, mut);
-    generate_getters!(get_right_mut, right, RefMut<NodePtr<K, V>>, mut);
-    generate_getters!(get_value_mut, value, RefMut<V>, mut);
+    generate_getters!(parent_mut, parent, RefMut<ParentPtr<K, V>>, mut);
+    generate_getters!(left_mut, left, RefMut<NodePtr<K, V>>, mut);
+    generate_getters!(right_mut, right, RefMut<NodePtr<K, V>>, mut);
+    generate_getters!(value_mut, value, RefMut<V>, mut);
 }
 
 /// 弱参照の操作
@@ -237,18 +237,18 @@ mod test_pointer {
 
         // 不変参照
         {
-            let node_ref = node.get_key();
+            let node_ref = node.key();
             println!("node_ref = {node_ref:?}");
             assert_eq!(*node_ref.unwrap(), 1);
 
-            let val_ref = node.get_value();
+            let val_ref = node.value();
             println!("val_ref = {val_ref:?}");
             assert_eq!(*val_ref.unwrap(), "first");
         }
 
         // 可変参照
         {
-            let val_mut = node.get_value_mut();
+            let val_mut = node.value_mut();
             println!("val_mut = {val_mut:?}");
 
             *val_mut.unwrap() = "changed";
@@ -258,11 +258,11 @@ mod test_pointer {
 
         // 不変参照
         {
-            let node_ref = node.get_key();
+            let node_ref = node.key();
             println!("node_ref = {node_ref:?}");
             assert_eq!(*node_ref.unwrap(), 1);
 
-            let val_ref = node.get_value();
+            let val_ref = node.value();
             println!("val_ref = {val_ref:?}");
             assert_eq!(*val_ref.unwrap(), "changed");
         }

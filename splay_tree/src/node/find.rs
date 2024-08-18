@@ -5,11 +5,11 @@ fn find_min<K: Ord, V, F: Fn(&K) -> bool>(mut root: NodePtr<K, V>, cmp: F) -> No
     let mut res = None;
 
     while root.is_some() {
-        if root.get_key().is_some_and(|k| cmp(&k)) {
+        if root.key().is_some_and(|k| cmp(&k)) {
             res = root.clone();
-            root = root.get_left().map(|node| node.clone())?;
+            root = root.left().map(|node| node.clone())?;
         } else {
-            root = root.get_right().map(|node| node.clone())?;
+            root = root.right().map(|node| node.clone())?;
         }
     }
 
@@ -29,7 +29,7 @@ pub fn upper_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
 /// 値 `x` を持つノードを返す
 pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
     let lb = lower_bound(root, x);
-    if &*lb.get_key()? == x {
+    if &*lb.key()? == x {
         lb
     } else {
         None
@@ -56,25 +56,25 @@ mod test_find {
 
         print_as_binary_tree(&root);
 
-        assert_eq!(*lower_bound(root.clone(), &0).get_key().unwrap(), 1);
-        assert_eq!(*upper_bound(root.clone(), &0).get_key().unwrap(), 1);
-        assert!(find(root.clone(), &0).get_key().is_none());
+        assert_eq!(*lower_bound(root.clone(), &0).key().unwrap(), 1);
+        assert_eq!(*upper_bound(root.clone(), &0).key().unwrap(), 1);
+        assert!(find(root.clone(), &0).key().is_none());
 
-        assert_eq!(*lower_bound(root.clone(), &1).get_key().unwrap(), 1);
-        assert_eq!(*upper_bound(root.clone(), &1).get_key().unwrap(), 3);
-        assert_eq!(*find(root.clone(), &1).get_key().unwrap(), 1);
+        assert_eq!(*lower_bound(root.clone(), &1).key().unwrap(), 1);
+        assert_eq!(*upper_bound(root.clone(), &1).key().unwrap(), 3);
+        assert_eq!(*find(root.clone(), &1).key().unwrap(), 1);
 
-        assert_eq!(*lower_bound(root.clone(), &5).get_key().unwrap(), 5);
-        assert_eq!(*upper_bound(root.clone(), &5).get_key().unwrap(), 15);
-        assert_eq!(*find(root.clone(), &5).get_key().unwrap(), 5);
+        assert_eq!(*lower_bound(root.clone(), &5).key().unwrap(), 5);
+        assert_eq!(*upper_bound(root.clone(), &5).key().unwrap(), 15);
+        assert_eq!(*find(root.clone(), &5).key().unwrap(), 5);
 
-        assert_eq!(*lower_bound(root.clone(), &10).get_key().unwrap(), 15);
-        assert_eq!(*upper_bound(root.clone(), &10).get_key().unwrap(), 15);
-        assert!(find(root.clone(), &10).get_key().is_none());
+        assert_eq!(*lower_bound(root.clone(), &10).key().unwrap(), 15);
+        assert_eq!(*upper_bound(root.clone(), &10).key().unwrap(), 15);
+        assert!(find(root.clone(), &10).key().is_none());
 
-        assert!(lower_bound(root.clone(), &100).get_key().is_none());
-        assert!(upper_bound(root.clone(), &100).get_key().is_none());
-        assert!(find(root.clone(), &100).get_key().is_none());
+        assert!(lower_bound(root.clone(), &100).key().is_none());
+        assert!(upper_bound(root.clone(), &100).key().is_none());
+        assert!(find(root.clone(), &100).key().is_none());
 
         print_as_binary_tree(&root);
     }
