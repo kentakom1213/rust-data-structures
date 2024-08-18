@@ -4,6 +4,8 @@ use super::{
 };
 
 /// 次に大きい値をもつノードを返す
+///
+/// - 計算量： `O(1) amotized`
 pub fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     if node.is_none() {
         return None;
@@ -87,4 +89,7 @@ mod test_prev_next {
         nxt = next(nxt);
         println!("> {nxt:?}");
     }
+
+    #[test]
+    fn test_next2() {}
 }

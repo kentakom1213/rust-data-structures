@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, mem, rc::Rc};
 
-use super::{Node, NodePtr};
+use super::{node_struct::Node, NodePtr};
 
 /// nodeを根とする木に(key, value)を挿入する
 /// - すでに同じキーが存在した場合，その値を置き換える

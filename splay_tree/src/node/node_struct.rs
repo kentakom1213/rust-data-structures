@@ -4,6 +4,8 @@ use std::{
     rc::{Rc, Weak},
 };
 
+use super::node_pointer::NodePtr;
+
 /// ノードの構造体
 pub struct Node<K: Ord, V> {
     pub key: K,
@@ -12,12 +14,6 @@ pub struct Node<K: Ord, V> {
     pub left: Option<Rc<RefCell<Node<K, V>>>>,
     pub right: Option<Rc<RefCell<Node<K, V>>>>,
 }
-
-/// ノードのポインタ
-pub type NodePtr<K, V> = Option<Rc<RefCell<Node<K, V>>>>;
-
-/// 親ノードのポインタ
-pub type ParentPtr<K, V> = Option<Weak<RefCell<Node<K, V>>>>;
 
 impl<K: Ord, V> Node<K, V> {
     /// 葉ノードを作成する
@@ -70,7 +66,7 @@ impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
 
 #[cfg(test)]
 mod test_node_struct {
-    use crate::node::Node;
+    use crate::node::node_struct::Node;
 
     #[test]
     fn test_create_tree() {
