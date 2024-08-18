@@ -5,7 +5,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use super::node_struct::Node;
+use super::{node_struct::Node, state::NodeState};
 
 /// ノードのポインタ
 pub type NodePtr<K, V> = Option<Rc<RefCell<Node<K, V>>>>;
@@ -15,6 +15,14 @@ pub type ParentPtr<K, V> = Option<Weak<RefCell<Node<K, V>>>>;
 
 /// ポインタに対する操作
 pub trait NodeOps<K: Ord, V> {
+    /// 与えられたノードが
+    /// - 空のノード
+    /// - 根ノード
+    /// - 親の左の子
+    /// - 親の右の子
+    ///
+    /// のどれかを判定する．
+    fn get_state(&self) -> NodeState;
     /// キーへの参照を取得する
     fn get_key(&self) -> Option<Ref<K>>;
     /// バリューへの参照を取得する
@@ -24,6 +32,26 @@ pub trait NodeOps<K: Ord, V> {
 }
 
 impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
+    fn get_state(&self) -> NodeState {
+        let Some(inner) = self else {
+            return NodeState::Nil;
+        };
+        let Some(par) = inner.borrow().parent.clone() else {
+            return NodeState::Root;
+        };
+        // 左の子である場合
+        let par = par.upgrade().unwrap();
+        if par
+            .borrow()
+            .left
+            .as_ref()
+            .is_some_and(|left| Rc::ptr_eq(left, inner))
+        {
+            NodeState::LeftChild
+        } else {
+            NodeState::RightChild
+        }
+    }
     fn get_key(&self) -> Option<Ref<K>> {
         let key_ref = self.as_ref()?.borrow();
         Some(Ref::map(key_ref, |node| &node.key))

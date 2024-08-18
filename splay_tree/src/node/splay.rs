@@ -1,13 +1,14 @@
 use std::rc::Rc;
 
 use super::{
+    node_pointer::NodeOps,
     state::{get_parent, NodeState},
     NodePtr,
 };
 
 /// nodeを1つ上に持ってくるように回転する
 pub fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
-    match NodeState::get(&node) {
+    match node.get_state() {
         NodeState::Nil | NodeState::Root => node,
         NodeState::LeftChild => {
             let inner = node?;
@@ -22,7 +23,7 @@ pub fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
             par.borrow_mut().left = right;
 
             // 自分の親←親の親
-            let par_state = NodeState::get(&Some(par.clone()));
+            let par_state = Some(par.clone()).get_state();
             let mut parpar = par.borrow_mut().parent.take();
             if let Some(parpar) = &mut parpar {
                 match par_state {
@@ -56,7 +57,7 @@ pub fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
             par.borrow_mut().right = left;
 
             // 自分の親←親の親
-            let par_state = NodeState::get(&Some(par.clone()));
+            let par_state = Some(par.clone()).get_state();
             let mut parpar = par.borrow_mut().parent.take();
             if let Some(parpar) = &mut parpar {
                 match par_state {
@@ -82,7 +83,7 @@ pub fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
 
 /// スプレー操作によりnodeを根に移動し，新たな根を返す
 pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    let mut state = NodeState::get(&node);
+    let mut state = node.get_state();
     while state.is_child() {
         // 親頂点の状態
         let par_state = NodeState::get_from_weak(&node.as_ref()?.borrow().parent);
@@ -108,7 +109,7 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
             _ => unreachable!(),
         }
 
-        state = NodeState::get(&node);
+        state = node.get_state();
     }
     node
 }
@@ -118,6 +119,7 @@ mod test_splay {
     use crate::{
         node::{
             insert::{find, insert},
+            node_pointer::NodeOps,
             splay::rotate,
             state::NodeState,
         },
@@ -139,7 +141,7 @@ mod test_splay {
 
         let find_5;
         (root, find_5) = find(root, &5);
-        println!("find_5 = {:?}", NodeState::get(&find_5));
+        println!("find_5 = {:?}", find_5.get_state());
 
         // rootを回転
         println!("> rotate at root");
@@ -150,7 +152,7 @@ mod test_splay {
         {
             let mut find_1;
             (root, find_1) = find(root, &1);
-            println!("find_1 = {:?}", NodeState::get(&find_1));
+            println!("find_1 = {:?}", find_1.get_state());
 
             // 回転
             println!("> rotate 1");
@@ -159,8 +161,8 @@ mod test_splay {
             print_as_binary_tree(&root);
             print_as_binary_tree(&find_1);
 
-            println!("root = {:?}", NodeState::get(&root));
-            println!("find_1 = {:?}", NodeState::get(&find_1));
+            println!("root = {:?}", root.get_state());
+            println!("find_1 = {:?}", find_1.get_state());
 
             root = find_1;
         }
@@ -168,7 +170,7 @@ mod test_splay {
         {
             let mut find_3;
             (root, find_3) = find(root, &3);
-            println!("find_3 = {:?}", NodeState::get(&find_3));
+            println!("find_3 = {:?}", find_3.get_state());
 
             // 30を回転
             println!("> rotate 3");
@@ -176,8 +178,8 @@ mod test_splay {
 
             print_as_binary_tree(&root);
 
-            println!("root = {:?}", NodeState::get(&root));
-            println!("find_3 = {:?}", NodeState::get(&find_3));
+            println!("root = {:?}", root.get_state());
+            println!("find_3 = {:?}", find_3.get_state());
         }
     }
 
@@ -195,7 +197,7 @@ mod test_splay {
         {
             let mut find_30;
             (root, find_30) = find(root, &30);
-            println!("find_30 = {:?}", NodeState::get(&find_30));
+            println!("find_30 = {:?}", find_30.get_state());
 
             // 回転
             println!("> rotate 30");
@@ -204,14 +206,14 @@ mod test_splay {
             print_as_binary_tree(&root);
             print_as_binary_tree(&find_30);
 
-            println!("root = {:?}", NodeState::get(&root));
-            println!("find_30 = {:?}", NodeState::get(&find_30));
+            println!("root = {:?}", root.get_state());
+            println!("find_30 = {:?}", find_30.get_state());
         }
 
         {
             let mut find_30;
             (root, find_30) = find(root, &30);
-            println!("find_30 = {:?}", NodeState::get(&find_30));
+            println!("find_30 = {:?}", find_30.get_state());
 
             // 回転
             println!("> rotate 30");
@@ -220,8 +222,8 @@ mod test_splay {
             print_as_binary_tree(&root);
             print_as_binary_tree(&find_30);
 
-            println!("root = {:?}", NodeState::get(&root));
-            println!("find_30 = {:?}", NodeState::get(&find_30));
+            println!("root = {:?}", root.get_state());
+            println!("find_30 = {:?}", find_30.get_state());
 
             root = find_30;
         }

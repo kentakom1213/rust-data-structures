@@ -1,4 +1,5 @@
 use super::{
+    node_pointer::NodeOps,
     state::{get_parent, NodeState},
     NodePtr,
 };
@@ -21,7 +22,7 @@ pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     }
 
     // 親をたどる
-    let mut state = NodeState::get(&node);
+    let mut state = node.get_state();
     while state.is_child() {
         match state {
             NodeState::LeftChild => {
@@ -32,7 +33,7 @@ pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
             }
             _ => unreachable!(),
         }
-        state = NodeState::get(&node);
+        state = node.get_state();
     }
 
     None
@@ -56,7 +57,7 @@ pub fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     }
 
     // 親をたどる
-    let mut state = NodeState::get(&node);
+    let mut state = node.get_state();
     while state.is_child() {
         match state {
             NodeState::LeftChild => {
@@ -67,7 +68,7 @@ pub fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
             }
             _ => unreachable!(),
         }
-        state = NodeState::get(&node);
+        state = node.get_state();
     }
 
     None

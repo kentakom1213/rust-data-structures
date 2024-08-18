@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use super::{NodePtr, ParentPtr};
+use super::{node_pointer::NodeOps, NodePtr, ParentPtr};
 
 /// ノードの状態を調べる
 #[derive(Debug, PartialEq)]
@@ -16,37 +16,9 @@ pub enum NodeState {
 }
 
 impl NodeState {
-    /// 与えられたノードが
-    /// - 空のノード
-    /// - 根ノード
-    /// - 親の左の子
-    /// - 親の右の子
-    ///
-    /// のどれかを判定する．
-    pub fn get<K: Ord, V>(node: &NodePtr<K, V>) -> Self {
-        let Some(inner) = node else {
-            return NodeState::Nil;
-        };
-        let Some(par) = inner.borrow().parent.clone() else {
-            return NodeState::Root;
-        };
-        // 左の子である場合
-        let par = par.upgrade().unwrap();
-        if par
-            .borrow()
-            .left
-            .as_ref()
-            .is_some_and(|left| Rc::ptr_eq(left, inner))
-        {
-            NodeState::LeftChild
-        } else {
-            NodeState::RightChild
-        }
-    }
-
     pub fn get_from_weak<K: Ord, V>(node: &ParentPtr<K, V>) -> Self {
         let node = node.as_ref().map(|p| p.upgrade().unwrap());
-        Self::get(&node)
+        node.get_state()
     }
 
     /// 子頂点であるかを判定する
@@ -69,6 +41,7 @@ mod test_node_state {
     use crate::{
         node::{
             insert::{find, insert},
+            node_pointer::NodeOps,
             state::NodeState,
         },
         print_util::print_as_binary_tree,
@@ -87,33 +60,33 @@ mod test_node_state {
 
         let find_1;
         (root, find_1) = find(root, &1);
-        println!("find_1 = {:?}", NodeState::get(&find_1));
+        println!("find_1 = {:?}", find_1.get_state());
 
         let find_3;
         (root, find_3) = find(root, &3);
-        println!("find_3 = {:?}", NodeState::get(&find_3));
+        println!("find_3 = {:?}", find_3.get_state());
 
         let find_5;
         (root, find_5) = find(root, &5);
-        println!("find_5 = {:?}", NodeState::get(&find_5));
+        println!("find_5 = {:?}", find_5.get_state());
 
         let find_15;
         (root, find_15) = find(root, &15);
-        println!("find_15 = {:?}", NodeState::get(&find_15));
+        println!("find_15 = {:?}", find_15.get_state());
 
         let find_20;
         (root, find_20) = find(root, &20);
-        println!("find_20 = {:?}", NodeState::get(&find_20));
+        println!("find_20 = {:?}", find_20.get_state());
 
         let find_30;
         (root, find_30) = find(root, &30);
-        println!("find_30 = {:?}", NodeState::get(&find_30));
+        println!("find_30 = {:?}", find_30.get_state());
 
         (root, _) = insert(root, 20, "sixth");
         print_as_binary_tree(&root);
 
         let find_20;
         (root, find_20) = find(root, &20);
-        println!("find_20 = {:?}", NodeState::get(&find_20));
+        println!("find_20 = {:?}", find_20.get_state());
     }
 }
