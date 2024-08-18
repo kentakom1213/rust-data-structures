@@ -1,20 +1,16 @@
+use std::fmt::Debug;
+
 use super::{node_pointer::NodeOps, state::NodeState, NodePtr};
 
 /// 次に小さい値を持つノードを返す
 ///
 /// - 計算量： `O(1) amotized`
 pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    if node.is_none() {
-        return None;
-    }
-
-    // 左の子がいる ⇒ 左の子孫の最大値
-    if let Some(mut prev) = node.as_ref()?.borrow().left.clone() {
-        while prev.borrow().right.is_some() {
-            let right = prev.borrow().right.clone()?;
-            prev = right;
+    if let Some(mut prv) = node.get_left().map(|node| node.clone())? {
+        while let Some(right) = Some(prv.clone()).get_right().map(|node| node.clone())? {
+            prv = right;
         }
-        return Some(prev);
+        return Some(prv);
     }
 
     // 親をたどる
@@ -36,15 +32,9 @@ pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 /// 次に大きい値をもつノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    if node.is_none() {
-        return None;
-    }
-
-    // 右の子がいる ⇒ 右の子孫の最小値
-    if let Some(mut nxt) = node.as_ref()?.borrow().right.clone() {
-        while nxt.borrow().left.is_some() {
-            let left = nxt.borrow().left.clone()?;
+pub fn next<K: Ord + Debug, V: Debug>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
+    if let Some(mut nxt) = node.get_right().map(|node| node.clone())? {
+        while let Some(left) = Some(nxt.clone()).get_left().map(|node| node.clone())? {
             nxt = left;
         }
         return Some(nxt);
@@ -130,5 +120,20 @@ mod test_prev_next {
     }
 
     #[test]
-    fn test_next2() {}
+    fn test_next2() {
+        let mut root = None;
+
+        (root, _) = insert(root, 1, "first");
+        (root, _) = insert(root, 2, "second");
+
+        print_as_binary_tree(&root);
+
+        let mut nxt;
+        (root, nxt) = find(root, &1);
+
+        assert_eq!(*nxt.get_key().unwrap(), 1);
+
+        nxt = next(nxt);
+        assert_eq!(*nxt.get_key().unwrap(), 2);
+    }
 }
