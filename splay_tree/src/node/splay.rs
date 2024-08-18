@@ -131,8 +131,7 @@ mod test_splay {
 
         print_as_binary_tree(&root);
 
-        let find_5;
-        (root, find_5) = find(root, &5);
+        let find_5 = find(root.clone(), &5);
         println!("find_5 = {:?}", find_5.get_state());
 
         // rootを回転
@@ -142,8 +141,7 @@ mod test_splay {
         print_as_binary_tree(&root);
 
         {
-            let mut find_1;
-            (root, find_1) = find(root, &1);
+            let mut find_1 = find(root.clone(), &1);
             println!("find_1 = {:?}", find_1.get_state());
 
             // 回転
@@ -159,8 +157,7 @@ mod test_splay {
         }
 
         {
-            let mut find_3;
-            (root, find_3) = find(root, &3);
+            let mut find_3 = find(root.clone(), &3);
             println!("find_3 = {:?}", find_3.get_state());
 
             // 30を回転
@@ -186,8 +183,7 @@ mod test_splay {
         print_as_binary_tree(&root);
 
         {
-            let mut find_30;
-            (root, find_30) = find(root, &30);
+            let mut find_30 = find(root.clone(), &30);
             println!("find_30 = {:?}", find_30.get_state());
 
             // 回転
@@ -202,8 +198,7 @@ mod test_splay {
         }
 
         {
-            let mut find_30;
-            (root, find_30) = find(root, &30);
+            let mut find_30 = find(root.clone(), &30);
             println!("find_30 = {:?}", find_30.get_state());
 
             // 回転
@@ -232,22 +227,19 @@ mod test_splay {
 
         print_as_binary_tree(&root);
 
-        let node;
-        (root, node) = find(root, &4);
+        let node = find(root.clone(), &4);
 
         root = splay(node);
 
         print_as_binary_tree(&root);
 
-        let node;
-        (root, node) = find(root, &1);
+        let node = find(root.clone(), &1);
 
         root = splay(node);
 
         print_as_binary_tree(&root);
 
-        let node;
-        (root, node) = find(root, &9);
+        let node = find(root.clone(), &9);
 
         root = splay(node);
 

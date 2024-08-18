@@ -60,7 +60,7 @@ pub fn next<K: Ord + Debug, V: Debug>(mut node: NodePtr<K, V>) -> NodePtr<K, V> 
 mod test_prev_next {
     use crate::{
         node::{
-            find::find,
+            find::lower_bound,
             insert::insert,
             node_pointer::NodeOps,
             prev_next::{next, prev},
@@ -79,8 +79,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut prv;
-        (root, prv) = find(root, &100);
+        let mut prv = lower_bound(root.clone(), &100);
 
         // アイテムをソート
         items.sort();
@@ -105,8 +104,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut nxt;
-        (root, nxt) = find(root, &-1);
+        let mut nxt = lower_bound(root.clone(), &-1);
 
         // アイテムをソート
         items.sort();
@@ -129,8 +127,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut nxt;
-        (root, nxt) = find(root, &1);
+        let mut nxt = lower_bound(root.clone(), &1);
 
         assert_eq!(*nxt.get_key().unwrap(), 1);
 
