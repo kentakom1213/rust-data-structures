@@ -1,6 +1,9 @@
 use std::{cmp::Ordering, mem, rc::Rc};
 
-use super::{node_pointer::Node, NodePtr};
+use super::{
+    node_pointer::{Node, NodeOps},
+    NodePtr,
+};
 
 /// nodeを根とする木に(key, value)を挿入する
 /// - すでに同じキーが存在した場合，その値を置き換える
@@ -66,12 +69,12 @@ pub fn insert<K: Ord, V: Clone>(
 /// rootを根とする木で，xに一致するキーをもつノードの参照を返す
 pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
     let mut node = root.clone();
-    while let Some(inner) = node.clone() {
-        let comp = x.cmp(&inner.borrow().key);
-        match comp {
-            Ordering::Less => node = inner.borrow().left.clone(),
+    while node.is_some() {
+        let comp = x.cmp(&node.get_key().as_ref().unwrap());
+        node = match comp {
+            Ordering::Less => node.get_left().unwrap().clone(),
             Ordering::Equal => break,
-            Ordering::Greater => node = inner.borrow().right.clone(),
+            Ordering::Greater => node.get_right().unwrap().clone(),
         }
     }
     (root, node)
