@@ -1,5 +1,23 @@
 //! ノードのポインタ
 
+macro_rules! generate_getters {
+    // 不変参照用のgetterを生成
+    ($name:ident, $field:ident, $return_type:ty) => {
+        fn $name(&self) -> Option<$return_type> {
+            let node_ref = self.as_ref()?.borrow();
+            Some(std::cell::Ref::map(node_ref, |node| &node.$field))
+        }
+    };
+
+    // 可変参照用のgetterを生成
+    ($name:ident, $field:ident, $return_type:ty, mut) => {
+        fn $name(&mut self) -> Option<$return_type> {
+            let node_mut = self.as_ref()?.borrow_mut();
+            Some(std::cell::RefMut::map(node_mut, |node| &mut node.$field))
+        }
+    };
+}
+
 use std::{
     cell::{Ref, RefCell, RefMut},
     rc::{Rc, Weak},
@@ -25,8 +43,23 @@ pub trait NodeOps<K: Ord, V> {
     ///
     /// のどれかを判定する．
     fn get_state(&self) -> NodeState;
-    /// 親のRc参照を取得する
-    fn get_parent(&self) -> Self;
+
+    /// 親のポインタを取得する
+    fn get_parent_ptr(&self) -> Self;
+
+    /// 親の参照を取得する
+    fn get_parent(&self) -> Option<Ref<ParentPtr<K, V>>>;
+    /// 親の可変参照を取得する
+    fn get_parent_mut(&mut self) -> Option<RefMut<ParentPtr<K, V>>>;
+    /// 左の子への参照を取得する
+    fn get_left(&self) -> Option<Ref<NodePtr<K, V>>>;
+    /// 左の子への可変参照を取得する
+    fn get_left_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
+    /// 右の子への参照を取得する
+    fn get_right(&self) -> Option<Ref<NodePtr<K, V>>>;
+    /// 右の子への可変参照を取得する
+    fn get_right_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
+
     /// キーへの参照を取得する
     fn get_key(&self) -> Option<Ref<K>>;
     /// バリューへの参照を取得する
@@ -37,50 +70,51 @@ pub trait NodeOps<K: Ord, V> {
 
 impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     fn is_child(&self) -> bool {
-        let Some(inner) = self else {
-            return false;
-        };
-        inner.borrow().parent.is_some()
+        self.get_parent().is_some_and(|node| node.is_some())
     }
+
     fn get_state(&self) -> NodeState {
-        let Some(inner) = self else {
+        if self.is_none() {
             return NodeState::Nil;
-        };
-        let Some(par) = inner.borrow().parent.clone() else {
+        }
+
+        let par = self.get_parent_ptr();
+
+        if par.is_none() {
             return NodeState::Root;
-        };
-        // 左の子である場合
-        let par = par.upgrade().unwrap();
-        if par
-            .borrow()
-            .left
-            .as_ref()
-            .is_some_and(|left| Rc::ptr_eq(left, inner))
-        {
+        }
+
+        if par.get_left().is_some_and(|left| {
+            left.as_ref()
+                .zip(self.as_ref())
+                .is_some_and(|(l, s)| Rc::ptr_eq(l, s))
+        }) {
             NodeState::LeftChild
         } else {
             NodeState::RightChild
         }
     }
-    fn get_parent(&self) -> Self {
+
+    fn get_parent_ptr(&self) -> Self {
         self.clone()?
             .borrow()
             .parent
             .as_ref()
             .map(|p| p.upgrade().unwrap())
     }
-    fn get_key(&self) -> Option<Ref<K>> {
-        let key_ref = self.as_ref()?.borrow();
-        Some(Ref::map(key_ref, |node| &node.key))
-    }
-    fn get_value(&self) -> Option<Ref<V>> {
-        let value_ref = self.as_ref()?.borrow();
-        Some(Ref::map(value_ref, |node| &node.value))
-    }
-    fn get_value_mut(&mut self) -> Option<RefMut<V>> {
-        let value_ref = self.as_ref()?.borrow_mut();
-        Some(RefMut::map(value_ref, |node| &mut node.value))
-    }
+
+    // 不変参照用のgetterを生成
+    generate_getters!(get_parent, parent, Ref<ParentPtr<K, V>>);
+    generate_getters!(get_left, left, Ref<NodePtr<K, V>>);
+    generate_getters!(get_right, right, Ref<NodePtr<K, V>>);
+    generate_getters!(get_key, key, Ref<K>);
+    generate_getters!(get_value, value, Ref<V>);
+
+    // 可変参照用のgetterを生成
+    generate_getters!(get_parent_mut, parent, RefMut<ParentPtr<K, V>>, mut);
+    generate_getters!(get_left_mut, left, RefMut<NodePtr<K, V>>, mut);
+    generate_getters!(get_right_mut, right, RefMut<NodePtr<K, V>>, mut);
+    generate_getters!(get_value_mut, value, RefMut<V>, mut);
 }
 
 #[cfg(test)]
@@ -96,9 +130,9 @@ mod test_pointer {
 
         // 不変参照
         {
-            let key_ref = node.get_key();
-            println!("key_ref = {key_ref:?}");
-            assert_eq!(*key_ref.unwrap(), 1);
+            let node_ref = node.get_key();
+            println!("node_ref = {node_ref:?}");
+            assert_eq!(*node_ref.unwrap(), 1);
 
             let val_ref = node.get_value();
             println!("val_ref = {val_ref:?}");
@@ -117,9 +151,9 @@ mod test_pointer {
 
         // 不変参照
         {
-            let key_ref = node.get_key();
-            println!("key_ref = {key_ref:?}");
-            assert_eq!(*key_ref.unwrap(), 1);
+            let node_ref = node.get_key();
+            println!("node_ref = {node_ref:?}");
+            assert_eq!(*node_ref.unwrap(), 1);
 
             let val_ref = node.get_value();
             println!("val_ref = {val_ref:?}");

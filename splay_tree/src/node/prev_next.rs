@@ -21,10 +21,10 @@ pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     while node.is_child() {
         match node.get_state() {
             NodeState::LeftChild => {
-                node = node.get_parent();
+                node = node.get_parent_ptr();
             }
             NodeState::RightChild => {
-                return node.get_parent();
+                return node.get_parent_ptr();
             }
             _ => unreachable!(),
         }
@@ -54,10 +54,10 @@ pub fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     while node.is_child() {
         match node.get_state() {
             NodeState::LeftChild => {
-                return node.get_parent();
+                return node.get_parent_ptr();
             }
             NodeState::RightChild => {
-                node = node.get_parent();
+                node = node.get_parent_ptr();
             }
             _ => unreachable!(),
         }

@@ -39,33 +39,33 @@ mod test_node_state {
 
         let find_1;
         (root, find_1) = find(root, &1);
-        println!("find_1 = {:?}", find_1.get_state());
+        assert_eq!(find_1.get_state(), NodeState::LeftChild);
 
         let find_3;
         (root, find_3) = find(root, &3);
-        println!("find_3 = {:?}", find_3.get_state());
+        assert_eq!(find_3.get_state(), NodeState::RightChild);
 
         let find_5;
         (root, find_5) = find(root, &5);
-        println!("find_5 = {:?}", find_5.get_state());
+        assert_eq!(find_5.get_state(), NodeState::Root);
 
         let find_15;
         (root, find_15) = find(root, &15);
-        println!("find_15 = {:?}", find_15.get_state());
+        assert_eq!(find_15.get_state(), NodeState::RightChild);
 
         let find_20;
         (root, find_20) = find(root, &20);
-        println!("find_20 = {:?}", find_20.get_state());
+        assert_eq!(find_20.get_state(), NodeState::Nil);
 
         let find_30;
         (root, find_30) = find(root, &30);
-        println!("find_30 = {:?}", find_30.get_state());
+        assert_eq!(find_30.get_state(), NodeState::RightChild);
 
         (root, _) = insert(root, 20, "sixth");
         print_as_binary_tree(&root);
 
         let find_20;
         (root, find_20) = find(root, &20);
-        println!("find_20 = {:?}", find_20.get_state());
+        assert_eq!(find_20.get_state(), NodeState::LeftChild);
     }
 }

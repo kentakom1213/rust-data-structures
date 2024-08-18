@@ -83,7 +83,7 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
         // 頂点の状態
         let state = node.get_state();
         // 親頂点の状態
-        let par_state = node.get_parent().get_state();
+        let par_state = node.get_parent_ptr().get_state();
 
         match (state, par_state) {
             // zig
@@ -100,7 +100,7 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
             (NodeState::LeftChild, NodeState::LeftChild)
             | (NodeState::RightChild, NodeState::RightChild) => {
                 // 親を先にrotate（オブジェクトをdropさせないため，変数に代入する）
-                let _par = rotate(node.get_parent());
+                let _par = rotate(node.get_parent_ptr());
                 node = rotate(node);
             }
             _ => unreachable!(),
