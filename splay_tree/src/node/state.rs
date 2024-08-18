@@ -15,22 +15,6 @@ pub enum NodeState {
     RightChild,
 }
 
-impl NodeState {
-    pub fn get_from_weak<K: Ord, V>(node: &ParentPtr<K, V>) -> Self {
-        let node = node.as_ref().map(|p| p.upgrade().unwrap());
-        node.get_state()
-    }
-}
-
-/// 親のRc参照を取得する
-pub fn get_parent<K: Ord, V>(node: &NodePtr<K, V>) -> NodePtr<K, V> {
-    node.clone()?
-        .borrow()
-        .parent
-        .as_ref()
-        .map(|p| p.upgrade().unwrap())
-}
-
 #[cfg(test)]
 mod test_node_state {
     use crate::{

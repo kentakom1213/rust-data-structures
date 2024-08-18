@@ -25,6 +25,8 @@ pub trait NodeOps<K: Ord, V> {
     ///
     /// のどれかを判定する．
     fn get_state(&self) -> NodeState;
+    /// 親のRc参照を取得する
+    fn get_parent(&self) -> Self;
     /// キーへの参照を取得する
     fn get_key(&self) -> Option<Ref<K>>;
     /// バリューへの参照を取得する
@@ -59,6 +61,13 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
         } else {
             NodeState::RightChild
         }
+    }
+    fn get_parent(&self) -> Self {
+        self.clone()?
+            .borrow()
+            .parent
+            .as_ref()
+            .map(|p| p.upgrade().unwrap())
     }
     fn get_key(&self) -> Option<Ref<K>> {
         let key_ref = self.as_ref()?.borrow();

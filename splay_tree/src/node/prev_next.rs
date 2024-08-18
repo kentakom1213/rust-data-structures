@@ -1,8 +1,4 @@
-use super::{
-    node_pointer::NodeOps,
-    state::{get_parent, NodeState},
-    NodePtr,
-};
+use super::{node_pointer::NodeOps, state::NodeState, NodePtr};
 
 /// 次に小さい値を持つノードを返す
 ///
@@ -25,10 +21,10 @@ pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     while node.is_child() {
         match node.get_state() {
             NodeState::LeftChild => {
-                node = get_parent(&node);
+                node = node.get_parent();
             }
             NodeState::RightChild => {
-                return get_parent(&node);
+                return node.get_parent();
             }
             _ => unreachable!(),
         }
@@ -58,10 +54,10 @@ pub fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     while node.is_child() {
         match node.get_state() {
             NodeState::LeftChild => {
-                return get_parent(&node);
+                return node.get_parent();
             }
             NodeState::RightChild => {
-                node = get_parent(&node);
+                node = node.get_parent();
             }
             _ => unreachable!(),
         }
