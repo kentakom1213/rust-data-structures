@@ -1,78 +1,80 @@
 use std::rc::Rc;
 
-use super::{node_pointer::NodeOps, state::NodeState, NodePtr};
+use super::{
+    node_pointer::{NodeOps, ParentOps},
+    state::NodeState,
+    NodePtr,
+};
 
 /// nodeを1つ上に持ってくるように回転する
-pub fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
+pub fn rotate<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     match node.get_state() {
         NodeState::Nil | NodeState::Root => node,
         NodeState::LeftChild => {
-            let inner = node?;
-            let mut right = inner.borrow_mut().right.take();
-            let par = inner.borrow().parent.clone()?;
+            let mut right = node.get_right_mut()?.take();
+            let par = node.get_parent()?.clone();
 
             // 親の左の子←自分の右の子
-            if let Some(right) = &mut right {
-                right.borrow_mut().parent = Some(par.clone());
+            if let Some(mut right_parent) = right.get_parent_mut() {
+                *right_parent = par.clone();
             }
-            let par = par.upgrade()?;
-            par.borrow_mut().left = right;
+            let mut par = par.to_strong_ptr();
+            *par.get_left_mut()? = right;
 
             // 自分の親←親の親
-            let par_state = Some(par.clone()).get_state();
-            let mut parpar = par.borrow_mut().parent.take();
-            if let Some(parpar) = &mut parpar {
-                match par_state {
-                    NodeState::LeftChild => {
-                        parpar.upgrade()?.borrow_mut().left = Some(inner.clone());
-                    }
-                    NodeState::RightChild => {
-                        parpar.upgrade()?.borrow_mut().right = Some(inner.clone());
-                    }
-                    _ => (),
+            let par_state = par.get_state();
+            let mut parpar = par.take_parent_strong();
+
+            match par_state {
+                NodeState::LeftChild => {
+                    *parpar.get_left_mut()? = node.clone();
                 }
+                NodeState::RightChild => {
+                    *parpar.get_right_mut()? = node.clone();
+                }
+                _ => (),
             }
-            inner.borrow_mut().parent = parpar;
+
+            *node.get_parent_mut()? = parpar.map(|f| Rc::downgrade(&f));
 
             // 自分の右の子←親
-            par.borrow_mut().parent = Some(Rc::downgrade(&inner));
-            inner.borrow_mut().right = Some(par);
+            *par.get_parent_mut()? = node.to_weak_ptr();
+            node.get_right_mut()?.replace(par?);
 
-            Some(inner)
+            node
         }
         NodeState::RightChild => {
-            let inner = node?;
-            let mut left = inner.as_ref().borrow_mut().left.take();
-            let par = inner.borrow().parent.clone()?;
+            let mut left = node.get_left_mut()?.take();
+            let par = node.get_parent()?.clone();
 
             // 親の右の子←自分の左の子
-            if let Some(left) = &mut left {
-                left.borrow_mut().parent = Some(par.clone());
+            if let Some(mut left_parent) = left.get_parent_mut() {
+                *left_parent = par.clone();
             }
-            let par = par.upgrade()?;
-            par.borrow_mut().right = left;
+            let mut par = par.to_strong_ptr();
+            *par.get_right_mut()? = left;
 
             // 自分の親←親の親
-            let par_state = Some(par.clone()).get_state();
-            let mut parpar = par.borrow_mut().parent.take();
-            if let Some(parpar) = &mut parpar {
-                match par_state {
-                    NodeState::LeftChild => {
-                        parpar.upgrade()?.borrow_mut().left = Some(inner.clone());
-                    }
-                    NodeState::RightChild => {
-                        parpar.upgrade()?.borrow_mut().right = Some(inner.clone());
-                    }
-                    _ => (),
+            let par_state = par.get_state();
+            let mut parpar = par.take_parent_strong();
+
+            match par_state {
+                NodeState::LeftChild => {
+                    *parpar.get_left_mut()? = node.clone();
                 }
+                NodeState::RightChild => {
+                    *parpar.get_right_mut()? = node.clone();
+                }
+                _ => (),
             }
-            inner.borrow_mut().parent = parpar;
+
+            *node.get_parent_mut()? = parpar.map(|f| Rc::downgrade(&f));
 
             // 自分の左の子←親
-            par.borrow_mut().parent = Some(Rc::downgrade(&inner));
-            inner.borrow_mut().left = Some(par);
+            *par.get_parent_mut()? = node.to_weak_ptr();
+            node.get_left_mut()?.replace(par?);
 
-            Some(inner)
+            node
         }
     }
 }
@@ -152,13 +154,12 @@ mod test_splay {
             println!("> rotate 1");
             find_1 = rotate(find_1);
 
-            print_as_binary_tree(&root);
-            print_as_binary_tree(&find_1);
-
             println!("root = {:?}", root.get_state());
             println!("find_1 = {:?}", find_1.get_state());
 
             root = find_1;
+
+            print_as_binary_tree(&root);
         }
 
         {

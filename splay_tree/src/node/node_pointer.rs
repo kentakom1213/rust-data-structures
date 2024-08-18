@@ -47,6 +47,15 @@ pub trait NodeOps<K: Ord, V> {
     /// 親のポインタを取得する
     fn get_parent_ptr(&self) -> Self;
 
+    /// 親へのポインタを切り離す
+    fn take_parent(&mut self) -> ParentPtr<K, V>;
+    /// 親へのポインタを切り離し，強参照を取得する
+    fn take_parent_strong(&mut self) -> NodePtr<K, V>;
+    /// 左の子へのポインタを切り離す
+    fn take_left(&mut self) -> NodePtr<K, V>;
+    /// 右の子へのポインタを切り離す
+    fn take_right(&mut self) -> NodePtr<K, V>;
+
     /// 親の参照を取得する
     fn get_parent(&self) -> Option<Ref<ParentPtr<K, V>>>;
     /// 親の可変参照を取得する
@@ -64,8 +73,11 @@ pub trait NodeOps<K: Ord, V> {
     fn get_key(&self) -> Option<Ref<K>>;
     /// バリューへの参照を取得する
     fn get_value(&self) -> Option<Ref<V>>;
-    // /// バリューへの可変参照を取得する
+    /// バリューへの可変参照を取得する
     fn get_value_mut(&mut self) -> Option<RefMut<V>>;
+
+    /// 親ポインタに変換する
+    fn to_weak_ptr(&self) -> ParentPtr<K, V>;
 }
 
 impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
@@ -96,11 +108,31 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     }
 
     fn get_parent_ptr(&self) -> Self {
-        self.clone()?
-            .borrow()
+        self.get_parent()?.to_strong_ptr()
+    }
+
+    fn take_parent(&mut self) -> ParentPtr<K, V> {
+        self.as_ref()?.borrow_mut().parent.take()
+    }
+
+    fn take_parent_strong(&mut self) -> NodePtr<K, V> {
+        self.as_ref()?
+            .borrow_mut()
             .parent
-            .as_ref()
+            .take()
             .map(|p| p.upgrade().unwrap())
+    }
+
+    fn take_left(&mut self) -> NodePtr<K, V> {
+        self.as_ref()?.borrow_mut().left.take()
+    }
+
+    fn take_right(&mut self) -> NodePtr<K, V> {
+        self.as_ref()?.borrow_mut().right.take()
+    }
+
+    fn to_weak_ptr(&self) -> ParentPtr<K, V> {
+        self.as_ref().map(|node| Rc::downgrade(node))
     }
 
     // 不変参照用のgetterを生成
@@ -115,6 +147,18 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     generate_getters!(get_left_mut, left, RefMut<NodePtr<K, V>>, mut);
     generate_getters!(get_right_mut, right, RefMut<NodePtr<K, V>>, mut);
     generate_getters!(get_value_mut, value, RefMut<V>, mut);
+}
+
+/// 弱参照の操作
+pub trait ParentOps<K: Ord, V> {
+    /// NodePtrへの変換
+    fn to_strong_ptr(&self) -> NodePtr<K, V>;
+}
+
+impl<K: Ord, V> ParentOps<K, V> for ParentPtr<K, V> {
+    fn to_strong_ptr(&self) -> NodePtr<K, V> {
+        self.as_ref()?.upgrade()
+    }
 }
 
 #[cfg(test)]
