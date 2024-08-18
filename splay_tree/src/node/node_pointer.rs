@@ -15,6 +15,8 @@ pub type ParentPtr<K, V> = Option<Weak<RefCell<Node<K, V>>>>;
 
 /// ポインタに対する操作
 pub trait NodeOps<K: Ord, V> {
+    /// 与えられたノードが子ノードであるかを判定する
+    fn is_child(&self) -> bool;
     /// 与えられたノードが
     /// - 空のノード
     /// - 根ノード
@@ -32,6 +34,12 @@ pub trait NodeOps<K: Ord, V> {
 }
 
 impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
+    fn is_child(&self) -> bool {
+        let Some(inner) = self else {
+            return false;
+        };
+        inner.borrow().parent.is_some()
+    }
     fn get_state(&self) -> NodeState {
         let Some(inner) = self else {
             return NodeState::Nil;

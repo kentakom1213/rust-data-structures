@@ -20,11 +20,6 @@ impl NodeState {
         let node = node.as_ref().map(|p| p.upgrade().unwrap());
         node.get_state()
     }
-
-    /// 子頂点であるかを判定する
-    pub fn is_child(&self) -> bool {
-        matches!(self, Self::LeftChild | Self::RightChild)
-    }
 }
 
 /// 親のRc参照を取得する

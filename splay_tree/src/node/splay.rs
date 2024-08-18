@@ -83,8 +83,9 @@ pub fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
 
 /// スプレー操作によりnodeを根に移動し，新たな根を返す
 pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    let mut state = node.get_state();
-    while state.is_child() {
+    while node.is_child() {
+        // 頂点の状態
+        let state = node.get_state();
         // 親頂点の状態
         let par_state = NodeState::get_from_weak(&node.as_ref()?.borrow().parent);
 
@@ -108,8 +109,6 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
             }
             _ => unreachable!(),
         }
-
-        state = node.get_state();
     }
     node
 }
@@ -121,7 +120,6 @@ mod test_splay {
             insert::{find, insert},
             node_pointer::NodeOps,
             splay::rotate,
-            state::NodeState,
         },
         print_util::print_as_binary_tree,
     };
