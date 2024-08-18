@@ -187,6 +187,15 @@ fn rotate<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
     }
 }
 
+/// 親のRc参照を取得する
+fn get_parent<K: Ord, V>(node: &NodePtr<K, V>) -> NodePtr<K, V> {
+    node.clone()?
+        .borrow()
+        .parent
+        .as_ref()
+        .map(|p| p.upgrade().unwrap())
+}
+
 /// スプレー操作によりnodeを根に移動し，新たな根を返す
 fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     let mut state = NodeState::get(&node);
@@ -209,13 +218,7 @@ fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
             (NodeState::LeftChild, NodeState::LeftChild)
             | (NodeState::RightChild, NodeState::RightChild) => {
                 // 親を先にrotate（オブジェクトをdropさせないため，変数に代入する）
-                let _par = rotate(
-                    node.clone()?
-                        .borrow()
-                        .parent
-                        .as_ref()
-                        .map(|p| p.upgrade().unwrap()),
-                );
+                let _par = rotate(get_parent(&node));
                 node = rotate(node);
             }
             _ => unreachable!(),
@@ -280,7 +283,7 @@ impl NodeState {
 }
 
 /// 次に大きい値をもつノードを返す
-fn next<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
+fn next<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     if node.is_none() {
         return None;
     }
@@ -294,12 +297,19 @@ fn next<K: Ord, V>(node: NodePtr<K, V>) -> NodePtr<K, V> {
         return Some(nxt);
     }
 
-    // 自分が親の左の子である
-    let state = NodeState::get(&node);
-    if state == NodeState::LeftChild {
-        let par = node.as_ref()?.clone();
-
-        todo!()
+    // 親をたどる
+    let mut state = NodeState::get(&node);
+    while state.is_child() {
+        match state {
+            NodeState::LeftChild => {
+                return get_parent(&node);
+            }
+            NodeState::RightChild => {
+                node = get_parent(&node);
+            }
+            _ => unreachable!(),
+        }
+        state = NodeState::get(&node);
     }
 
     None
@@ -343,7 +353,7 @@ mod test {
         print_util::print_as_binary_tree,
     };
 
-    use super::{find, Node};
+    use super::{find, next, Node};
 
     #[test]
     fn test_create_tree() {
@@ -581,5 +591,47 @@ mod test {
         root = splay(node);
 
         print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_next() {
+        let mut root = None;
+
+        for i in [7, 4, 100, 0, 6, -1, 33, 21] {
+            (root, _) = insert(root, i, i);
+        }
+
+        print_as_binary_tree(&root);
+
+        let mut nxt;
+        (root, nxt) = find(root, &-1);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
+
+        nxt = next(nxt);
+        println!("> {nxt:?}");
     }
 }
