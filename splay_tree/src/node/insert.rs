@@ -1,6 +1,9 @@
-use std::{cmp::Ordering, mem, rc::Rc};
+use std::{cmp::Ordering, fmt::Debug, mem, rc::Rc};
 
-use super::{node_pointer::Node, NodePtr};
+use super::{
+    node_pointer::{Node, NodeOps},
+    NodePtr,
+};
 
 /// nodeを根とする木に(key, value)を挿入する
 /// - すでに同じキーが存在した場合，その値を置き換える
@@ -64,13 +67,63 @@ pub fn insert<K: Ord, V: Clone>(
 }
 
 /// nodeの左側に子を追加し，追加された子のポインタを返す
-pub fn insert_left<K: Ord, V>(node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
-    todo!()
+pub fn insert_left<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
+    let mut new_node = Node::node_ptr(key, value);
+
+    // node.left.parent ← new_node
+    if let Some(mut left) = node.left_mut() {
+        if let Some(mut left_par) = left.parent_mut() {
+            *left_par = new_node.to_weak_ptr();
+        };
+    }
+
+    // new_node.left ← node.left
+    *new_node.left_mut().unwrap() = node.take_left();
+
+    // new_node.parent ← node
+    *new_node.parent_mut().unwrap() = node.to_weak_ptr();
+
+    // node.left ← new_node
+    if let Some(mut left) = node.left_mut() {
+        *left = new_node.clone();
+    }
+
+    new_node
+}
+
+/// nodeの右側に子を追加し，追加された子のポインタを返す
+pub fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
+    let mut new_node = Node::node_ptr(key, value);
+
+    // node.right.parent ← new_node
+    if let Some(mut right) = node.right_mut() {
+        if let Some(mut right_par) = right.parent_mut() {
+            *right_par = new_node.to_weak_ptr();
+        };
+    }
+
+    // new_node.right ← node.right
+    *new_node.right_mut().unwrap() = node.take_right();
+
+    // new_node.parent ← node
+    *new_node.parent_mut().unwrap() = node.to_weak_ptr();
+
+    // node.right ← new_node
+    if let Some(mut right) = node.right_mut() {
+        *right = new_node.clone();
+    }
+
+    new_node
 }
 
 #[cfg(test)]
 mod test_insert {
-    use crate::{node::insert::insert, print_util::print_as_binary_tree};
+    use crate::{
+        node::insert::{insert, insert_right},
+        print_util::print_as_binary_tree,
+    };
+
+    use super::insert_left;
 
     #[test]
     fn test_insert() {
@@ -93,6 +146,62 @@ mod test_insert {
         print_as_binary_tree(&root);
 
         (root, _) = insert(root, 15, "sixth");
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_insert_left() {
+        let mut root = None;
+
+        {
+            let res = insert_left(root.clone(), 3, "first");
+            println!("{:?}", res);
+
+            root = res;
+        }
+
+        print_as_binary_tree(&root);
+
+        {
+            let res = insert_left(root.clone(), 1, "second");
+            println!("{:?}", res);
+        }
+
+        print_as_binary_tree(&root);
+
+        {
+            let res = insert_left(root.clone(), 2, "third");
+            println!("{:?}", res);
+        }
+
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_insert_right() {
+        let mut root = None;
+
+        {
+            let res = insert_right(root.clone(), 3, "first");
+            println!("{:?}", res);
+
+            root = res;
+        }
+
+        print_as_binary_tree(&root);
+
+        {
+            let res = insert_right(root.clone(), 5, "second");
+            println!("{:?}", res);
+        }
+
+        print_as_binary_tree(&root);
+
+        {
+            let res = insert_right(root.clone(), 4, "third");
+            println!("{:?}", res);
+        }
+
         print_as_binary_tree(&root);
     }
 }
