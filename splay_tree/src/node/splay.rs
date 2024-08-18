@@ -114,11 +114,7 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_splay {
     use crate::{
-        node::{
-            insert::{find, insert},
-            node_pointer::NodeOps,
-            splay::rotate,
-        },
+        node::{find::find, insert::insert, node_pointer::NodeOps, splay::rotate},
         print_util::print_as_binary_tree,
     };
 

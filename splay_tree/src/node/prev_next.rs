@@ -60,7 +60,8 @@ pub fn next<K: Ord + Debug, V: Debug>(mut node: NodePtr<K, V>) -> NodePtr<K, V> 
 mod test_prev_next {
     use crate::{
         node::{
-            insert::{find, insert},
+            find::find,
+            insert::insert,
             node_pointer::NodeOps,
             prev_next::{next, prev},
         },
