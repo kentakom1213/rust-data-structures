@@ -1,7 +1,9 @@
 use std::{cell::RefMut, cmp::Ordering, fmt::Debug, mem};
 
 use super::{
+    find::upper_bound,
     node_pointer::{Node, NodeOps},
+    prev_next::prev,
     NodePtr,
 };
 
@@ -70,12 +72,24 @@ pub fn insert_single<K: Ord, V>(
 /// - NodePtr<K, V>: 挿入後の根ノード
 /// - NodePtr<K, V>: 追加されたノード
 /// - Option<V>: 置き換えられた値
-pub fn insert_double<K: Ord, V>(
+pub fn insert_multi<K: Ord + Debug, V: Debug>(
     root: NodePtr<K, V>,
     key: K,
     value: V,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
-    todo!()
+    // keyをもつ最も右の頂点を探索
+    let ub = upper_bound(root.clone(), &key);
+    println!("ub: {:?}", ub);
+    let rightmost = prev(ub);
+    println!("rightmost: {:?}", rightmost);
+
+    if rightmost.key().is_some_and(|k| *k == key) {
+        let new_node = insert_right(rightmost, key, value);
+        (root, new_node)
+    } else {
+        let (root, new_node, _) = insert_single(root, key, value);
+        (root, new_node)
+    }
 }
 
 /// nodeの左側に子を追加し，追加された子のポインタを返す
@@ -132,7 +146,7 @@ fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr
 mod test_insert {
     use crate::{node::node_pointer::NodeOps, print_util::print_as_binary_tree};
 
-    use super::{insert_left, insert_right, insert_single};
+    use super::{insert_left, insert_multi, insert_right, insert_single};
 
     #[test]
     fn test_insert_left() {
@@ -252,6 +266,20 @@ mod test_insert {
         (root, dup, _) = insert_single(root, 20, "Updated".to_string());
 
         assert_eq!(dup.value().unwrap().clone(), "Updated".to_string());
+
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_insert_double() {
+        let mut root = None;
+
+        for i in 0..20 {
+            let dup;
+            (root, dup) = insert_multi(root, 0, i);
+
+            println!("{dup:?}");
+        }
 
         print_as_binary_tree(&root);
     }
