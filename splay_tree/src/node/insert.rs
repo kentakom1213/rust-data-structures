@@ -37,7 +37,7 @@ pub fn insert_single<K: Ord + Debug, V: Clone + Debug>(
     let mut par = root.clone();
 
     loop {
-        let comp = par.key().unwrap().cmp(&key);
+        let comp = key.cmp(&par.key().unwrap());
         match comp {
             Ordering::Less => {
                 if let Some(left) = par.left().map(|node| node.clone()).unwrap() {
@@ -117,7 +117,7 @@ fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr
 #[cfg(test)]
 mod test_insert {
     use crate::{
-        node::insert::{insert, insert_right},
+        node::{insert::insert_right, node_pointer::NodeOps, splay::splay},
         print_util::print_as_binary_tree,
     };
 
@@ -231,9 +231,16 @@ mod test_insert {
     fn test_insert_single2() {
         let mut root = None;
 
-        for i in 0..20 {
-            (root, _) = insert_single(root, i, i);
+        for i in 0..=20 {
+            (root, _) = insert_single(root, i, i.to_string());
         }
+
+        print_as_binary_tree(&root);
+
+        let dup;
+        (root, dup) = insert_single(root, 20, "Updated".to_string());
+
+        assert_eq!(dup.value().unwrap().clone(), "Updated".to_string());
 
         print_as_binary_tree(&root);
     }
