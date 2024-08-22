@@ -1,14 +1,9 @@
 use std::{cmp::Ordering, fmt::Debug};
 
 use super::{
-    find::find,
     node_pointer::{Node, NodeOps},
     NodePtr,
 };
-
-pub fn insert<K: Ord, V>(root: NodePtr<K, V>, key: K, value: V) -> (NodePtr<K, V>, Option<V>) {
-    todo!()
-}
 
 /// rootを根とする木に(key, value)を挿入する．
 /// 挿入後のノードの参照を返す．

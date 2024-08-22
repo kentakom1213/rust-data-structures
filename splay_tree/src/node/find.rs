@@ -39,7 +39,7 @@ pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_find {
     use crate::{
-        node::{find::find, insert::insert, node_pointer::NodeOps},
+        node::{find::find, insert::insert_single, node_pointer::NodeOps},
         print_util::print_as_binary_tree,
     };
 
@@ -48,11 +48,11 @@ mod test_find {
     #[test]
     fn test_find_lowerbound_upperbound() {
         let mut root = None;
-        (root, _) = insert(root, 5, "first");
-        (root, _) = insert(root, 15, "second");
-        (root, _) = insert(root, 1, "third");
-        (root, _) = insert(root, 3, "forth");
-        (root, _) = insert(root, 30, "fifth");
+        (root, _) = insert_single(root, 5, "first");
+        (root, _) = insert_single(root, 15, "second");
+        (root, _) = insert_single(root, 1, "third");
+        (root, _) = insert_single(root, 3, "forth");
+        (root, _) = insert_single(root, 30, "fifth");
 
         print_as_binary_tree(&root);
 
