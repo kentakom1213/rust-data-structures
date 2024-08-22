@@ -1,12 +1,18 @@
-use std::{cmp::Ordering, fmt::Debug, mem, rc::Rc};
+use std::{cmp::Ordering, fmt::Debug};
 
 use super::{
+    find::find,
     node_pointer::{Node, NodeOps},
     NodePtr,
 };
 
-/// nodeを根とする木に(key, value)を挿入する
-/// - すでに同じキーが存在した場合，その値を置き換える
+pub fn insert<K: Ord, V>(root: NodePtr<K, V>, key: K, value: V) -> (NodePtr<K, V>, Option<V>) {
+    todo!()
+}
+
+/// rootを根とする木に(key, value)を挿入する．
+/// 挿入後のノードの参照を返す．
+/// すでに同一のキーを持つノードが存在した場合，値を置き換える．
 ///
 /// **引数**
 /// - node: 挿入対象のノード
@@ -14,60 +20,52 @@ use super::{
 /// - value: 値
 ///
 /// **戻り値**
-/// - NodePtr<K, V>: 挿入後のノード
+/// - NodePtr<K, V>: 挿入後の根ノード
+/// - NodePtr<K, V>: 追加されたノード
 /// - Option<V>: 置き換えられた値
-pub fn insert<K: Ord, V: Clone>(
-    node: NodePtr<K, V>,
+pub fn insert_single<K: Ord + Debug, V: Clone + Debug>(
+    root: NodePtr<K, V>,
     key: K,
     value: V,
-) -> (NodePtr<K, V>, Option<V>) {
-    let Some(node) = node else {
-        return (Node::node_ptr(key, value), None);
-    };
+) -> (NodePtr<K, V>, NodePtr<K, V>) {
+    if root.is_none() {
+        let new_node = Node::node_ptr(key, value);
+        return (new_node.clone(), new_node);
+    }
 
-    // キーの比較
-    let comp = key.cmp(&node.as_ref().borrow().key);
+    // 親ノードをたどっていく
+    let mut par = root.clone();
 
-    match comp {
-        Ordering::Less => {
-            // 左の子に挿入
-            let left = node.borrow_mut().left.take();
-            let (mut new_left, old_value) = insert(left, key, value);
-
-            // new_leftの親の更新
-            let node_ptr_weak = Rc::downgrade(&node);
-            new_left.as_mut().unwrap().borrow_mut().parent = Some(node_ptr_weak);
-
-            // 子を戻す
-            node.borrow_mut().left = new_left;
-
-            (Some(node), old_value)
-        }
-        Ordering::Equal => {
-            // valueを置き換える
-            let old_value = mem::replace(&mut node.borrow_mut().value, value);
-
-            (Some(node), Some(old_value))
-        }
-        Ordering::Greater => {
-            // 左の子に挿入
-            let right = node.borrow_mut().right.take();
-            let (mut new_right, old_value) = insert(right, key, value);
-
-            // new_rightの親の更新
-            let node_ptr_weak = Rc::downgrade(&node);
-            new_right.as_mut().unwrap().borrow_mut().parent = Some(node_ptr_weak);
-
-            // 子を戻す
-            node.borrow_mut().right = new_right;
-
-            (Some(node), old_value)
+    loop {
+        let comp = par.key().unwrap().cmp(&key);
+        match comp {
+            Ordering::Less => {
+                if let Some(left) = par.left().map(|node| node.clone()).unwrap() {
+                    par = Some(left);
+                } else {
+                    // 左側に挿入
+                    return (root, insert_left(par, key, value));
+                }
+            }
+            Ordering::Equal => {
+                // 置き換える
+                *par.value_mut().unwrap() = value;
+                return (root, par);
+            }
+            Ordering::Greater => {
+                if let Some(right) = par.right().map(|node| node.clone()).unwrap() {
+                    par = Some(right);
+                } else {
+                    // 右側に挿入
+                    return (root, insert_right(par, key, value));
+                }
+            }
         }
     }
 }
 
 /// nodeの左側に子を追加し，追加された子のポインタを返す
-pub fn insert_left<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
+fn insert_left<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
     let mut new_node = Node::node_ptr(key, value);
 
     // node.left.parent ← new_node
@@ -92,7 +90,7 @@ pub fn insert_left<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> Node
 }
 
 /// nodeの右側に子を追加し，追加された子のポインタを返す
-pub fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
+fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
     let mut new_node = Node::node_ptr(key, value);
 
     // node.right.parent ← new_node
@@ -123,31 +121,7 @@ mod test_insert {
         print_util::print_as_binary_tree,
     };
 
-    use super::insert_left;
-
-    #[test]
-    fn test_insert() {
-        let mut root = None;
-        print_as_binary_tree(&root);
-
-        (root, _) = insert(root, 5, "first");
-        print_as_binary_tree(&root);
-
-        (root, _) = insert(root, 15, "second");
-        print_as_binary_tree(&root);
-
-        (root, _) = insert(root, 1, "third");
-        print_as_binary_tree(&root);
-
-        (root, _) = insert(root, 3, "forth");
-        print_as_binary_tree(&root);
-
-        (root, _) = insert(root, 30, "fifth");
-        print_as_binary_tree(&root);
-
-        (root, _) = insert(root, 15, "sixth");
-        print_as_binary_tree(&root);
-    }
+    use super::{insert_left, insert_single};
 
     #[test]
     fn test_insert_left() {
@@ -200,6 +174,65 @@ mod test_insert {
         {
             let res = insert_right(root.clone(), 4, "third");
             println!("{:?}", res);
+        }
+
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_insert_single() {
+        let mut root = None;
+        print_as_binary_tree(&root);
+
+        {
+            let new_node;
+            (root, new_node) = insert_single(root, 5, "first");
+            println!("new_node: {new_node:?}");
+            print_as_binary_tree(&root);
+        }
+
+        {
+            let new_node;
+            (root, new_node) = insert_single(root, 15, "second");
+            println!("new_node: {new_node:?}");
+            print_as_binary_tree(&root);
+        }
+
+        {
+            let new_node;
+            (root, new_node) = insert_single(root, 1, "third");
+            println!("new_node: {new_node:?}");
+            print_as_binary_tree(&root);
+        }
+
+        {
+            let new_node;
+            (root, new_node) = insert_single(root, 3, "forth");
+            println!("new_node: {new_node:?}");
+            print_as_binary_tree(&root);
+        }
+
+        {
+            let new_node;
+            (root, new_node) = insert_single(root, 30, "fifth");
+            println!("new_node: {new_node:?}");
+            print_as_binary_tree(&root);
+        }
+
+        {
+            let new_node;
+            (root, new_node) = insert_single(root, 15, "sixth");
+            println!("new_node: {new_node:?}");
+            print_as_binary_tree(&root);
+        }
+    }
+
+    #[test]
+    fn test_insert_single2() {
+        let mut root = None;
+
+        for i in 0..20 {
+            (root, _) = insert_single(root, i, i);
         }
 
         print_as_binary_tree(&root);
