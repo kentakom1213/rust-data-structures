@@ -222,7 +222,7 @@ impl<K: Ord, V> ParentOps<K, V> for ParentPtr<K, V> {
 
 #[cfg(test)]
 mod test_pointer {
-    use crate::node::node_pointer::{Node, NodeOps};
+    use crate::node::pointer::{Node, NodeOps};
 
     #[test]
     fn test_create_tree() {

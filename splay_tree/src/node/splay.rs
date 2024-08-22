@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use super::{
-    node_pointer::{NodeOps, ParentOps},
+    pointer::{NodeOps, ParentOps},
     state::NodeState,
     NodePtr,
 };
@@ -114,7 +114,7 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_splay {
     use crate::{
-        node::{find::find, insert::insert_single, node_pointer::NodeOps, splay::rotate},
+        node::{find::find, insert::insert_single, pointer::NodeOps, splay::rotate},
         print_util::print_as_binary_tree,
     };
 

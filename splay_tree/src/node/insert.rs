@@ -2,8 +2,8 @@ use std::{cell::RefMut, cmp::Ordering, fmt::Debug, mem};
 
 use super::{
     find::upper_bound,
-    node_pointer::{Node, NodeOps},
-    prev_next::prev,
+    iterator::prev,
+    pointer::{Node, NodeOps},
     NodePtr,
 };
 
@@ -144,7 +144,7 @@ fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr
 
 #[cfg(test)]
 mod test_insert {
-    use crate::{node::node_pointer::NodeOps, print_util::print_as_binary_tree};
+    use crate::{node::pointer::NodeOps, print_util::print_as_binary_tree};
 
     use super::{insert_left, insert_multi, insert_right, insert_single};
 

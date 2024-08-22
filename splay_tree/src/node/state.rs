@@ -16,7 +16,7 @@ pub enum NodeState {
 #[cfg(test)]
 mod test_node_state {
     use crate::{
-        node::{find::find, insert::insert_single, node_pointer::NodeOps, state::NodeState},
+        node::{find::find, insert::insert_single, pointer::NodeOps, state::NodeState},
         print_util::print_as_binary_tree,
     };
 

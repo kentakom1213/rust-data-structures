@@ -1,4 +1,4 @@
-use super::{node_pointer::NodeOps, NodePtr};
+use super::{pointer::NodeOps, NodePtr};
 
 /// 比較関数 cmp を満たす最小のノードを返す
 fn find_min<K: Ord, V, F: Fn(&K) -> bool>(mut root: NodePtr<K, V>, cmp: F) -> NodePtr<K, V> {
@@ -39,7 +39,7 @@ pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_find {
     use crate::{
-        node::{find::find, insert::insert_single, node_pointer::NodeOps},
+        node::{find::find, insert::insert_single, pointer::NodeOps},
         print_util::print_as_binary_tree,
     };
 

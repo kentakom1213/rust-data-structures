@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use super::{node_pointer::NodeOps, state::NodeState, NodePtr};
+use super::{pointer::NodeOps, state::NodeState, NodePtr};
 
 /// 次に小さい値を持つノードを返す
 ///
@@ -62,8 +62,8 @@ mod test_prev_next {
         node::{
             find::lower_bound,
             insert::insert_single,
-            node_pointer::NodeOps,
-            prev_next::{next, prev},
+            pointer::NodeOps,
+            iterator::{next, prev},
         },
         print_util::print_as_binary_tree,
     };
