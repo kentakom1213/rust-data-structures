@@ -23,11 +23,11 @@ mod test_node_state {
     #[test]
     fn test_nodestate() {
         let mut root = None;
-        (root, _) = insert_single(root, 5, "first");
-        (root, _) = insert_single(root, 15, "second");
-        (root, _) = insert_single(root, 1, "third");
-        (root, _) = insert_single(root, 3, "forth");
-        (root, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert_single(root, 5, "first");
+        (root, _, _) = insert_single(root, 15, "second");
+        (root, _, _) = insert_single(root, 1, "third");
+        (root, _, _) = insert_single(root, 3, "forth");
+        (root, _, _) = insert_single(root, 30, "fifth");
 
         print_as_binary_tree(&root);
 
@@ -49,7 +49,7 @@ mod test_node_state {
         let find_30 = find(root.clone(), &30);
         assert_eq!(find_30.get_state(), NodeState::RightChild);
 
-        (root, _) = insert_single(root, 20, "sixth");
+        (root, _, _) = insert_single(root, 20, "sixth");
         print_as_binary_tree(&root);
 
         let find_20 = find(root.clone(), &20);

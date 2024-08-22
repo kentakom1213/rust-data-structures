@@ -74,7 +74,7 @@ mod test_prev_next {
         let mut items = [7, 4, 100, 0, 6, -1, 33, 21];
 
         for i in items {
-            (root, _) = insert_single(root, i, i);
+            (root, _, _) = insert_single(root, i, i);
         }
 
         print_as_binary_tree(&root);
@@ -99,7 +99,7 @@ mod test_prev_next {
         let mut items = [7, 4, 100, 0, 6, -1, 33, 21];
 
         for i in items {
-            (root, _) = insert_single(root, i, i);
+            (root, _, _) = insert_single(root, i, i);
         }
 
         print_as_binary_tree(&root);
@@ -122,8 +122,8 @@ mod test_prev_next {
     fn test_next2() {
         let mut root = None;
 
-        (root, _) = insert_single(root, 1, "first");
-        (root, _) = insert_single(root, 2, "second");
+        (root, _, _) = insert_single(root, 1, "first");
+        (root, _, _) = insert_single(root, 2, "second");
 
         print_as_binary_tree(&root);
 

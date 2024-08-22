@@ -123,11 +123,11 @@ mod test_splay {
     #[test]
     fn test_rotate_right() {
         let mut root = None;
-        (root, _) = insert_single(root, 5, "first");
-        (root, _) = insert_single(root, 15, "second");
-        (root, _) = insert_single(root, 1, "third");
-        (root, _) = insert_single(root, 3, "forth");
-        (root, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert_single(root, 5, "first");
+        (root, _, _) = insert_single(root, 15, "second");
+        (root, _, _) = insert_single(root, 1, "third");
+        (root, _, _) = insert_single(root, 3, "forth");
+        (root, _, _) = insert_single(root, 30, "fifth");
 
         print_as_binary_tree(&root);
 
@@ -174,11 +174,11 @@ mod test_splay {
     #[test]
     fn test_rotate_left() {
         let mut root = None;
-        (root, _) = insert_single(root, 5, "first");
-        (root, _) = insert_single(root, 15, "second");
-        (root, _) = insert_single(root, 1, "third");
-        (root, _) = insert_single(root, 3, "forth");
-        (root, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert_single(root, 5, "first");
+        (root, _, _) = insert_single(root, 15, "second");
+        (root, _, _) = insert_single(root, 1, "third");
+        (root, _, _) = insert_single(root, 3, "forth");
+        (root, _, _) = insert_single(root, 30, "fifth");
 
         print_as_binary_tree(&root);
 
@@ -219,11 +219,11 @@ mod test_splay {
     fn test_splay() {
         let mut root = None;
 
-        (root, _) = insert_single(root, 1, "first");
-        (root, _) = insert_single(root, 3, "second");
-        (root, _) = insert_single(root, 4, "third");
-        (root, _) = insert_single(root, 9, "forth");
-        (root, _) = insert_single(root, 2, "fifth");
+        (root, _, _) = insert_single(root, 1, "first");
+        (root, _, _) = insert_single(root, 3, "second");
+        (root, _, _) = insert_single(root, 4, "third");
+        (root, _, _) = insert_single(root, 9, "forth");
+        (root, _, _) = insert_single(root, 2, "fifth");
 
         print_as_binary_tree(&root);
 

@@ -48,11 +48,11 @@ mod test_find {
     #[test]
     fn test_find_lowerbound_upperbound() {
         let mut root = None;
-        (root, _) = insert_single(root, 5, "first");
-        (root, _) = insert_single(root, 15, "second");
-        (root, _) = insert_single(root, 1, "third");
-        (root, _) = insert_single(root, 3, "forth");
-        (root, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert_single(root, 5, "first");
+        (root, _, _) = insert_single(root, 15, "second");
+        (root, _, _) = insert_single(root, 1, "third");
+        (root, _, _) = insert_single(root, 3, "forth");
+        (root, _, _) = insert_single(root, 30, "fifth");
 
         print_as_binary_tree(&root);
 
