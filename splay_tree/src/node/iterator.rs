@@ -1,72 +1,182 @@
-use std::fmt::Debug;
-
 use super::{pointer::NodeOps, state::NodeState, NodePtr};
+
+/// ノードのイテレータ
+#[derive(Debug)]
+pub enum NodeIterator<K: Ord, V> {
+    /// `K` の下界
+    INF,
+    /// ノードの値
+    Node(NodePtr<K, V>),
+    /// `K` の上界
+    SUP,
+}
+
+impl<K: Ord, V> NodeIterator<K, V> {
+    pub fn is_inf(&self) -> bool {
+        match self {
+            NodeIterator::INF => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_sup(&self) -> bool {
+        match self {
+            NodeIterator::SUP => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_node(&self) -> bool {
+        match self {
+            NodeIterator::Node(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        match self {
+            NodeIterator::INF | NodeIterator::SUP => true,
+            _ => false,
+        }
+    }
+
+    pub fn unwrap(self) -> NodePtr<K, V> {
+        match self {
+            NodeIterator::Node(node) => node,
+            _ => panic!("NodeIterator::unwrap"),
+        }
+    }
+
+    pub fn as_ref(&self) -> Option<&NodePtr<K, V>> {
+        match self {
+            NodeIterator::Node(node) => Some(node),
+            _ => None,
+        }
+    }
+}
 
 /// 次に小さい値を持つノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn prev<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    if let Some(mut prv) = node.left().map(|node| node.clone())? {
-        while let Some(right) = Some(prv.clone()).right().map(|node| node.clone())? {
-            prv = right;
-        }
-        return Some(prv);
-    }
-
-    // 親をたどる
-    while node.is_child() {
-        match node.get_state() {
-            NodeState::LeftChild => {
-                node = node.get_parent_ptr();
+pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIterator<K, V> {
+    match iter {
+        NodeIterator::INF => NodeIterator::INF,
+        NodeIterator::Node(mut node) => {
+            if let Some(left) = node.left().map(|node| node.clone()) {
+                if let Some(mut prv) = left {
+                    while let Some(right) =
+                        Some(prv.clone()).right().map(|node| node.clone()).unwrap()
+                    {
+                        prv = right;
+                    }
+                    return NodeIterator::Node(Some(prv));
+                }
             }
-            NodeState::RightChild => {
-                return node.get_parent_ptr();
-            }
-            _ => unreachable!(),
-        }
-    }
 
-    None
+            // 親をたどる
+            while node.is_child() {
+                match node.get_state() {
+                    NodeState::LeftChild => {
+                        node = node.get_parent_ptr();
+                    }
+                    NodeState::RightChild => {
+                        return NodeIterator::Node(node.get_parent_ptr());
+                    }
+                    _ => unreachable!(),
+                }
+            }
+
+            NodeIterator::INF
+        }
+        NodeIterator::SUP => NodeIterator::Node(get_max(root)),
+    }
 }
 
 /// 次に大きい値をもつノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn next<K: Ord + Debug, V: Debug>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
-    if let Some(mut nxt) = node.right().map(|node| node.clone())? {
-        while let Some(left) = Some(nxt.clone()).left().map(|node| node.clone())? {
-            nxt = left;
+pub fn next<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIterator<K, V> {
+    match iter {
+        NodeIterator::INF => NodeIterator::Node(get_min(root)),
+        NodeIterator::Node(mut node) => {
+            if let Some(right) = node.right().map(|node| node.clone()) {
+                if let Some(mut nxt) = right {
+                    while let Some(left) =
+                        Some(nxt.clone()).left().map(|node| node.clone()).unwrap()
+                    {
+                        nxt = left;
+                    }
+                    return NodeIterator::Node(Some(nxt));
+                }
+            }
+
+            // 親をたどる
+            while node.is_child() {
+                match node.get_state() {
+                    NodeState::RightChild => {
+                        node = node.get_parent_ptr();
+                    }
+                    NodeState::LeftChild => {
+                        return NodeIterator::Node(node.get_parent_ptr());
+                    }
+                    _ => unreachable!(),
+                }
+            }
+
+            NodeIterator::SUP
         }
-        return Some(nxt);
+        NodeIterator::SUP => NodeIterator::SUP,
+    }
+}
+
+/// rootを根とする木のうち，最も左側の子を返す
+pub fn get_min<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
+    let mut node = root;
+
+    while let left @ Some(_) = node.left().map(|node| node.clone())? {
+        node = left;
     }
 
-    // 親をたどる
-    while node.is_child() {
-        match node.get_state() {
-            NodeState::LeftChild => {
-                return node.get_parent_ptr();
-            }
-            NodeState::RightChild => {
-                node = node.get_parent_ptr();
-            }
-            _ => unreachable!(),
-        }
+    node
+}
+
+/// rootを根とする木のうち，最も右側の子を返す
+pub fn get_max<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
+    let mut node = root;
+
+    while let right @ Some(_) = node.right().map(|node| node.clone())? {
+        node = right;
     }
 
-    None
+    node
 }
 
 #[cfg(test)]
 mod test_prev_next {
     use crate::{
         node::{
-            find::lower_bound,
             insert::insert_single,
+            iterator::{get_min, next, prev, NodeIterator},
             pointer::NodeOps,
-            iterator::{next, prev},
         },
         print_util::print_as_binary_tree,
     };
+
+    #[test]
+    fn test_min() {
+        let mut root = None;
+        let mut items = [7, 4, 100, 0, 6, -1, 33, 21];
+
+        for i in items {
+            (root, _, _) = insert_single(root, i, i);
+        }
+
+        print_as_binary_tree(&root);
+
+        let min = get_min(root.clone());
+
+        assert_eq!(*min.key().unwrap(), -1);
+    }
 
     #[test]
     fn test_prev() {
@@ -79,18 +189,20 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut prv = lower_bound(root.clone(), &100);
+        let mut itr = prev(NodeIterator::SUP, root.clone());
+        println!("itr: {:?}", itr);
 
         // アイテムをソート
         items.sort();
 
         for i in items.iter().rev() {
-            assert_eq!(*prv.key().unwrap(), *i);
+            assert_eq!(*itr.as_ref().unwrap().key().unwrap(), *i);
 
-            prv = prev(prv);
+            itr = prev(itr, root.clone());
+            println!("itr: {:?}", itr);
         }
 
-        assert!(prv.is_none());
+        assert!(itr.is_inf());
     }
 
     #[test]
@@ -104,34 +216,17 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut nxt = lower_bound(root.clone(), &-1);
+        let mut itr = next(NodeIterator::INF, root.clone());
 
         // アイテムをソート
         items.sort();
 
         for i in items {
-            assert_eq!(*nxt.key().unwrap(), i);
+            assert_eq!(*itr.as_ref().unwrap().key().unwrap(), i);
 
-            nxt = next(nxt);
+            itr = next(itr, root.clone());
         }
 
-        assert!(nxt.is_none());
-    }
-
-    #[test]
-    fn test_next2() {
-        let mut root = None;
-
-        (root, _, _) = insert_single(root, 1, "first");
-        (root, _, _) = insert_single(root, 2, "second");
-
-        print_as_binary_tree(&root);
-
-        let mut nxt = lower_bound(root.clone(), &1);
-
-        assert_eq!(*nxt.key().unwrap(), 1);
-
-        nxt = next(nxt);
-        assert_eq!(*nxt.key().unwrap(), 2);
+        assert!(itr.is_sup());
     }
 }

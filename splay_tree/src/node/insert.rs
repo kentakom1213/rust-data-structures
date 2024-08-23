@@ -1,5 +1,7 @@
 use std::{cell::RefMut, cmp::Ordering, fmt::Debug, mem};
 
+use crate::node::iterator::NodeIterator;
+
 use super::{
     find::upper_bound,
     iterator::prev,
@@ -78,17 +80,24 @@ pub fn insert_multi<K: Ord + Debug, V: Debug>(
     value: V,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
     // keyをもつ最も右の頂点を探索
-    let ub = upper_bound(root.clone(), &key);
-    println!("ub: {:?}", ub);
-    let rightmost = prev(ub);
-    println!("rightmost: {:?}", rightmost);
+    let rightmost = prev(
+        if let ub @ Some(_) = upper_bound(root.clone(), &key) {
+            NodeIterator::Node(ub)
+        } else {
+            NodeIterator::SUP
+        },
+        root.clone(),
+    );
 
-    if rightmost.key().is_some_and(|k| *k == key) {
-        let new_node = insert_right(rightmost, key, value);
-        (root, new_node)
-    } else {
-        let (root, new_node, _) = insert_single(root, key, value);
-        (root, new_node)
+    match rightmost {
+        NodeIterator::Node(node) if node.key().is_some_and(|k| *k == key) => {
+            let new_node = insert_right(node, key, value);
+            (root, new_node)
+        }
+        _ => {
+            let (root, new_node, _) = insert_single(root, key, value);
+            (root, new_node)
+        }
     }
 }
 
@@ -144,9 +153,12 @@ fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr
 
 #[cfg(test)]
 mod test_insert {
-    use crate::{node::pointer::NodeOps, print_util::print_as_binary_tree};
+    use crate::{
+        node::{insert::insert_multi, pointer::NodeOps},
+        print_util::print_as_binary_tree,
+    };
 
-    use super::{insert_left, insert_multi, insert_right, insert_single};
+    use super::{insert_left, insert_right, insert_single};
 
     #[test]
     fn test_insert_left() {
