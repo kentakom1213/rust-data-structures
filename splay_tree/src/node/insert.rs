@@ -1,6 +1,6 @@
-use std::{cell::RefMut, cmp::Ordering, fmt::Debug, mem};
+use std::{cmp::Ordering, fmt::Debug, mem};
 
-use crate::node::iterator::NodeIterator;
+use super::iterator::NodeIterator;
 
 use super::{
     find::upper_bound,
@@ -286,11 +286,13 @@ mod test_insert {
     fn test_insert_double() {
         let mut root = None;
 
-        for i in 0..20 {
-            let dup;
-            (root, dup) = insert_multi(root, 0, i);
+        for j in 0..4 {
+            for i in 0..5 {
+                let dup;
+                (root, dup) = insert_multi(root, i, j);
 
-            println!("{dup:?}");
+                println!("{dup:?}");
+            }
         }
 
         print_as_binary_tree(&root);

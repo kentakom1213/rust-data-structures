@@ -4,6 +4,7 @@ mod find;
 mod insert;
 mod iterator;
 mod pointer;
+mod remove;
 mod splay;
 mod state;
 
