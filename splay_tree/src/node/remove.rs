@@ -1,9 +1,6 @@
 use crate::node::state::NodeState;
 
-use super::{
-    pointer::{NodeOps, ParentOps},
-    NodePtr,
-};
+use super::{pointer::NodeOps, NodePtr};
 
 /// ノード node を削除する
 ///
@@ -19,24 +16,14 @@ pub fn remove<K: Ord, V>(
     mut node: NodePtr<K, V>,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
     let state = node.get_state();
-    let left = node.take_left();
-    let right = node.take_right();
-    let parent = node.take_parent_strong();
+
+    // ポインタを取り出す
+    let mut left = node.take_left();
+    let mut right = node.take_right();
+    let mut parent = node.take_parent_strong();
 
     // 葉になったので自分を削除
-    let node = remove_leaf(node);
-
-    match (left.is_some(), right.is_some()) {
-        (false, false) => match state {
-            NodeState::Root => root = None,
-            _ => (),
-        },
-        (false, true) => match state {
-            NodeState::Root => (root, node) = (right, node),
-        },
-        (true, false) => todo!(),
-        (true, true) => todo!(),
-    }
+    let mut node = remove_leaf(node);
 
     (root, node)
 }
