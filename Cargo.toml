@@ -1,0 +1,20 @@
+[workspace]
+
+members = [
+    "aa_tree",
+    "aa_tree_traversable",
+    "binary_tree",
+    "btree",
+    "btree_const",
+    "double_linked_list",
+    "dynamic_lazy_segment_tree",
+    "dynamic_segment_tree",
+    "lazy_segment_tree",
+    "linked_list_unsafe",
+    "LinkedList",
+    "skiplist",
+    "splay_tree",
+    "splay_tree_simple",
+    "treap",
+    "trie",
+]

@@ -10,11 +10,12 @@ use super::{pointer::NodeOps, NodePtr};
 ///
 /// **戻り値**
 /// - NodePtr\<K, V\>: 削除後の木の根のポインタ
+/// - NodePtr\<K, V\>: 削除後，代わりに埋められたノードのポインタ
 /// - NodePtr\<K, V\>: 削除されたノードのポインタ
 pub fn remove<K: Ord, V>(
     mut root: NodePtr<K, V>,
     mut node: NodePtr<K, V>,
-) -> (NodePtr<K, V>, NodePtr<K, V>) {
+) -> (NodePtr<K, V>, NodePtr<K, V>, NodePtr<K, V>) {
     let state = node.get_state();
 
     // ポインタを取り出す
@@ -25,7 +26,14 @@ pub fn remove<K: Ord, V>(
     // 葉になったので自分を削除
     let mut node = remove_leaf(node);
 
-    (root, node)
+    match (left, right) {
+        (None, None) => {
+            return (root, None, node);
+        }
+        _ => ()
+    }
+
+    todo!()
 }
 
 /// 葉ノード leaf を削除し，削除済み頂点のポインタを返す
