@@ -165,7 +165,7 @@ mod test_prev_next {
     #[test]
     fn test_min() {
         let mut root = None;
-        let mut items = [7, 4, 100, 0, 6, -1, 33, 21];
+        let items = [7, 4, 100, 0, 6, -1, 33, 21];
 
         for i in items {
             (root, _, _) = insert_single(root, i, i);
