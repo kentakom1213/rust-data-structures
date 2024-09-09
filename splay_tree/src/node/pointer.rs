@@ -103,6 +103,9 @@ pub trait NodeOps<K: Ord, V> {
     /// のどれかを判定する．
     fn get_state(&self) -> NodeState;
 
+    /// ポインタの同一性判定
+    fn is_same(&self, other: &Self) -> bool;
+
     /// 親のポインタを取得する
     fn get_parent_ptr(&self) -> Self;
 
@@ -155,15 +158,18 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
             return NodeState::Root;
         }
 
-        if par.left().is_some_and(|left| {
-            left.as_ref()
-                .zip(self.as_ref())
-                .is_some_and(|(l, s)| Rc::ptr_eq(l, s))
-        }) {
+        if par.left().is_some_and(|left| left.is_same(self)) {
             NodeState::LeftChild
         } else {
             NodeState::RightChild
         }
+    }
+
+    fn is_same(&self, other: &Self) -> bool {
+        self.as_ref()
+            .zip(other.as_ref())
+            .map(|(s, o)| Rc::ptr_eq(s, o))
+            .unwrap_or(false)
     }
 
     fn get_parent_ptr(&self) -> Self {

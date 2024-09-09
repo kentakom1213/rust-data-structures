@@ -79,13 +79,12 @@ pub fn remove<K: Ord + Debug, V: Debug>(
         (mut left @ Some(_), mut right @ Some(_)) => {
             // 右の子の最小値を取り出す
             let mut right_min = get_min(right.clone());
-            dbg!(&right, &right_min);
-            eprintln!("{right_min:?} : {:?}", right_min.get_state());
             (right, _, right_min) = remove_leaf(right, right_min);
-            eprintln!("{right_min:?}");
 
             *left.parent_mut().unwrap() = right_min.to_weak_ptr();
-            *right.parent_mut().unwrap() = right_min.to_weak_ptr();
+            if let Some(mut right_par) = right.parent_mut() {
+                *right_par = right_min.to_weak_ptr();
+            }
             *right_min.left_mut().unwrap() = left;
             *right_min.right_mut().unwrap() = right;
 
@@ -123,11 +122,12 @@ fn remove_leaf<K: Ord + Debug, V: Debug>(
     root: NodePtr<K, V>,
     leaf: NodePtr<K, V>,
 ) -> (NodePtr<K, V>, NodePtr<K, V>, NodePtr<K, V>) {
+    if root.is_same(&leaf) {
+        return (None, None, leaf);
+    }
+
     // 親ノード
     let mut parent = leaf.get_parent_ptr();
-
-    dbg!(&parent);
-    dbg!(&leaf.get_state());
 
     // 親ノードから切り離す
     let removed_node = match leaf.get_state() {
@@ -136,8 +136,6 @@ fn remove_leaf<K: Ord + Debug, V: Debug>(
         NodeState::LeftChild => parent.take_left(),
         NodeState::RightChild => parent.take_right(),
     };
-
-    dbg!(&removed_node);
 
     (root, parent, removed_node)
 }
@@ -232,6 +230,36 @@ mod test_remove {
         }
 
         println!("Remove 4");
+        print_as_binary_tree(&root);
+
+        {
+            let node = find(root.clone(), &2);
+            let new_node;
+            let removed_node;
+            (root, new_node, removed_node) = remove(root, node);
+            assert_eq!(*removed_node.key().unwrap(), 2);
+            assert!(find(root.clone(), &2).is_none());
+        }
+
+        println!("Remove 2");
+        print_as_binary_tree(&root);
+    }
+
+    #[test]
+    fn test_small() {
+        let mut root = None;
+        (root, _, _) = insert_single(root, 1, 1);
+        (root, _, _) = insert_single(root, 0, 0);
+        (root, _, _) = insert_single(root, 3, 3);
+
+        print_as_binary_tree(&root);
+
+        let removed;
+        let node = find(root.clone(), &1);
+        (root, _, removed) = remove(root, node);
+
+        assert_eq!(*removed.key().unwrap(), 1);
+
         print_as_binary_tree(&root);
     }
 }
