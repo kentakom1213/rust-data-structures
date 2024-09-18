@@ -74,7 +74,7 @@ pub fn insert_single<K: Ord, V>(
 /// - NodePtr<K, V>: 挿入後の根ノード
 /// - NodePtr<K, V>: 追加されたノード
 /// - Option<V>: 置き換えられた値
-pub fn insert_multi<K: Ord + Debug, V: Debug>(
+pub fn insert_multi<K: Ord, V>(
     root: NodePtr<K, V>,
     key: K,
     value: V,
