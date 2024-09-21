@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{fmt::Debug, rc::Rc};
 
 use super::{
     pointer::{NodeOps, ParentOps},
@@ -80,7 +80,7 @@ pub fn rotate<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 }
 
 /// スプレー操作によりnodeを根に移動し，新たな根を返す
-pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
+pub fn splay<K: Ord + Debug, V: Debug>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
     while node.is_child() {
         // 頂点の状態
         let state = node.get_state();
@@ -88,6 +88,10 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
         let par_state = node.get_parent_ptr().get_state();
 
         match (state, par_state) {
+            (NodeState::Root, _) => {
+                eprintln!("root: {:?}", &node.parent());
+                break;
+            }
             // zig
             (NodeState::LeftChild | NodeState::RightChild, NodeState::Root) => {
                 node = rotate(node);
