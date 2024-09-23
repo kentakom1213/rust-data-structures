@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, fmt::Debug, mem};
 
-use super::iterator::NodeIterator;
+use super::iterator::NodePosition;
 
 use super::{
     find::upper_bound,
@@ -22,7 +22,7 @@ use super::{
 /// - NodePtr<K, V>: 追加されたノード
 /// - Option<V>: 置き換えられた値
 pub fn insert_single<K: Ord, V>(
-    root: NodePtr<K, V>,
+    mut root: NodePtr<K, V>,
     key: K,
     value: V,
 ) -> (NodePtr<K, V>, NodePtr<K, V>, Option<V>) {
@@ -42,20 +42,20 @@ pub fn insert_single<K: Ord, V>(
                     par = Some(left);
                 } else {
                     // 左側に挿入
-                    return (root, insert_left(par, key, value), None);
+                    break (root, insert_left(par, key, value), None);
                 }
             }
             Ordering::Equal => {
                 // 置き換える
                 let old_value = mem::replace(&mut *par.value_mut().unwrap(), value);
-                return (root, par, Some(old_value));
+                break (root, par, Some(old_value));
             }
             Ordering::Greater => {
                 if let Some(right) = par.right().map(|node| node.clone()).unwrap() {
                     par = Some(right);
                 } else {
                     // 右側に挿入
-                    return (root, insert_right(par, key, value), None);
+                    break (root, insert_right(par, key, value), None);
                 }
             }
         }
@@ -80,17 +80,17 @@ pub fn insert_multi<K: Ord + Debug, V: Debug>(
     value: V,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
     // keyをもつ最も右の頂点を探索
-    let rightmost = prev(if let ub @ Some(_) = upper_bound(root.clone(), &key) {
-        NodeIterator::Node {
-            root: &root,
-            node: ub,
-        }
-    } else {
-        NodeIterator::SUP(&root)
-    });
+    let rightmost = prev(
+        if let ub @ Some(_) = upper_bound(root.clone(), &key) {
+            NodePosition::Node(ub)
+        } else {
+            NodePosition::SUP
+        },
+        &root,
+    );
 
     match rightmost {
-        NodeIterator::Node { node, .. } if node.key().is_some_and(|k| *k == key) => {
+        NodePosition::Node(node) if node.key().is_some_and(|k| *k == key) => {
             let new_node = insert_right(node, key, value);
             (root, new_node)
         }
