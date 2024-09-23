@@ -82,15 +82,18 @@ pub fn insert_multi<K: Ord + Debug, V: Debug>(
     // keyをもつ最も右の頂点を探索
     let rightmost = prev(
         if let ub @ Some(_) = upper_bound(root.clone(), &key) {
-            NodeIterator::Node(ub)
+            NodeIterator::Node {
+                root: &root,
+                node: ub,
+            }
         } else {
-            NodeIterator::SUP
+            NodeIterator::SUP(&root)
         },
         root.clone(),
     );
 
     match rightmost {
-        NodeIterator::Node(node) if node.key().is_some_and(|k| *k == key) => {
+        NodeIterator::Node { node: node, .. } if node.key().is_some_and(|k| *k == key) => {
             let new_node = insert_right(node, key, value);
             (root, new_node)
         }

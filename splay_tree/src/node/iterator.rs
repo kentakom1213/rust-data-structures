@@ -2,54 +2,57 @@ use super::{pointer::NodeOps, state::NodeState, NodePtr};
 
 /// ノードのイテレータ
 #[derive(Debug)]
-pub enum NodeIterator<K: Ord, V> {
+pub enum NodeIterator<'a, K: Ord, V> {
     /// `K` の下界
-    INF,
+    INF(&'a NodePtr<K, V>),
     /// ノードの値
-    Node(NodePtr<K, V>),
+    Node {
+        root: &'a NodePtr<K, V>,
+        node: NodePtr<K, V>,
+    },
     /// `K` の上界
-    SUP,
+    SUP(&'a NodePtr<K, V>),
 }
 
-impl<K: Ord, V> NodeIterator<K, V> {
+impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     pub fn is_inf(&self) -> bool {
         match self {
-            NodeIterator::INF => true,
+            NodeIterator::INF(_) => true,
             _ => false,
         }
     }
 
     pub fn is_sup(&self) -> bool {
         match self {
-            NodeIterator::SUP => true,
+            NodeIterator::SUP(_) => true,
             _ => false,
         }
     }
 
     pub fn is_node(&self) -> bool {
         match self {
-            NodeIterator::Node(_) => true,
+            NodeIterator::Node { .. } => true,
             _ => false,
         }
     }
 
     pub fn is_none(&self) -> bool {
         match self {
-            NodeIterator::INF | NodeIterator::SUP => true,
+            NodeIterator::INF(_) | NodeIterator::SUP(_) => true,
             _ => false,
         }
     }
 
     pub fn unwrap(self) -> NodePtr<K, V> {
         match self {
-            NodeIterator::Node(node) => node,
+            NodeIterator::Node { node, .. } => node,
             _ => panic!("NodeIterator::unwrap"),
         }
     }
 
-    pub fn as_ref(&self) -> Option<&NodePtr<K, V>> {
+    pub fn as_ref(&'a self) -> Option<&'a NodePtr<K, V>> {
         match self {
-            NodeIterator::Node(node) => Some(node),
+            NodeIterator::Node { node, .. } => Some(node),
             _ => None,
         }
     }
@@ -60,8 +63,8 @@ impl<K: Ord, V> NodeIterator<K, V> {
 /// - 計算量： `O(1) amotized`
 pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIterator<K, V> {
     match iter {
-        NodeIterator::INF => NodeIterator::INF,
-        NodeIterator::Node(mut node) => {
+        NodeIterator::INF(root) => NodeIterator::INF(root),
+        NodeIterator::Node { root, mut node } => {
             if let Some(left) = node.left().map(|node| node.clone()) {
                 if let Some(mut prv) = left {
                     while let Some(right) =
@@ -69,26 +72,33 @@ pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIte
                     {
                         prv = right;
                     }
-                    return NodeIterator::Node(Some(prv));
+                    return NodeIterator::Node {
+                        root,
+                        node: Some(prv),
+                    };
                 }
             }
 
             // 親をたどる
             while node.is_child() {
                 match node.get_state() {
-                    NodeState::LeftChild => {
-                        node = node.get_parent_ptr();
-                    }
+                    NodeState::LeftChild => node = node.get_parent_ptr(),
                     NodeState::RightChild => {
-                        return NodeIterator::Node(node.get_parent_ptr());
+                        return NodeIterator::Node {
+                            root,
+                            node: node.get_parent_ptr(),
+                        };
                     }
                     _ => unreachable!(),
                 }
             }
 
-            NodeIterator::INF
+            NodeIterator::INF(root)
         }
-        NodeIterator::SUP => NodeIterator::Node(get_max(root)),
+        NodeIterator::SUP(root) => NodeIterator::Node {
+            root,
+            node: get_max(root.clone()),
+        },
     }
 }
 
@@ -97,8 +107,11 @@ pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIte
 /// - 計算量： `O(1) amotized`
 pub fn next<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIterator<K, V> {
     match iter {
-        NodeIterator::INF => NodeIterator::Node(get_min(root)),
-        NodeIterator::Node(mut node) => {
+        NodeIterator::INF(root) => NodeIterator::Node {
+            root,
+            node: get_min(root.clone()),
+        },
+        NodeIterator::Node { root, mut node } => {
             if let Some(right) = node.right().map(|node| node.clone()) {
                 if let Some(mut nxt) = right {
                     while let Some(left) =
@@ -106,26 +119,30 @@ pub fn next<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIte
                     {
                         nxt = left;
                     }
-                    return NodeIterator::Node(Some(nxt));
+                    return NodeIterator::Node {
+                        root,
+                        node: Some(nxt),
+                    };
                 }
             }
 
             // 親をたどる
             while node.is_child() {
                 match node.get_state() {
-                    NodeState::RightChild => {
-                        node = node.get_parent_ptr();
-                    }
+                    NodeState::RightChild => node = node.get_parent_ptr(),
                     NodeState::LeftChild => {
-                        return NodeIterator::Node(node.get_parent_ptr());
+                        return NodeIterator::Node {
+                            root,
+                            node: node.get_parent_ptr(),
+                        };
                     }
                     _ => unreachable!(),
                 }
             }
 
-            NodeIterator::SUP
+            NodeIterator::SUP(root)
         }
-        NodeIterator::SUP => NodeIterator::SUP,
+        NodeIterator::SUP(root) => NodeIterator::SUP(root),
     }
 }
 
@@ -189,7 +206,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut itr = prev(NodeIterator::SUP, root.clone());
+        let mut itr = prev(NodeIterator::SUP(&root), root.clone());
         println!("itr: {:?}", itr);
 
         // アイテムをソート
@@ -216,7 +233,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut itr = next(NodeIterator::INF, root.clone());
+        let mut itr = next(NodeIterator::INF(&root), root.clone());
 
         // アイテムをソート
         items.sort();
