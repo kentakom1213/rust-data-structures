@@ -182,7 +182,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     pub fn first(root: &'a NodePtr<K, V>) -> Self {
         NodeIterator {
             root,
-            pos: NodePosition::INF,
+            pos: next(NodePosition::INF, root),
         }
     }
 
@@ -190,7 +190,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     pub fn last(root: &'a NodePtr<K, V>) -> Self {
         NodeIterator {
             root,
-            pos: NodePosition::SUP,
+            pos: prev(NodePosition::SUP, root),
         }
     }
 }
@@ -198,19 +198,21 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
 impl<'a, K: Ord, V> Iterator for NodeIterator<'a, K, V> {
     type Item = NodePtr<K, V>;
     fn next(&mut self) -> Option<Self::Item> {
+        let val = self.pos.as_ref().map(|node| node.clone());
         // posを次に進める
         self.pos = next(self.pos.clone(), self.root);
 
-        self.pos.as_ref().map(|node| node.clone())
+        val
     }
 }
 
 impl<'a, K: Ord, V> DoubleEndedIterator for NodeIterator<'a, K, V> {
     fn next_back(&mut self) -> Option<Self::Item> {
+        let val = self.pos.as_ref().map(|node| node.clone());
         // posを前に進める
         self.pos = prev(self.pos.clone(), self.root);
 
-        self.pos.as_ref().map(|node| node.clone())
+        val
     }
 }
 
@@ -218,6 +220,7 @@ impl<'a, K: Ord, V> DoubleEndedIterator for NodeIterator<'a, K, V> {
 mod test_prev_next {
     use crate::{
         node::{
+            find::find,
             insert::insert_single,
             iterator::{get_min, next, prev, NodePosition},
             pointer::NodeOps,
@@ -304,10 +307,22 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut itr = NodeIterator::first(&root);
+        let itr = NodeIterator::first(&root);
 
-        for x in itr {
-            println!("x: {:?}", x.key());
+        for (x, ans) in itr.zip([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+            assert_eq!(*x.key().unwrap(), ans);
+        }
+
+        let itr = NodeIterator::last(&root);
+
+        for (x, ans) in itr.rev().zip([10, 9, 8, 7, 6, 5, 4, 3, 2, 1]) {
+            assert_eq!(*x.key().unwrap(), ans);
+        }
+
+        let itr = NodeIterator::new(&root, find(&root, &4));
+
+        for (x, ans) in itr.zip([4, 5, 6, 7, 8, 9, 10]) {
+            assert_eq!(*x.key().unwrap(), ans);
         }
     }
 }

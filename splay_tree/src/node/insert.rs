@@ -81,7 +81,7 @@ pub fn insert_multi<K: Ord, V>(
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
     // keyをもつ最も右の頂点を探索
     let rightmost = prev(
-        if let ub @ Some(_) = upper_bound(root.clone(), &key) {
+        if let ub @ Some(_) = upper_bound(&root, &key) {
             NodePosition::Node(ub)
         } else {
             NodePosition::SUP
