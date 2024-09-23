@@ -61,7 +61,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
 /// 次に小さい値を持つノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIterator<K, V> {
+pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, _root: NodePtr<K, V>) -> NodeIterator<K, V> {
     match iter {
         NodeIterator::INF(root) => NodeIterator::INF(root),
         NodeIterator::Node { root, mut node } => {
@@ -105,7 +105,7 @@ pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIte
 /// 次に大きい値をもつノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn next<K: Ord, V>(iter: NodeIterator<K, V>, root: NodePtr<K, V>) -> NodeIterator<K, V> {
+pub fn next<K: Ord, V>(iter: NodeIterator<K, V>, _root: NodePtr<K, V>) -> NodeIterator<K, V> {
     match iter {
         NodeIterator::INF(root) => NodeIterator::Node {
             root,

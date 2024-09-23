@@ -93,7 +93,7 @@ pub fn insert_multi<K: Ord + Debug, V: Debug>(
     );
 
     match rightmost {
-        NodeIterator::Node { node: node, .. } if node.key().is_some_and(|k| *k == key) => {
+        NodeIterator::Node { node, .. } if node.key().is_some_and(|k| *k == key) => {
             let new_node = insert_right(node, key, value);
             (root, new_node)
         }
