@@ -1,7 +1,7 @@
 use super::{pointer::NodeOps, state::NodeState, NodePtr};
 
 /// ノードのイテレータ
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum NodeIterator<'a, K: Ord, V> {
     /// `K` の下界
     INF(&'a NodePtr<K, V>),
@@ -61,7 +61,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
 /// 次に小さい値を持つノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, _root: NodePtr<K, V>) -> NodeIterator<K, V> {
+pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>) -> NodeIterator<K, V> {
     match iter {
         NodeIterator::INF(root) => NodeIterator::INF(root),
         NodeIterator::Node { root, mut node } => {
@@ -105,7 +105,7 @@ pub fn prev<K: Ord, V>(iter: NodeIterator<K, V>, _root: NodePtr<K, V>) -> NodeIt
 /// 次に大きい値をもつノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn next<K: Ord, V>(iter: NodeIterator<K, V>, _root: NodePtr<K, V>) -> NodeIterator<K, V> {
+pub fn next<K: Ord, V>(iter: NodeIterator<K, V>) -> NodeIterator<K, V> {
     match iter {
         NodeIterator::INF(root) => NodeIterator::Node {
             root,
@@ -206,7 +206,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut itr = prev(NodeIterator::SUP(&root), root.clone());
+        let mut itr = prev(NodeIterator::SUP(&root));
         println!("itr: {:?}", itr);
 
         // アイテムをソート
@@ -215,7 +215,7 @@ mod test_prev_next {
         for i in items.iter().rev() {
             assert_eq!(*itr.as_ref().unwrap().key().unwrap(), *i);
 
-            itr = prev(itr, root.clone());
+            itr = prev(itr);
             println!("itr: {:?}", itr);
         }
 
@@ -233,7 +233,7 @@ mod test_prev_next {
 
         print_as_binary_tree(&root);
 
-        let mut itr = next(NodeIterator::INF(&root), root.clone());
+        let mut itr = next(NodeIterator::INF(&root));
 
         // アイテムをソート
         items.sort();
@@ -241,7 +241,7 @@ mod test_prev_next {
         for i in items {
             assert_eq!(*itr.as_ref().unwrap().key().unwrap(), i);
 
-            itr = next(itr, root.clone());
+            itr = next(itr);
         }
 
         assert!(itr.is_sup());
