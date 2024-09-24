@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use std::{cmp::Ordering, mem};
 
 use super::pointer::NodePtr;
@@ -16,7 +15,7 @@ use super::pointer::{Node, NodeOps};
 /// - NodePtr<K, V>: 挿入後の根ノード
 /// - NodePtr<K, V>: 追加されたノード
 /// - Option<V>: 置き換えられた値
-pub fn insert<K: Ord + Debug, V: Debug>(
+pub fn insert<K: Ord, V>(
     root: NodePtr<K, V>,
     key: K,
     value: V,
@@ -61,15 +60,18 @@ pub fn insert<K: Ord + Debug, V: Debug>(
 pub fn insert_left<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
     let mut new_node = Node::node_ptr(key, value);
 
-    // node.left.parent ← new_node
-    if let Some(mut left) = node.left_mut() {
-        if let Some(mut left_par) = left.parent_mut() {
-            *left_par = new_node.to_weak_ptr();
-        };
+    if node.is_none() {
+        return new_node;
     }
 
     // new_node.left ← node.left
     *new_node.left_mut().unwrap() = node.take_left();
+
+    // left.parent ← new_node
+    let new_node_weak = new_node.to_weak_ptr();
+    if let Some(mut left_par) = new_node.left_mut().unwrap().parent_mut() {
+        *left_par = new_node_weak;
+    }
 
     // new_node.parent ← node
     *new_node.parent_mut().unwrap() = node.to_weak_ptr();
@@ -83,46 +85,28 @@ pub fn insert_left<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> Node
 }
 
 /// nodeの右側に子を追加し，追加された子のポインタを返す
-pub fn insert_right<K: Ord + Debug, V: Debug>(
-    mut node: NodePtr<K, V>,
-    key: K,
-    value: V,
-) -> NodePtr<K, V> {
+pub fn insert_right<K: Ord, V>(mut node: NodePtr<K, V>, key: K, value: V) -> NodePtr<K, V> {
     let mut new_node = Node::node_ptr(key, value);
 
-    // node.right.parent ← new_node
-    if let Some(mut right) = node.right_mut() {
-        if let Some(mut right_par) = right.parent_mut() {
-            *right_par = new_node.to_weak_ptr().clone();
-        };
-        println!("right.parent: {:?}", right.get_parent_ptr());
-    }
-
-    if let Some(right) = new_node.right() {
-        println!("right.parent: {:?}", right.get_parent_ptr());
+    if node.is_none() {
+        return new_node;
     }
 
     // new_node.right ← node.right
     *new_node.right_mut().unwrap() = node.take_right();
 
-    if let Some(right) = new_node.right() {
-        println!("right.parent: {:?}", right.get_parent_ptr());
+    // right.parent ← new_node
+    let new_node_weak = new_node.to_weak_ptr();
+    if let Some(mut right_par) = new_node.right_mut().unwrap().parent_mut() {
+        *right_par = new_node_weak;
     }
 
     // new_node.parent ← node
     *new_node.parent_mut().unwrap() = node.to_weak_ptr();
 
-    if let Some(right) = new_node.right() {
-        println!("right.parent: {:?}", right.get_parent_ptr());
-    }
-
     // node.right ← new_node
     if let Some(mut right) = node.right_mut() {
         *right = new_node.clone();
-    }
-
-    if let Some(right) = new_node.right() {
-        println!("right.parent: {:?}", right.get_parent_ptr());
     }
 
     new_node

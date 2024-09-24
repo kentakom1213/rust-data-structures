@@ -1,4 +1,4 @@
-use std::{fmt::Debug, rc::Rc};
+use std::rc::Rc;
 
 use super::{
     pointer::{NodeOps, NodePtr, ParentOps},

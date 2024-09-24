@@ -8,6 +8,7 @@ use crate::{
         insert::{insert, insert_right},
         iterator::{prev, NodeIterator, NodePosition},
         pointer::{NodeOps, NodePtr},
+        remove::remove,
         splay::splay,
     },
     print_util::print_as_tree,
@@ -20,7 +21,7 @@ pub struct Multiset<K: Ord> {
     size: usize,
 }
 
-impl<K: Ord + Debug> Multiset<K> {
+impl<K: Ord> Multiset<K> {
     /// 新規作成
     pub fn new() -> Self {
         Self {
@@ -39,10 +40,9 @@ impl<K: Ord + Debug> Multiset<K> {
         self.size == 0
     }
 
-    /// 要素の追加
-    pub fn insert(&mut self, key: K) {
-        // keyをもつ最も右の頂点を探索
-        let rightmost = prev(
+    /// 値 `x` を持つノードのうち，最も右側にあるものを探索する
+    fn find_rightmost_node(&self, key: &K) -> NodePtr<K, usize> {
+        let upperbound = prev(
             if let ub @ Some(_) = upper_bound(&self.root, &key) {
                 NodePosition::Node(ub)
             } else {
@@ -51,32 +51,53 @@ impl<K: Ord + Debug> Multiset<K> {
             &self.root,
         );
 
-        let new_node;
-        match rightmost {
-            NodePosition::Node(node) if node.key().is_some_and(|k| *k == key) => {
-                let cnt = *node.value().unwrap();
-                new_node = insert_right(node, key, cnt + 1);
-            }
-            _ => {
-                (_, new_node, _) = insert(self.root.clone(), key, 1);
-            }
+        match upperbound {
+            NodePosition::Node(node) if node.key().is_some_and(|k| &*k == key) => node,
+            _ => None,
         }
+    }
 
-        eprintln!("Before Splay:");
-        print_as_tree(&self.root);
+    /// 要素の追加
+    pub fn insert(&mut self, key: K) {
+        // 最も右側の頂点を探索
+        let rightmost = self.find_rightmost_node(&key);
 
-        if let Some(right) = new_node.right() {
-            println!("before right_state: {:?}", right.get_state());
+        let new_node;
+        if rightmost.is_some() {
+            let cnt = *rightmost.value().unwrap();
+            new_node = insert_right(rightmost, key, cnt + 1);
+        } else {
+            (_, new_node, _) = insert(self.root.clone(), key, 1);
         }
 
         self.size += 1;
         self.root = splay(new_node);
+    }
 
-        eprintln!("After Splay:");
-        print_as_tree(&self.root);
+    /// 要素の削除
+    pub fn remove(&mut self, key: &K) -> bool {
+        // 最も右側の頂点を探索
+        let rightmost = self.find_rightmost_node(&key);
 
-        if let Some(right) = self.root.right() {
-            println!("after right_state: {:?}", right.get_state());
+        if rightmost.is_none() {
+            return false;
+        }
+
+        (self.root, _) = remove(self.root.clone(), rightmost);
+
+        self.size -= 1;
+        true
+    }
+
+    /// `key` に一致する要素の個数を返す
+    pub fn count(&mut self, key: &K) -> usize {
+        // 最も右側の頂点を探索
+        let rightmost = self.find_rightmost_node(&key);
+
+        if rightmost.is_some() {
+            *rightmost.value().unwrap()
+        } else {
+            0
         }
     }
 }

@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use super::{
     iterator::get_min,
     pointer::{NodeOps, NodePtr},
@@ -15,7 +13,7 @@ use super::{
 /// **戻り値**
 /// - NodePtr\<K, V\>: 削除後の木の根のポインタ
 /// - NodePtr\<K, V\>: 削除されたノードのポインタ
-pub fn remove<K: Ord + Debug, V: Debug>(
+pub fn remove<K: Ord, V>(
     mut root: NodePtr<K, V>,
     node: NodePtr<K, V>,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {

@@ -1,60 +1,97 @@
-use splay_tree::{
-    multiset::Multiset,
-    node::{find::find, pointer::NodeOps},
-};
+use splay_tree::multiset::Multiset;
 
 #[test]
 fn test_insert() {
     let mut mset = Multiset::new();
-    eprintln!("{mset:?}");
+    assert_eq!(format!("{mset:?}"), "{}".to_string());
+    assert_eq!(mset.len(), 0);
+    assert_eq!(mset.count(&1), 0);
 
-    for i in 0..10 {
+    for i in 0..5 {
         mset.insert(i);
     }
 
     mset.print_as_tree();
-    eprintln!("{mset:?}");
+    assert_eq!(format!("{mset:?}"), "{0, 1, 2, 3, 4}".to_string());
+    assert_eq!(mset.len(), 5);
+    assert_eq!(mset.count(&1), 1);
 
-    for i in 0..10 {
+    for i in 0..5 {
         mset.insert(i);
-        mset.print_as_tree();
     }
 
     mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 1, 1, 2, 2, 3, 3, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 10);
+    assert_eq!(mset.count(&1), 2);
 
-    eprintln!("{mset:?}");
+    for i in 0..5 {
+        mset.insert(i);
+    }
+
+    mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 15);
+    assert_eq!(mset.count(&1), 3);
 }
 
 #[test]
-fn test() {
+fn test_remove() {
     let mut mset = Multiset::new();
 
-    mset.insert(1);
-    mset.insert(2);
-    mset.insert(3);
+    for _ in 0..3 {
+        for i in 0..5 {
+            mset.insert(i);
+        }
+    }
 
-    let node = find(&mset.root, &4);
-    println!("4 state: {:?}", node.get_state());
+    mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 15);
+    assert_eq!(mset.count(&2), 3);
 
-    mset.insert(4);
+    assert_eq!(mset.remove(&2), true);
+    mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 14);
+    assert_eq!(mset.count(&2), 2);
 
-    let node = find(&mset.root, &4);
-    println!("4 state: {:?}", node.get_state());
+    assert_eq!(mset.remove(&2), true);
+    mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 0, 1, 1, 1, 2, 3, 3, 3, 4, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 13);
+    assert_eq!(mset.count(&2), 1);
 
-    mset.insert(1);
+    assert_eq!(mset.remove(&2), true);
+    mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 0, 1, 1, 1, 3, 3, 3, 4, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 12);
+    assert_eq!(mset.count(&2), 0);
 
-    let node = find(&mset.root, &4);
-    println!("4 state: {:?}", node.get_state());
-
-    mset.insert(2);
-
-    let node = find(&mset.root, &4);
-    println!("4 state: {:?}", node.get_state());
-
-    mset.insert(3);
-
-    let node = find(&mset.root, &4);
-    println!("4 state: {:?}", node.get_state());
-
-    mset.insert(4);
+    assert_eq!(mset.remove(&2), false);
+    mset.print_as_tree();
+    assert_eq!(
+        format!("{mset:?}"),
+        "{0, 0, 0, 1, 1, 1, 3, 3, 3, 4, 4, 4}".to_string()
+    );
+    assert_eq!(mset.len(), 12);
+    assert_eq!(mset.count(&2), 0);
 }
