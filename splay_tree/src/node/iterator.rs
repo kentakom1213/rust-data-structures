@@ -1,4 +1,7 @@
-use super::{pointer::NodeOps, state::NodeState, NodePtr};
+use super::{
+    pointer::{NodeOps, NodePtr},
+    state::NodeState,
+};
 
 /// ノードの位置
 #[derive(Debug)]
@@ -198,21 +201,21 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
 impl<'a, K: Ord, V> Iterator for NodeIterator<'a, K, V> {
     type Item = NodePtr<K, V>;
     fn next(&mut self) -> Option<Self::Item> {
-        let val = self.pos.as_ref().map(|node| node.clone());
+        let val = self.pos.as_ref().map(|node| node.clone())??;
         // posを次に進める
         self.pos = next(self.pos.clone(), self.root);
 
-        val
+        Some(Some(val))
     }
 }
 
 impl<'a, K: Ord, V> DoubleEndedIterator for NodeIterator<'a, K, V> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let val = self.pos.as_ref().map(|node| node.clone());
+        let val = self.pos.as_ref().map(|node| node.clone())??;
         // posを前に進める
         self.pos = prev(self.pos.clone(), self.root);
 
-        val
+        Some(Some(val))
     }
 }
 
@@ -221,11 +224,11 @@ mod test_prev_next {
     use crate::{
         node::{
             find::find,
-            insert::insert_single,
+            insert::insert,
             iterator::{get_min, next, prev, NodePosition},
             pointer::NodeOps,
         },
-        print_util::print_as_binary_tree,
+        print_util::print_as_tree,
     };
 
     use super::NodeIterator;
@@ -236,10 +239,10 @@ mod test_prev_next {
         let items = [7, 4, 100, 0, 6, -1, 33, 21];
 
         for i in items {
-            (root, _, _) = insert_single(root, i, i);
+            (root, _, _) = insert(root, i, i);
         }
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         let min = get_min(root.clone());
 
@@ -252,10 +255,10 @@ mod test_prev_next {
         let mut items = [7, 4, 100, 0, 6, -1, 33, 21];
 
         for i in items {
-            (root, _, _) = insert_single(root, i, i);
+            (root, _, _) = insert(root, i, i);
         }
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         let mut itr = prev(NodePosition::SUP, &root);
         println!("itr: {:?}", itr);
@@ -279,10 +282,10 @@ mod test_prev_next {
         let mut items = [7, 4, 100, 0, 6, -1, 33, 21];
 
         for i in items {
-            (root, _, _) = insert_single(root, i, i);
+            (root, _, _) = insert(root, i, i);
         }
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         let mut itr = next(NodePosition::INF, &root);
 
@@ -301,11 +304,14 @@ mod test_prev_next {
     #[test]
     fn test_iter() {
         let mut root = None;
+
+        assert!(NodeIterator::first(&root).next().is_none());
+
         for i in [2, 5, 3, 8, 6, 1, 4, 7, 9, 10] {
-            (root, _, _) = insert_single(root, i, i);
+            (root, _, _) = insert(root, i, i);
         }
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         let itr = NodeIterator::first(&root);
 

@@ -159,10 +159,14 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
         }
 
         if par.left().is_some_and(|left| left.is_same(self)) {
-            NodeState::LeftChild
-        } else {
-            NodeState::RightChild
+            return NodeState::LeftChild;
         }
+
+        if par.right().is_some_and(|right| right.is_same(self)) {
+            return NodeState::RightChild;
+        }
+
+        unreachable!()
     }
 
     fn is_same(&self, other: &Self) -> bool {

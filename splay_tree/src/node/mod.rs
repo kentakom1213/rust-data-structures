@@ -1,11 +1,9 @@
 //! ノードの構造体
 
-mod find;
-mod insert;
-mod iterator;
-mod pointer;
-mod remove;
-mod splay;
-mod state;
-
-pub use pointer::{NodePtr, ParentPtr};
+pub mod find;
+pub mod insert;
+pub mod iterator;
+pub mod pointer;
+pub mod remove;
+pub mod splay;
+pub mod state;

@@ -1,4 +1,4 @@
-use super::{pointer::NodeOps, NodePtr};
+use super::pointer::{NodeOps, NodePtr};
 
 /// 比較関数 cmp を満たす最小のノードを返す
 fn find_min<K: Ord, V, F: Fn(&K) -> bool>(root: &NodePtr<K, V>, cmp: F) -> NodePtr<K, V> {
@@ -40,8 +40,8 @@ pub fn find<K: Ord, V>(root: &NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_find {
     use crate::{
-        node::{find::find, insert::insert_single, pointer::NodeOps},
-        print_util::print_as_binary_tree,
+        node::{find::find, insert::insert, pointer::NodeOps},
+        print_util::print_as_tree,
     };
 
     use super::{lower_bound, upper_bound};
@@ -49,13 +49,13 @@ mod test_find {
     #[test]
     fn test_find_lowerbound_upperbound() {
         let mut root = None;
-        (root, _, _) = insert_single(root, 5, "first");
-        (root, _, _) = insert_single(root, 15, "second");
-        (root, _, _) = insert_single(root, 1, "third");
-        (root, _, _) = insert_single(root, 3, "forth");
-        (root, _, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert(root, 5, "first");
+        (root, _, _) = insert(root, 15, "second");
+        (root, _, _) = insert(root, 1, "third");
+        (root, _, _) = insert(root, 3, "forth");
+        (root, _, _) = insert(root, 30, "fifth");
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         assert_eq!(*lower_bound(&root, &0).key().unwrap(), 1);
         assert_eq!(*upper_bound(&root, &0).key().unwrap(), 1);
@@ -77,6 +77,6 @@ mod test_find {
         assert!(upper_bound(&root, &100).key().is_none());
         assert!(find(&root, &100).key().is_none());
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
     }
 }

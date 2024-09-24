@@ -1,6 +1,10 @@
 use std::fmt::Debug;
 
-use super::{iterator::get_min, pointer::NodeOps, splay::splay, NodePtr};
+use super::{
+    iterator::get_min,
+    pointer::{NodeOps, NodePtr},
+    splay::splay,
+};
 
 /// ノード node を削除する
 ///
@@ -11,7 +15,7 @@ use super::{iterator::get_min, pointer::NodeOps, splay::splay, NodePtr};
 /// **戻り値**
 /// - NodePtr\<K, V\>: 削除後の木の根のポインタ
 /// - NodePtr\<K, V\>: 削除されたノードのポインタ
-pub fn remove<K: Ord, V>(
+pub fn remove<K: Ord + Debug, V: Debug>(
     mut root: NodePtr<K, V>,
     node: NodePtr<K, V>,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
@@ -48,8 +52,8 @@ pub fn remove<K: Ord, V>(
 #[cfg(test)]
 mod test_remove {
     use crate::{
-        node::{find::find, insert::insert_single, pointer::NodeOps},
-        print_util::print_as_binary_tree,
+        node::{find::find, insert::insert, pointer::NodeOps},
+        print_util::print_as_tree,
     };
 
     use super::remove;
@@ -59,11 +63,11 @@ mod test_remove {
         let mut root = None;
 
         for i in [4, 2, 6, 1, 3, 5, 7] {
-            (root, _, _) = insert_single(root, i, i);
+            (root, _, _) = insert(root, i, i);
         }
 
         println!("Initial Tree");
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 7");
         {
@@ -73,7 +77,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 7);
             assert!(find(&root, &7).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 6");
         {
@@ -83,7 +87,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 6);
             assert!(find(&root, &6).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 7");
         {
@@ -93,7 +97,7 @@ mod test_remove {
             assert!(removed_node.is_none());
             assert!(find(&root, &7).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 4");
         {
@@ -103,7 +107,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 4);
             assert!(find(&root, &4).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 2");
         {
@@ -113,7 +117,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 2);
             assert!(find(&root, &2).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 1");
         {
@@ -123,7 +127,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 1);
             assert!(find(&root, &1).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 3");
         {
@@ -133,7 +137,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 3);
             assert!(find(&root, &3).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         println!("Remove 5");
         {
@@ -143,7 +147,7 @@ mod test_remove {
             assert_eq!(*removed_node.key().unwrap(), 5);
             assert!(find(&root, &5).is_none());
         }
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         assert!(root.is_none());
     }
@@ -151,11 +155,11 @@ mod test_remove {
     #[test]
     fn test_small() {
         let mut root = None;
-        (root, _, _) = insert_single(root, 1, 1);
-        (root, _, _) = insert_single(root, 0, 0);
-        (root, _, _) = insert_single(root, 3, 3);
+        (root, _, _) = insert(root, 1, 1);
+        (root, _, _) = insert(root, 0, 0);
+        (root, _, _) = insert(root, 3, 3);
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         let removed;
         let node = find(&root, &1);
@@ -163,6 +167,6 @@ mod test_remove {
 
         assert_eq!(*removed.key().unwrap(), 1);
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
     }
 }
