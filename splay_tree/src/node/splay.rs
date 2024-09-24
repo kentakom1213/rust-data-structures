@@ -1,9 +1,8 @@
-use std::rc::Rc;
+use std::{fmt::Debug, rc::Rc};
 
 use super::{
-    pointer::{NodeOps, ParentOps},
+    pointer::{NodeOps, NodePtr, ParentOps},
     state::NodeState,
-    NodePtr,
 };
 
 /// nodeを1つ上に持ってくるように回転する
@@ -85,20 +84,24 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
         // 頂点の状態
         let state = node.get_state();
         // 親頂点の状態
-        let par_state = node.get_parent_ptr().get_state();
+        let par = node.get_parent_ptr();
+        let par_state = par.get_state();
 
         match (state, par_state) {
+            (NodeState::Root, _) => {
+                break;
+            }
             // zig
             (NodeState::LeftChild | NodeState::RightChild, NodeState::Root) => {
                 node = rotate(node);
             }
-            // zig-zig
+            // zig-zag
             (NodeState::LeftChild, NodeState::RightChild)
             | (NodeState::RightChild, NodeState::LeftChild) => {
                 node = rotate(node);
                 node = rotate(node);
             }
-            // zig-zag
+            // zig-zig
             (NodeState::LeftChild, NodeState::LeftChild)
             | (NodeState::RightChild, NodeState::RightChild) => {
                 // 親を先にrotate（オブジェクトをdropさせないため，変数に代入する）
@@ -114,8 +117,8 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_splay {
     use crate::{
-        node::{find::find, insert::insert_single, pointer::NodeOps, splay::rotate},
-        print_util::print_as_binary_tree,
+        node::{find::find, insert::insert, pointer::NodeOps, splay::rotate},
+        print_util::print_as_tree,
     };
 
     use super::splay;
@@ -123,25 +126,25 @@ mod test_splay {
     #[test]
     fn test_rotate_right() {
         let mut root = None;
-        (root, _, _) = insert_single(root, 5, "first");
-        (root, _, _) = insert_single(root, 15, "second");
-        (root, _, _) = insert_single(root, 1, "third");
-        (root, _, _) = insert_single(root, 3, "forth");
-        (root, _, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert(root, 5, "first");
+        (root, _, _) = insert(root, 15, "second");
+        (root, _, _) = insert(root, 1, "third");
+        (root, _, _) = insert(root, 3, "forth");
+        (root, _, _) = insert(root, 30, "fifth");
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
-        let find_5 = find(root.clone(), &5);
+        let find_5 = find(&root, &5);
         println!("find_5 = {:?}", find_5.get_state());
 
         // rootを回転
         println!("> rotate at root");
         root = rotate(root);
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         {
-            let mut find_1 = find(root.clone(), &1);
+            let mut find_1 = find(&root, &1);
             println!("find_1 = {:?}", find_1.get_state());
 
             // 回転
@@ -153,18 +156,18 @@ mod test_splay {
 
             root = find_1;
 
-            print_as_binary_tree(&root);
+            print_as_tree(&root);
         }
 
         {
-            let mut find_3 = find(root.clone(), &3);
+            let mut find_3 = find(&root, &3);
             println!("find_3 = {:?}", find_3.get_state());
 
             // 30を回転
             println!("> rotate 3");
             find_3 = rotate(find_3);
 
-            print_as_binary_tree(&root);
+            print_as_tree(&root);
 
             println!("root = {:?}", root.get_state());
             println!("find_3 = {:?}", find_3.get_state());
@@ -174,39 +177,39 @@ mod test_splay {
     #[test]
     fn test_rotate_left() {
         let mut root = None;
-        (root, _, _) = insert_single(root, 5, "first");
-        (root, _, _) = insert_single(root, 15, "second");
-        (root, _, _) = insert_single(root, 1, "third");
-        (root, _, _) = insert_single(root, 3, "forth");
-        (root, _, _) = insert_single(root, 30, "fifth");
+        (root, _, _) = insert(root, 5, "first");
+        (root, _, _) = insert(root, 15, "second");
+        (root, _, _) = insert(root, 1, "third");
+        (root, _, _) = insert(root, 3, "forth");
+        (root, _, _) = insert(root, 30, "fifth");
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
         {
-            let mut find_30 = find(root.clone(), &30);
+            let mut find_30 = find(&root, &30);
             println!("find_30 = {:?}", find_30.get_state());
 
             // 回転
             println!("> rotate 30");
             find_30 = rotate(find_30);
 
-            print_as_binary_tree(&root);
-            print_as_binary_tree(&find_30);
+            print_as_tree(&root);
+            print_as_tree(&find_30);
 
             println!("root = {:?}", root.get_state());
             println!("find_30 = {:?}", find_30.get_state());
         }
 
         {
-            let mut find_30 = find(root.clone(), &30);
+            let mut find_30 = find(&root, &30);
             println!("find_30 = {:?}", find_30.get_state());
 
             // 回転
             println!("> rotate 30");
             find_30 = rotate(find_30);
 
-            print_as_binary_tree(&root);
-            print_as_binary_tree(&find_30);
+            print_as_tree(&root);
+            print_as_tree(&find_30);
 
             println!("root = {:?}", root.get_state());
             println!("find_30 = {:?}", find_30.get_state());
@@ -219,30 +222,30 @@ mod test_splay {
     fn test_splay() {
         let mut root = None;
 
-        (root, _, _) = insert_single(root, 1, "first");
-        (root, _, _) = insert_single(root, 3, "second");
-        (root, _, _) = insert_single(root, 4, "third");
-        (root, _, _) = insert_single(root, 9, "forth");
-        (root, _, _) = insert_single(root, 2, "fifth");
+        (root, _, _) = insert(root, 1, "first");
+        (root, _, _) = insert(root, 3, "second");
+        (root, _, _) = insert(root, 4, "third");
+        (root, _, _) = insert(root, 9, "forth");
+        (root, _, _) = insert(root, 2, "fifth");
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
-        let node = find(root.clone(), &4);
-
-        root = splay(node);
-
-        print_as_binary_tree(&root);
-
-        let node = find(root.clone(), &1);
+        let node = find(&root, &4);
 
         root = splay(node);
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
 
-        let node = find(root.clone(), &9);
+        let node = find(&root, &1);
 
         root = splay(node);
 
-        print_as_binary_tree(&root);
+        print_as_tree(&root);
+
+        let node = find(&root, &9);
+
+        root = splay(node);
+
+        print_as_tree(&root);
     }
 }

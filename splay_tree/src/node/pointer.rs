@@ -159,10 +159,14 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
         }
 
         if par.left().is_some_and(|left| left.is_same(self)) {
-            NodeState::LeftChild
-        } else {
-            NodeState::RightChild
+            return NodeState::LeftChild;
         }
+
+        if par.right().is_some_and(|right| right.is_same(self)) {
+            return NodeState::RightChild;
+        }
+
+        unreachable!()
     }
 
     fn is_same(&self, other: &Self) -> bool {
@@ -189,11 +193,19 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     }
 
     fn take_left(&mut self) -> NodePtr<K, V> {
-        self.as_ref()?.borrow_mut().left.take()
+        let mut left = self.as_ref()?.borrow_mut().left.take();
+        if let Some(mut left_par) = left.parent_mut() {
+            *left_par = None;
+        }
+        left
     }
 
     fn take_right(&mut self) -> NodePtr<K, V> {
-        self.as_ref()?.borrow_mut().right.take()
+        let mut right = self.as_ref()?.borrow_mut().right.take();
+        if let Some(mut right_par) = right.parent_mut() {
+            *right_par = None;
+        }
+        right
     }
 
     fn to_weak_ptr(&self) -> ParentPtr<K, V> {
