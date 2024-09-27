@@ -325,7 +325,7 @@ mod test_prev_next {
             assert_eq!(*x.key().unwrap(), ans);
         }
 
-        let itr = NodeIterator::new(&root, find(&root, &4));
+        let itr = NodeIterator::new(&root, find(root.clone(), &4));
 
         for (x, ans) in itr.zip([4, 5, 6, 7, 8, 9, 10]) {
             assert_eq!(*x.key().unwrap(), ans);

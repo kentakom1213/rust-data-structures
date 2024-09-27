@@ -43,7 +43,7 @@ impl<K: Ord> Multiset<K> {
     /// 値 `x` を持つノードのうち，最も右側にあるものを探索する
     fn find_rightmost_node(&self, key: &K) -> NodePtr<K, usize> {
         let upperbound = prev(
-            if let ub @ Some(_) = upper_bound(&self.root, &key) {
+            if let ub @ Some(_) = upper_bound(self.root.clone(), &key) {
                 NodePosition::Node(ub)
             } else {
                 NodePosition::SUP
