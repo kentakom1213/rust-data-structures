@@ -1,12 +1,16 @@
 //! 多重集合
 
-use std::{fmt::Debug, ops::RangeBounds};
+use std::{
+    cmp,
+    fmt::Debug,
+    ops::{Bound, RangeBounds},
+};
 
 use crate::{
     node::{
-        find::upper_bound,
+        find::{lower_bound, upper_bound},
         insert::{insert, insert_right},
-        iterator::{prev, NodeIterator, NodePosition},
+        iterator::{prev, NodeIterator, NodePosition, NodeRangeIterator},
         pointer::{NodeOps, NodePtr},
         remove::remove,
         splay::splay,
@@ -106,8 +110,35 @@ impl<K: Ord> Multiset<K> {
     }
 
     /// 指定した区間のイテレータを返す
-    pub fn range<R: RangeBounds<K>>(&mut self, range: &R) -> NodeIterator<K, usize> {
-        todo!()
+    pub fn range<R: RangeBounds<K>>(&mut self, range: R) -> NodeRangeIterator<K, usize> {
+        let left = match range.start_bound() {
+            Bound::Unbounded => NodePosition::INF,
+            Bound::Included(x) => {
+                let left;
+                (self.root, left) = lower_bound(self.root.clone(), x);
+                prev(NodePosition::Node(left), &self.root)
+            }
+            Bound::Excluded(x) => {
+                let left;
+                (self.root, left) = upper_bound(self.root.clone(), x);
+                prev(NodePosition::Node(left), &self.root)
+            }
+        };
+        let right = match range.end_bound() {
+            Bound::Unbounded => NodePosition::SUP,
+            Bound::Included(x) => {
+                let right;
+                (self.root, right) = upper_bound(self.root.clone(), x);
+                NodePosition::Node(right)
+            }
+            Bound::Excluded(x) => {
+                let right;
+                (self.root, right) = lower_bound(self.root.clone(), x);
+                NodePosition::Node(right)
+            }
+        };
+
+        NodeRangeIterator::new(&self.root, left, right)
     }
 
     /// ノードのイテレータを返す
