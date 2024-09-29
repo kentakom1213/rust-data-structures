@@ -223,7 +223,6 @@ impl<'a, K: Ord, V> DoubleEndedIterator for NodeIterator<'a, K, V> {
 mod test_prev_next {
     use crate::{
         node::{
-            find::find,
             insert::insert,
             iterator::{get_min, next, prev, NodePosition},
             pointer::NodeOps,

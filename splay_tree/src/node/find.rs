@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use super::{
     pointer::{NodeOps, NodePtr},
     splay::splay,
