@@ -25,7 +25,7 @@ pub struct Multiset<K: Ord> {
     size: usize,
 }
 
-impl<K: Ord> Multiset<K> {
+impl<K: Ord + Debug> Multiset<K> {
     /// 新規作成
     pub fn new() -> Self {
         Self {
@@ -113,28 +113,50 @@ impl<K: Ord> Multiset<K> {
     pub fn range<R: RangeBounds<K>>(&mut self, range: R) -> NodeRangeIterator<K, usize> {
         let left = match range.start_bound() {
             Bound::Unbounded => NodePosition::INF,
-            Bound::Included(x) => {
-                let left;
-                (self.root, left) = lower_bound(self.root.clone(), x);
-                prev(NodePosition::Node(left), &self.root)
-            }
-            Bound::Excluded(x) => {
-                let left;
-                (self.root, left) = upper_bound(self.root.clone(), x);
-                prev(NodePosition::Node(left), &self.root)
-            }
+            Bound::Included(x) => prev(
+                {
+                    let lb;
+                    (self.root, lb) = lower_bound(self.root.clone(), &x);
+                    if lb.is_some() {
+                        NodePosition::Node(lb)
+                    } else {
+                        NodePosition::SUP
+                    }
+                },
+                &self.root,
+            ),
+            Bound::Excluded(x) => prev(
+                {
+                    let ub;
+                    (self.root, ub) = upper_bound(self.root.clone(), &x);
+                    if ub.is_some() {
+                        NodePosition::Node(ub)
+                    } else {
+                        NodePosition::SUP
+                    }
+                },
+                &self.root,
+            ),
         };
         let right = match range.end_bound() {
             Bound::Unbounded => NodePosition::SUP,
             Bound::Included(x) => {
                 let right;
                 (self.root, right) = upper_bound(self.root.clone(), x);
-                NodePosition::Node(right)
+                if right.is_some() {
+                    NodePosition::Node(right)
+                } else {
+                    NodePosition::SUP
+                }
             }
             Bound::Excluded(x) => {
                 let right;
                 (self.root, right) = lower_bound(self.root.clone(), x);
-                NodePosition::Node(right)
+                if right.is_some() {
+                    NodePosition::Node(right)
+                } else {
+                    NodePosition::SUP
+                }
             }
         };
 

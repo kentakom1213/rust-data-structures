@@ -127,6 +127,13 @@ fn test_range() {
 
     data.sort();
 
+    let range = mset.range(20..);
+
+    for node in range {
+        print!("{}, ", *node.key().unwrap());
+    }
+    println!();
+
     let range = mset.range(1..3);
 
     for (node, i) in range.zip([1, 1, 1, 2].into_iter()) {
@@ -154,6 +161,12 @@ fn test_range() {
     let range = mset.range(..);
 
     for (node, i) in range.zip([0, 1, 1, 1, 2, 3, 4, 5, 6, 6, 7, 7, 8, 9].into_iter()) {
+        assert_eq!(*node.key().unwrap(), i);
+    }
+
+    let range = mset.range(..=3);
+
+    for (node, i) in range.rev().zip([3, 2, 1, 1, 1, 0].into_iter()) {
         assert_eq!(*node.key().unwrap(), i);
     }
 }
