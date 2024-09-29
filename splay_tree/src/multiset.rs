@@ -1,6 +1,6 @@
 //! 多重集合
 
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::RangeBounds};
 
 use crate::{
     node::{
@@ -103,6 +103,16 @@ impl<K: Ord> Multiset<K> {
         } else {
             0
         }
+    }
+
+    /// 指定した区間のイテレータを返す
+    pub fn range<R: RangeBounds<K>>(&mut self, range: &R) -> NodeIterator<K, usize> {
+        todo!()
+    }
+
+    /// ノードのイテレータを返す
+    pub fn iter(&self) -> NodeIterator<K, usize> {
+        NodeIterator::first(&self.root)
     }
 }
 

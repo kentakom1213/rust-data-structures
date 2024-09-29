@@ -1,3 +1,5 @@
+use std::cmp;
+
 use super::{
     pointer::{NodeOps, NodePtr},
     state::NodeState,
@@ -20,6 +22,31 @@ impl<K: Ord, V> Clone for NodePosition<K, V> {
             NodePosition::INF => NodePosition::INF,
             NodePosition::Node(node) => NodePosition::Node(node.clone()),
             NodePosition::SUP => NodePosition::SUP,
+        }
+    }
+}
+
+impl<K: Ord, V> PartialEq for NodePosition<K, V> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (NodePosition::INF, NodePosition::INF) => true,
+            (NodePosition::SUP, NodePosition::SUP) => true,
+            (NodePosition::Node(node1), NodePosition::Node(node2)) => node1.is_same(node2),
+            _ => false,
+        }
+    }
+}
+
+impl<K: Ord, V> PartialOrd for NodePosition<K, V> {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        match (self, other) {
+            (NodePosition::INF, NodePosition::INF) => Some(cmp::Ordering::Equal),
+            (NodePosition::SUP, NodePosition::SUP) => Some(cmp::Ordering::Equal),
+            (NodePosition::Node(node1), NodePosition::Node(node2)) => node1.partial_cmp(node2),
+            (NodePosition::INF, _) => Some(cmp::Ordering::Less),
+            (NodePosition::SUP, _) => Some(cmp::Ordering::Greater),
+            (_, NodePosition::INF) => Some(cmp::Ordering::Greater),
+            (_, NodePosition::SUP) => Some(cmp::Ordering::Less),
         }
     }
 }
@@ -185,7 +212,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     pub fn first(root: &'a NodePtr<K, V>) -> Self {
         NodeIterator {
             root,
-            pos: next(NodePosition::INF, root),
+            pos: NodePosition::INF,
         }
     }
 
@@ -193,7 +220,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     pub fn last(root: &'a NodePtr<K, V>) -> Self {
         NodeIterator {
             root,
-            pos: prev(NodePosition::SUP, root),
+            pos: NodePosition::SUP,
         }
     }
 }
@@ -201,9 +228,10 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
 impl<'a, K: Ord, V> Iterator for NodeIterator<'a, K, V> {
     type Item = NodePtr<K, V>;
     fn next(&mut self) -> Option<Self::Item> {
-        let val = self.pos.as_ref().map(|node| node.clone())??;
         // posを次に進める
         self.pos = next(self.pos.clone(), self.root);
+
+        let val = self.pos.as_ref().map(|node| node.clone())??;
 
         Some(Some(val))
     }
@@ -211,9 +239,64 @@ impl<'a, K: Ord, V> Iterator for NodeIterator<'a, K, V> {
 
 impl<'a, K: Ord, V> DoubleEndedIterator for NodeIterator<'a, K, V> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let val = self.pos.as_ref().map(|node| node.clone())??;
         // posを前に進める
         self.pos = prev(self.pos.clone(), self.root);
+
+        let val = self.pos.as_ref().map(|node| node.clone())??;
+
+        Some(Some(val))
+    }
+}
+
+/// 範囲をもつイテレータ
+pub struct NodeRangeIterator<'a, K: Ord, V> {
+    /// 根のポインタ
+    root: &'a NodePtr<K, V>,
+    /// 左端の位置
+    left: NodePosition<K, V>,
+    /// 右端の位置
+    right: NodePosition<K, V>,
+}
+
+impl<'a, K: Ord, V> NodeRangeIterator<'a, K, V> {
+    /// 新しいイテレータを返す
+    pub fn new(
+        root: &'a NodePtr<K, V>,
+        left: NodePosition<K, V>,
+        right: NodePosition<K, V>,
+    ) -> Self {
+        NodeRangeIterator { root, left, right }
+    }
+}
+
+impl<'a, K: Ord, V> Iterator for NodeRangeIterator<'a, K, V> {
+    type Item = NodePtr<K, V>;
+    fn next(&mut self) -> Option<Self::Item> {
+        // 左端を次に進める
+        self.left = next(self.left.clone(), self.root);
+
+        // 左端が右端に到達したら終了
+        if self.left >= self.right {
+            return None;
+        }
+
+        let val = self.left.as_ref().map(|node| node.clone())??;
+
+        Some(Some(val))
+    }
+}
+
+impl<'a, K: Ord, V> DoubleEndedIterator for NodeRangeIterator<'a, K, V> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        // 右端を前に進める
+        self.right = prev(self.right.clone(), self.root);
+
+        // 右端が左端に到達したら終了
+        if self.right <= self.left {
+            return None;
+        }
+
+        let val = self.right.as_ref().map(|node| node.clone())??;
 
         Some(Some(val))
     }
@@ -226,11 +309,12 @@ mod test_prev_next {
             insert::insert,
             iterator::{get_min, next, prev, NodePosition},
             pointer::NodeOps,
+            splay::splay,
         },
         print_util::print_as_tree,
     };
 
-    use super::NodeIterator;
+    use super::{NodeIterator, NodeRangeIterator};
 
     #[test]
     fn test_min() {
@@ -329,10 +413,31 @@ mod test_prev_next {
             assert_eq!(*x.key().unwrap(), ans);
         }
 
-        let itr = NodeIterator::new(&root, node_4);
+        let mut itr = NodeIterator::new(&root, node_4);
+        itr.next_back();
 
         for (x, ans) in itr.zip([4, 5, 6, 7, 8, 9, 10]) {
             assert_eq!(*x.key().unwrap(), ans);
         }
+    }
+
+    #[test]
+    fn test_range_iterator() {
+        let mut root = None;
+
+        let data = vec![69, 39, 34, 21, 33, 52, 1000, -200];
+
+        for &i in data.iter() {
+            let inserted;
+            (_, inserted, _) = insert(root.clone(), i, i);
+            root = splay(inserted);
+        }
+
+        print_as_tree(&root);
+
+        let mut itr = NodeRangeIterator::new(&root, NodePosition::INF, NodePosition::SUP);
+
+        assert_eq!(*itr.next().unwrap().key().unwrap(), -200);
+        assert_eq!(*itr.next_back().unwrap().key().unwrap(), 1000);
     }
 }

@@ -218,8 +218,6 @@ mod test_splay {
 
             println!("root = {:?}", root.get_state());
             println!("find_30 = {:?}", find_30.get_state());
-
-            root = find_30;
         }
     }
 
@@ -235,24 +233,15 @@ mod test_splay {
 
         print_as_tree(&root);
 
-        let node;
-        (root, node) = find(root.clone(), &4);
-
-        root = splay(node);
+        (root, _) = find(root.clone(), &4);
 
         print_as_tree(&root);
 
-        let node;
-        (root, node) = find(root.clone(), &1);
-
-        root = splay(node);
+        (root, _) = find(root.clone(), &1);
 
         print_as_tree(&root);
 
-        let node;
-        (root, node) = find(root.clone(), &9);
-
-        root = splay(node);
+        (root, _) = find(root.clone(), &9);
 
         print_as_tree(&root);
     }

@@ -105,6 +105,8 @@ pub trait NodeOps<K: Ord, V> {
 
     /// ポインタの同一性判定
     fn is_same(&self, other: &Self) -> bool;
+    /// ポインタの半順序
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering>;
 
     /// 親のポインタを取得する
     fn get_parent_ptr(&self) -> Self;
@@ -174,6 +176,10 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
             .zip(other.as_ref())
             .map(|(s, o)| Rc::ptr_eq(s, o))
             .unwrap_or(false)
+    }
+
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.key().zip(other.key()).map(|(s, o)| s.cmp(&o))
     }
 
     fn get_parent_ptr(&self) -> Self {

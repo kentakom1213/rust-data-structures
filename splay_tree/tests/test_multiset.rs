@@ -1,4 +1,4 @@
-use splay_tree::multiset::Multiset;
+use splay_tree::{multiset::Multiset, node::pointer::NodeOps};
 
 #[test]
 fn test_insert() {
@@ -94,4 +94,21 @@ fn test_remove() {
     );
     assert_eq!(mset.len(), 12);
     assert_eq!(mset.count(&2), 0);
+}
+
+#[test]
+fn test_iter() {
+    let mut mset = Multiset::new();
+
+    let mut data = vec![9, 0, 1, 3, 90, 43, 30, 22, 43, 20];
+
+    for i in data.iter() {
+        mset.insert(*i);
+    }
+
+    data.sort();
+
+    for (node, &i) in mset.iter().zip(&data) {
+        assert_eq!(*node.key().unwrap(), i);
+    }
 }
