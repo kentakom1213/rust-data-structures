@@ -307,8 +307,13 @@ mod test_prev_next {
 
         assert!(NodeIterator::first(&root).next().is_none());
 
+        let mut node_4 = None;
         for i in [2, 5, 3, 8, 6, 1, 4, 7, 9, 10] {
-            (root, _, _) = insert(root, i, i);
+            let inserted;
+            (root, inserted, _) = insert(root, i, i);
+            if i == 4 {
+                node_4 = inserted;
+            }
         }
 
         print_as_tree(&root);
@@ -325,7 +330,7 @@ mod test_prev_next {
             assert_eq!(*x.key().unwrap(), ans);
         }
 
-        let itr = NodeIterator::new(&root, find(root.clone(), &4));
+        let itr = NodeIterator::new(&root, node_4);
 
         for (x, ans) in itr.zip([4, 5, 6, 7, 8, 9, 10]) {
             assert_eq!(*x.key().unwrap(), ans);

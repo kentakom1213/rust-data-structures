@@ -69,81 +69,113 @@ mod test_remove {
 
         println!("Remove 7");
         {
-            let node = find(root.clone(), &7);
+            let node;
+            (root, node) = find(root.clone(), &7);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 7);
-            assert!(find(root.clone(), &7).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &7);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 6");
         {
-            let node = find(root.clone(), &6);
+            let node;
+            (root, node) = find(root.clone(), &6);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 6);
-            assert!(find(root.clone(), &6).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &6);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 7");
         {
-            let node = find(root.clone(), &7);
+            let node;
+            (root, node) = find(root.clone(), &7);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert!(removed_node.is_none());
-            assert!(find(root.clone(), &7).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &7);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 4");
         {
-            let node = find(root.clone(), &4);
+            let node;
+            (root, node) = find(root.clone(), &4);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 4);
-            assert!(find(root.clone(), &4).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &4);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 2");
         {
-            let node = find(root.clone(), &2);
+            let node;
+            (root, node) = find(root.clone(), &2);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 2);
-            assert!(find(root.clone(), &2).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &2);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 1");
         {
-            let node = find(root.clone(), &1);
+            let node;
+            (root, node) = find(root.clone(), &1);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 1);
-            assert!(find(root.clone(), &1).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &1);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 3");
         {
-            let node = find(root.clone(), &3);
+            let node;
+            (root, node) = find(root.clone(), &3);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 3);
-            assert!(find(root.clone(), &3).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &3);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
         println!("Remove 5");
         {
-            let node = find(root.clone(), &5);
+            let node;
+            (root, node) = find(root.clone(), &5);
             let removed_node;
             (root, removed_node) = remove(root, node);
             assert_eq!(*removed_node.key().unwrap(), 5);
-            assert!(find(root.clone(), &5).is_none());
+
+            let node;
+            (root, node) = find(root.clone(), &5);
+            assert!(node.is_none());
         }
         print_as_tree(&root);
 
@@ -160,10 +192,14 @@ mod test_remove {
         print_as_tree(&root);
 
         let removed;
-        let node = find(root.clone(), &1);
+        let node;
+        (root, node) = find(root, &0);
+
+        print_as_tree(&root);
+
         (root, removed) = remove(root, node);
 
-        assert_eq!(*removed.key().unwrap(), 1);
+        assert_eq!(*removed.key().unwrap(), 0);
 
         print_as_tree(&root);
     }

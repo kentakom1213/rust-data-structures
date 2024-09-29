@@ -4,39 +4,70 @@ use super::{
 };
 
 /// 比較関数 cmp を満たす最小のノードを返す
-fn find_min<K: Ord, V, F: Fn(&K) -> bool>(root: NodePtr<K, V>, cmp: F) -> NodePtr<K, V> {
+///
+/// **戻り値**
+/// - `NodePtr<K, V>`: 検索後の根ノード
+/// - `NodePtr<K, V>`: 比較関数 cmp を満たす最小のノード
+fn find_min<K: Ord, V, F: Fn(&K) -> bool>(
+    root: NodePtr<K, V>,
+    cmp: F,
+) -> (NodePtr<K, V>, NodePtr<K, V>) {
     let mut root = root.clone();
     let mut res = None;
 
     while root.is_some() {
         if root.key().is_some_and(|k| cmp(&k)) {
             res = root.clone();
-            root = root.left().map(|node| node.clone())?;
+            root = match root.left().map(|node| node.clone()) {
+                Some(node) => node,
+                None => return (splay(res), None),
+            };
         } else {
-            root = root.right().map(|node| node.clone())?;
+            root = match root.right().map(|node| node.clone()) {
+                Some(node) => node,
+                None => {
+                    if res.is_some() {
+                        return (splay(res), None);
+                    } else {
+                        return (splay(root), None);
+                    }
+                }
+            };
         }
     }
 
-    splay(res.clone())
+    (splay(res.clone()), res)
 }
 
 /// `x` 以上の値を持つ最小のノードを返す
-pub fn lower_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
+///
+/// **戻り値**
+/// - `NodePtr<K, V>`: 検索後の根ノード
+/// - `NodePtr<K, V>`: `x` 以上の値を持つ最小のノード
+pub fn lower_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
     find_min(root, |k| k >= x)
 }
 
 /// `x` より大きい値を持つ最小のノードを返す
-pub fn upper_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
+///
+/// **戻り値**
+/// - `NodePtr<K, V>`: 検索後の根ノード
+/// - `NodePtr<K, V>`: `x` より大きい値を持つ最小のノード
+pub fn upper_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
     find_min(root, |k| k > x)
 }
 
 /// 値 `x` を持つノードを返す
-pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> NodePtr<K, V> {
-    let lb = lower_bound(root.clone(), x);
-    if &*lb.key()? == x {
-        lb
+///
+/// **戻り値**
+/// - `NodePtr<K, V>`: 検索後の根ノード
+/// - `NodePtr<K, V>`: 値 `x` を持つノード
+pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
+    let (new_root, lb) = lower_bound(root.clone(), x);
+    if lb.key().is_some_and(|k| &*k == x) {
+        (new_root, lb)
     } else {
-        None
+        (new_root, None)
     }
 }
 
@@ -60,26 +91,68 @@ mod test_find {
 
         print_as_tree(&root);
 
-        // assert_eq!(*lower_bound(root.clone(), &0).key().unwrap(), 1);
-        // assert_eq!(*upper_bound(root.clone(), &0).key().unwrap(), 1);
-        // assert!(find(root.clone(), &0).key().is_none());
+        // 0
+        (root, _) = lower_bound(root, &0);
+        assert_eq!(*root.key().unwrap(), 1);
+        print_as_tree(&root);
 
-        // assert_eq!(*lower_bound(root.clone(), &1).key().unwrap(), 1);
-        assert_eq!(*upper_bound(root.clone(), &1).key().unwrap(), 3);
-        // assert_eq!(*find(root.clone(), &1).key().unwrap(), 1);
+        (root, _) = upper_bound(root, &0);
+        assert_eq!(*root.key().unwrap(), 1);
+        print_as_tree(&root);
 
-        assert_eq!(*lower_bound(root.clone(), &5).key().unwrap(), 5);
-        assert_eq!(*upper_bound(root.clone(), &5).key().unwrap(), 15);
-        assert_eq!(*find(root.clone(), &5).key().unwrap(), 5);
+        (root, _) = find(root, &0);
+        print_as_tree(&root);
 
-        assert_eq!(*lower_bound(root.clone(), &10).key().unwrap(), 15);
-        assert_eq!(*upper_bound(root.clone(), &10).key().unwrap(), 15);
-        assert!(find(root.clone(), &10).key().is_none());
+        // 1
+        (root, _) = lower_bound(root, &1);
+        assert_eq!(*root.key().unwrap(), 1);
+        print_as_tree(&root);
 
-        assert!(lower_bound(root.clone(), &100).key().is_none());
-        assert!(upper_bound(root.clone(), &100).key().is_none());
-        assert!(find(root.clone(), &100).key().is_none());
+        (root, _) = upper_bound(root, &1);
+        assert_eq!(*root.key().unwrap(), 3);
+        print_as_tree(&root);
 
+        (root, _) = find(root, &1);
+        assert_eq!(*root.key().unwrap(), 1);
+        print_as_tree(&root);
+
+        // 5
+        (root, _) = lower_bound(root, &5);
+        assert_eq!(*root.key().unwrap(), 5);
+        print_as_tree(&root);
+
+        (root, _) = upper_bound(root, &5);
+        assert_eq!(*root.key().unwrap(), 15);
+        print_as_tree(&root);
+
+        (root, _) = find(root, &5);
+        assert_eq!(*root.key().unwrap(), 5);
+        print_as_tree(&root);
+
+        // 10
+        (root, _) = lower_bound(root, &10);
+        assert_eq!(*root.key().unwrap(), 15);
+        print_as_tree(&root);
+
+        (root, _) = upper_bound(root, &10);
+        assert_eq!(*root.key().unwrap(), 15);
+        print_as_tree(&root);
+
+        (root, _) = find(root, &10);
+        assert!(root.key().is_none());
+        print_as_tree(&root);
+
+        // 100
+        (root, _) = lower_bound(root, &100);
+        assert!(root.key().is_none());
+        print_as_tree(&root);
+
+        (root, _) = upper_bound(root, &100);
+        assert!(root.key().is_none());
+        print_as_tree(&root);
+
+        (root, _) = find(root, &100);
+        assert!(root.key().is_none());
         print_as_tree(&root);
     }
 }
