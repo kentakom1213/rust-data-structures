@@ -10,7 +10,7 @@ use super::{
 /// **戻り値**
 /// - `NodePtr<K, V>`: 検索後の根ノード
 /// - `NodePtr<K, V>`: 比較関数 cmp を満たす最小のノード
-fn find_min<K: Ord + Debug, V: Debug, F: Fn(&K) -> bool>(
+fn find_min<K: Ord, V, F: Fn(&K) -> bool>(
     root: NodePtr<K, V>,
     cmp: F,
 ) -> (NodePtr<K, V>, NodePtr<K, V>) {
@@ -46,10 +46,7 @@ fn find_min<K: Ord + Debug, V: Debug, F: Fn(&K) -> bool>(
 /// **戻り値**
 /// - `NodePtr<K, V>`: 検索後の根ノード
 /// - `NodePtr<K, V>`: `x` 以上の値を持つ最小のノード
-pub fn lower_bound<K: Ord + Debug, V: Debug>(
-    root: NodePtr<K, V>,
-    x: &K,
-) -> (NodePtr<K, V>, NodePtr<K, V>) {
+pub fn lower_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
     find_min(root, |k| k >= x)
 }
 
@@ -58,10 +55,7 @@ pub fn lower_bound<K: Ord + Debug, V: Debug>(
 /// **戻り値**
 /// - `NodePtr<K, V>`: 検索後の根ノード
 /// - `NodePtr<K, V>`: `x` より大きい値を持つ最小のノード
-pub fn upper_bound<K: Ord + Debug, V: Debug>(
-    root: NodePtr<K, V>,
-    x: &K,
-) -> (NodePtr<K, V>, NodePtr<K, V>) {
+pub fn upper_bound<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
     find_min(root, |k| k > x)
 }
 
@@ -70,10 +64,7 @@ pub fn upper_bound<K: Ord + Debug, V: Debug>(
 /// **戻り値**
 /// - `NodePtr<K, V>`: 検索後の根ノード
 /// - `NodePtr<K, V>`: 値 `x` を持つノード
-pub fn find<K: Ord + Debug, V: Debug>(
-    root: NodePtr<K, V>,
-    x: &K,
-) -> (NodePtr<K, V>, NodePtr<K, V>) {
+pub fn find<K: Ord, V>(root: NodePtr<K, V>, x: &K) -> (NodePtr<K, V>, NodePtr<K, V>) {
     let (new_root, lb) = lower_bound(root.clone(), x);
     if lb.key().is_some_and(|k| &*k == x) {
         (new_root, lb)
