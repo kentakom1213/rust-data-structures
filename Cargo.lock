@@ -150,6 +150,10 @@ name = "splay_tree"
 version = "0.1.0"
 
 [[package]]
+name = "splay_tree_2"
+version = "0.1.0"
+
+[[package]]
 name = "splay_tree_simple"
 version = "0.1.0"
 dependencies = [
