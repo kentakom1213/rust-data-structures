@@ -50,11 +50,7 @@ impl<K: Ord + Debug> Multiset<K> {
             {
                 let ub;
                 (self.root, ub) = upper_bound(self.root.clone(), &key);
-                if ub.is_some() {
-                    NodePosition::Node(ub)
-                } else {
-                    NodePosition::SUP
-                }
+                ub
             },
             &self.root,
         );
@@ -117,11 +113,7 @@ impl<K: Ord + Debug> Multiset<K> {
                 {
                     let lb;
                     (self.root, lb) = lower_bound(self.root.clone(), &x);
-                    if lb.is_some() {
-                        NodePosition::Node(lb)
-                    } else {
-                        NodePosition::SUP
-                    }
+                    lb
                 },
                 &self.root,
             ),
@@ -129,11 +121,7 @@ impl<K: Ord + Debug> Multiset<K> {
                 {
                     let ub;
                     (self.root, ub) = upper_bound(self.root.clone(), &x);
-                    if ub.is_some() {
-                        NodePosition::Node(ub)
-                    } else {
-                        NodePosition::SUP
-                    }
+                    ub
                 },
                 &self.root,
             ),
@@ -141,22 +129,14 @@ impl<K: Ord + Debug> Multiset<K> {
         let right = match range.end_bound() {
             Bound::Unbounded => NodePosition::SUP,
             Bound::Included(x) => {
-                let right;
-                (self.root, right) = upper_bound(self.root.clone(), x);
-                if right.is_some() {
-                    NodePosition::Node(right)
-                } else {
-                    NodePosition::SUP
-                }
+                let ub;
+                (self.root, ub) = upper_bound(self.root.clone(), x);
+                ub
             }
             Bound::Excluded(x) => {
-                let right;
-                (self.root, right) = lower_bound(self.root.clone(), x);
-                if right.is_some() {
-                    NodePosition::Node(right)
-                } else {
-                    NodePosition::SUP
-                }
+                let lb;
+                (self.root, lb) = lower_bound(self.root.clone(), x);
+                lb
             }
         };
 
