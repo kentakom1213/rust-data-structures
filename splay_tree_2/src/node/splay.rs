@@ -130,24 +130,23 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_splay {
     use crate::{
-        node::{find::find, insert::insert, pointer::NodeOps, splay::rotate},
+        node::{self, find::find, insert::insert, pointer::NodeOps, splay::rotate},
         print_util::print_as_tree,
     };
 
     #[test]
     fn test_rotate_right() {
+        let (node_1, node_3, mut node_5, mut node_15, mut node_30);
         let mut root = None;
-        (root, _, _) = insert(root, 5, "first");
-        (root, _, _) = insert(root, 15, "second");
-        (root, _, _) = insert(root, 1, "third");
-        (root, _, _) = insert(root, 3, "forth");
-        (root, _, _) = insert(root, 30, "fifth");
+        (root, node_5, _) = insert(root, 5, "first");
+        (root, node_15, _) = insert(root, 15, "second");
+        (root, node_1, _) = insert(root, 1, "third");
+        (root, node_3, _) = insert(root, 3, "forth");
+        (root, node_30, _) = insert(root, 30, "fifth");
 
         print_as_tree(&root);
 
-        let find_5;
-        (root, find_5) = find(root.clone(), &5);
-        println!("find_5 = {:?}", find_5.as_ref().unwrap().get_state());
+        println!("find_5 = {:?}", node_5.get_state());
 
         // rootを回転
         println!("> rotate at root");
@@ -156,35 +155,33 @@ mod test_splay {
         print_as_tree(&root);
 
         {
-            let mut find_1;
-            (root, find_1) = find(root.clone(), &1);
-            println!("find_1 = {:?}", find_1.as_ref().unwrap().get_state());
+            println!("find_15 = {:?}", node_15.get_state());
 
             // 回転
-            println!("> rotate 1");
-            find_1 = Some(rotate(find_1.unwrap()));
+            println!("> rotate 15");
+            node_15 = rotate(node_15);
 
             println!("root = {:?}", root.as_ref().unwrap().get_state());
-            println!("find_1 = {:?}", find_1.as_ref().unwrap().get_state());
+            println!("find_15 = {:?}", node_15.get_state());
 
-            root = find_1;
+            root = Some(node_15);
 
             print_as_tree(&root);
         }
 
         {
-            let mut find_3;
-            (root, find_3) = find(root.clone(), &3);
-            println!("find_3 = {:?}", find_3.as_ref().unwrap().get_state());
+            println!("find_30 = {:?}", node_30.get_state());
 
-            // 30を回転
-            println!("> rotate 3");
-            find_3 = Some(rotate(find_3.unwrap()));
-
-            print_as_tree(&root);
+            // 回転
+            println!("> rotate 30");
+            node_30 = rotate(node_30);
 
             println!("root = {:?}", root.as_ref().unwrap().get_state());
-            println!("find_3 = {:?}", find_3.as_ref().unwrap().get_state());
+            println!("find_30 = {:?}", node_30.get_state());
+
+            root = Some(node_30);
+
+            print_as_tree(&root);
         }
     }
 

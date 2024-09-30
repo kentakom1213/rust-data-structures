@@ -32,7 +32,7 @@ pub fn insert<K: Ord, V>(
         let comp = key.cmp(&par.as_ref().unwrap().key());
         match comp {
             Ordering::Less => {
-                if let Some(Some(left)) = par.as_ref().map(|node| node.right().clone()) {
+                if let Some(Some(left)) = par.as_ref().map(|node| node.left().clone()) {
                     par.replace(left);
                 } else {
                     // 左側に挿入

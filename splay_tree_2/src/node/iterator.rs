@@ -179,8 +179,8 @@ pub fn next<K: Ord, V>(
 pub fn get_min<K: Ord, V>(root: Option<NodePtr<K, V>>) -> Option<NodePtr<K, V>> {
     let mut node = root;
 
-    while let Some(inner) = node {
-        node = inner.left().as_ref().map(|node| node.clone());
+    while let left @ Some(_) = node.as_ref().map(|node| node.left().clone())? {
+        node = left;
     }
 
     node
@@ -190,8 +190,8 @@ pub fn get_min<K: Ord, V>(root: Option<NodePtr<K, V>>) -> Option<NodePtr<K, V>> 
 pub fn get_max<K: Ord, V>(root: Option<NodePtr<K, V>>) -> Option<NodePtr<K, V>> {
     let mut node = root;
 
-    while let Some(inner) = node {
-        node = inner.right().as_ref().map(|node| node.clone());
+    while let right @ Some(_) = node.as_ref().map(|node| node.right().clone())? {
+        node = right;
     }
 
     node
