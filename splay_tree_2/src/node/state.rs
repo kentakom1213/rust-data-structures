@@ -21,7 +21,7 @@ mod test_node_state {
     #[test]
     fn test_nodestate() {
         let (find_1, find_3, find_5, find_15, find_30);
-        let mut find_20;
+        let find_20;
 
         let mut root = None;
         (root, find_5, _) = insert(root, 5, "first");

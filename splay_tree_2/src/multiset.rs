@@ -24,7 +24,7 @@ pub struct Multiset<K: Ord> {
     size: usize,
 }
 
-impl<K: Ord + Debug> Multiset<K> {
+impl<K: Ord> Multiset<K> {
     /// 新規作成
     pub fn new() -> Self {
         Self {

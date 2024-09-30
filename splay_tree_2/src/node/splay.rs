@@ -130,13 +130,13 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 #[cfg(test)]
 mod test_splay {
     use crate::{
-        node::{self, find::find, insert::insert, pointer::NodeOps, splay::rotate},
+        node::{find::find, insert::insert, pointer::NodeOps, splay::rotate},
         print_util::print_as_tree,
     };
 
     #[test]
     fn test_rotate_right() {
-        let (node_1, node_3, mut node_5, mut node_15, mut node_30);
+        let (node_1, node_3, node_5, mut node_15, mut node_30);
         let mut root = None;
         (root, node_5, _) = insert(root, 5, "first");
         (root, node_15, _) = insert(root, 15, "second");

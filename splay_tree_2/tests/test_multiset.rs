@@ -1,4 +1,4 @@
-use splay_tree_2::{multiset::Multiset, node::pointer::NodeOps, print_util::print_as_tree};
+use splay_tree_2::{multiset::Multiset, node::pointer::NodeOps};
 
 #[test]
 fn test_insert() {
