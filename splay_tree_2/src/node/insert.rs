@@ -20,46 +20,40 @@ pub fn insert<K: Ord, V>(
     key: K,
     value: V,
 ) -> (Option<NodePtr<K, V>>, NodePtr<K, V>, Option<V>) {
+    if root.is_none() {
+        let new_root = Node::node_ptr(key, value);
+        return (Some(new_root.clone()), new_root, None);
+    }
+
     // 親ノードをたどっていく
     let mut par = root.clone();
 
-    while let Some(mut inner) = par {
-        let comp = key.cmp(&inner.key());
+    loop {
+        let comp = key.cmp(&par.as_ref().unwrap().key());
         match comp {
             Ordering::Less => {
-                if let Some(left) = inner.left().as_ref().map(|node| node.clone()) {
-                    par = Some(left);
+                if let Some(Some(left)) = par.as_ref().map(|node| node.right().clone()) {
+                    par.replace(left);
                 } else {
                     // 左側に挿入
-                    return (
-                        Some(inner.clone()),
-                        insert_left(Some(inner.clone()), key, value),
-                        None,
-                    );
+                    break (root, insert_left(par, key, value), None);
                 }
             }
             Ordering::Equal => {
                 // 置き換える
-                let old_value = mem::replace(&mut *inner.value_mut(), value);
-                return (root, inner, Some(old_value));
+                let old_value = mem::replace(&mut *par.as_mut().unwrap().value_mut(), value);
+                break (root, par.unwrap(), Some(old_value));
             }
             Ordering::Greater => {
-                if let Some(right) = inner.right().as_ref().map(|node| node.clone()) {
-                    par = Some(right);
+                if let Some(Some(right)) = par.as_ref().map(|node| node.right().clone()) {
+                    par.replace(right);
                 } else {
                     // 右側に挿入
-                    return (
-                        Some(inner.clone()),
-                        insert_right(Some(inner.clone()), key, value),
-                        None,
-                    );
+                    break (root, insert_right(par, key, value), None);
                 }
             }
         }
     }
-
-    let new_root = Node::node_ptr(key, value);
-    (Some(new_root.clone()), new_root, None)
 }
 
 /// nodeの左側に子を追加し，追加された子のポインタを返す
