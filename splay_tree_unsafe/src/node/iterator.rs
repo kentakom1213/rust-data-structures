@@ -299,8 +299,6 @@ impl<'a, K: Ord + Debug, V: Debug> DoubleEndedIterator for NodeRangeIterator<'a,
 
         // 右端が左端に到達したら終了
         if self.right <= self.left {
-            println!("self.left: {:?}", self.left);
-            println!("self.right: {:?}", self.right);
             return None;
         }
 

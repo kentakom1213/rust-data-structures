@@ -280,7 +280,6 @@ pub mod multiset {
                 }
             }
         }
-
         pub mod insert {
             use std::{cmp::Ordering, mem};
 
@@ -358,13 +357,12 @@ pub mod multiset {
                 *new_node.left_mut() = inner.take_left();
 
                 // left.parent ← new_node
-                let new_node_weak = new_node.to_weak_ptr();
-                if let Some(left) = new_node.left_mut().as_mut() {
-                    *left.parent_mut() = Some(new_node_weak);
+                if let Some(left) = new_node.clone().left_mut().as_mut() {
+                    *left.parent_mut() = Some(new_node);
                 }
 
                 // new_node.parent ← node
-                *new_node.parent_mut() = Some(inner.to_weak_ptr());
+                *new_node.parent_mut() = Some(inner);
 
                 // node.left ← new_node
                 inner.left_mut().replace(new_node.clone());
@@ -388,13 +386,13 @@ pub mod multiset {
                 *new_node.right_mut() = inner.take_right();
 
                 // right.parent ← new_node
-                let new_node_weak = new_node.to_weak_ptr();
+                let new_node_weak = new_node;
                 if let Some(right) = new_node.right_mut().as_mut() {
                     *right.parent_mut() = Some(new_node_weak);
                 }
 
                 // new_node.parent ← node
-                *new_node.parent_mut() = Some(inner.to_weak_ptr());
+                *new_node.parent_mut() = Some(inner);
 
                 // node.right ← new_node
                 inner.right_mut().replace(new_node.clone());
@@ -402,9 +400,8 @@ pub mod multiset {
                 new_node
             }
         }
-
         pub mod iterator {
-            use std::cmp;
+            use std::{cmp, fmt::Debug};
 
             use super::{
                 pointer::{NodeOps, NodePtr},
@@ -451,7 +448,7 @@ pub mod multiset {
                         (NodePosition::INF, NodePosition::INF) => Some(cmp::Ordering::Equal),
                         (NodePosition::SUP, NodePosition::SUP) => Some(cmp::Ordering::Equal),
                         (NodePosition::Node(node1), NodePosition::Node(node2)) => {
-                            node1.partial_cmp(node2)
+                            Some(node1.key_cmp(node2))
                         }
                         (NodePosition::INF, _) => Some(cmp::Ordering::Less),
                         (NodePosition::SUP, _) => Some(cmp::Ordering::Greater),
@@ -529,10 +526,10 @@ pub mod multiset {
                             match node.get_state() {
                                 NodeState::LeftChild => {
                                     // 親は存在する
-                                    node = node.get_parent_ptr().unwrap();
+                                    node = node.parent().unwrap();
                                 }
                                 NodeState::RightChild => {
-                                    return NodePosition::Node(node.get_parent_ptr().unwrap());
+                                    return NodePosition::Node(node.parent().unwrap());
                                 }
                                 _ => unreachable!(),
                             }
@@ -574,10 +571,10 @@ pub mod multiset {
                             match node.get_state() {
                                 NodeState::RightChild => {
                                     // 親は存在する
-                                    node = node.get_parent_ptr().unwrap();
+                                    node = node.parent().unwrap();
                                 }
                                 NodeState::LeftChild => {
-                                    return NodePosition::Node(node.get_parent_ptr().unwrap());
+                                    return NodePosition::Node(node.parent().unwrap());
                                 }
                                 _ => unreachable!(),
                             }
@@ -706,7 +703,7 @@ pub mod multiset {
                 }
             }
 
-            impl<'a, K: Ord, V> DoubleEndedIterator for NodeRangeIterator<'a, K, V> {
+            impl<'a, K: Ord + Debug, V: Debug> DoubleEndedIterator for NodeRangeIterator<'a, K, V> {
                 fn next_back(&mut self) -> Option<Self::Item> {
                     // 右端を前に進める
                     self.right = prev(self.right.clone(), self.root);
@@ -722,7 +719,6 @@ pub mod multiset {
                 }
             }
         }
-
         pub mod pointer {
             //! ノードのポインタ
 
@@ -730,33 +726,33 @@ pub mod multiset {
                 // 不変参照用のgetterを生成
                 ($name:ident, $field:ident, $return_type:ty) => {
                     fn $name(&self) -> $return_type {
-                        let node_ref = self.borrow();
-                        std::cell::Ref::map(node_ref, |node| &node.$field)
+                        unsafe { &self.as_ref().$field }
                     }
                 };
 
                 // 可変参照用のgetterを生成
                 ($name:ident, $field:ident, $return_type:ty, mut) => {
                     fn $name(&mut self) -> $return_type {
-                        let node_mut = self.borrow_mut();
-                        std::cell::RefMut::map(node_mut, |node| &mut node.$field)
+                        unsafe { &mut self.as_mut().$field }
                     }
                 };
             }
 
             use std::{
-                cell::{Ref, RefCell, RefMut},
                 fmt::Debug,
-                rc::{Rc, Weak},
+                ptr::{self, NonNull},
             };
 
             use super::state::NodeState;
+
+            /// ノードのポインタ
+            pub type NodePtr<K, V> = NonNull<Node<K, V>>;
 
             /// ノードの構造体
             pub struct Node<K: Ord, V> {
                 pub key: K,
                 pub value: V,
-                pub parent: Option<ParentPtr<K, V>>,
+                pub parent: Option<NodePtr<K, V>>,
                 pub left: Option<NodePtr<K, V>>,
                 pub right: Option<NodePtr<K, V>>,
             }
@@ -775,7 +771,9 @@ pub mod multiset {
 
                 /// ノードのポインタを確保する
                 pub fn node_ptr(key: K, value: V) -> NodePtr<K, V> {
-                    Rc::new(RefCell::new(Self::new(key, value)))
+                    let ptr = Box::new(Self::new(key, value));
+                    NonNull::new(Box::into_raw(ptr))
+                        .unwrap_or_else(|| panic!("Failed to allocate memory"))
                 }
             }
 
@@ -810,12 +808,6 @@ pub mod multiset {
                 }
             }
 
-            /// ノードのポインタ
-            pub type NodePtr<K, V> = Rc<RefCell<Node<K, V>>>;
-
-            /// 親ノードのポインタ
-            pub type ParentPtr<K, V> = Weak<RefCell<Node<K, V>>>;
-
             /// ポインタに対する操作
             pub trait NodeOps<K: Ord, V> {
                 /// 与えられたノードが子ノードであるかを判定する
@@ -832,13 +824,10 @@ pub mod multiset {
                 /// ポインタの同一性判定
                 fn is_same(&self, other: &Self) -> bool;
                 /// ポインタの半順序
-                fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering>;
-
-                /// 親のポインタを取得する
-                fn get_parent_ptr(&self) -> Option<NodePtr<K, V>>;
+                fn key_cmp(&self, other: &Self) -> std::cmp::Ordering;
 
                 /// 親へのポインタを切り離す
-                fn take_parent(&mut self) -> Option<ParentPtr<K, V>>;
+                fn take_parent(&mut self) -> Option<NodePtr<K, V>>;
                 /// 親へのポインタを切り離し，強参照を取得する
                 fn take_parent_strong(&mut self) -> Option<NodePtr<K, V>>;
                 /// 左の子へのポインタを切り離す
@@ -847,27 +836,24 @@ pub mod multiset {
                 fn take_right(&mut self) -> Option<NodePtr<K, V>>;
 
                 /// 親の参照を取得する
-                fn parent(&self) -> Ref<Option<ParentPtr<K, V>>>;
+                fn parent(&self) -> &Option<NodePtr<K, V>>;
                 /// 親の可変参照を取得する
-                fn parent_mut(&mut self) -> RefMut<Option<ParentPtr<K, V>>>;
+                fn parent_mut(&mut self) -> &mut Option<NodePtr<K, V>>;
                 /// 左の子への参照を取得する
-                fn left(&self) -> Ref<Option<NodePtr<K, V>>>;
+                fn left(&self) -> &Option<NodePtr<K, V>>;
                 /// 左の子への可変参照を取得する
-                fn left_mut(&mut self) -> RefMut<Option<NodePtr<K, V>>>;
+                fn left_mut(&mut self) -> &mut Option<NodePtr<K, V>>;
                 /// 右の子への参照を取得する
-                fn right(&self) -> Ref<Option<NodePtr<K, V>>>;
+                fn right(&self) -> &Option<NodePtr<K, V>>;
                 /// 右の子への可変参照を取得する
-                fn right_mut(&mut self) -> RefMut<Option<NodePtr<K, V>>>;
+                fn right_mut(&mut self) -> &mut Option<NodePtr<K, V>>;
 
                 /// キーへの参照を取得する
-                fn key(&self) -> Ref<K>;
+                fn key(&self) -> &K;
                 /// バリューへの参照を取得する
-                fn value(&self) -> Ref<V>;
+                fn value(&self) -> &V;
                 /// バリューへの可変参照を取得する
-                fn value_mut(&mut self) -> RefMut<V>;
-
-                /// 親ポインタに変換する
-                fn to_weak_ptr(&self) -> ParentPtr<K, V>;
+                fn value_mut(&mut self) -> &mut V;
             }
 
             impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
@@ -876,23 +862,17 @@ pub mod multiset {
                 }
 
                 fn get_state(&self) -> NodeState {
-                    let par = self.get_parent_ptr();
+                    let par = self.parent();
 
                     if par.is_none() {
                         return NodeState::Root;
                     }
 
-                    if par.clone().is_some_and(|ptr| {
-                        ptr.left().as_ref().is_some_and(|left| left.is_same(self))
-                    }) {
+                    if par.is_some_and(|ptr| ptr.left().is_some_and(|left| left.is_same(self))) {
                         return NodeState::LeftChild;
                     }
 
-                    if par.is_some_and(|ptr| {
-                        ptr.right()
-                            .as_ref()
-                            .is_some_and(|right| right.is_same(self))
-                    }) {
+                    if par.is_some_and(|ptr| ptr.right().is_some_and(|right| right.is_same(self))) {
                         return NodeState::RightChild;
                     }
 
@@ -900,77 +880,55 @@ pub mod multiset {
                 }
 
                 fn is_same(&self, other: &Self) -> bool {
-                    Rc::ptr_eq(self, other)
+                    NonNull::eq(&self, other)
                 }
 
-                fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-                    self.borrow().key.partial_cmp(&other.borrow().key)
+                fn key_cmp(&self, other: &Self) -> std::cmp::Ordering {
+                    unsafe { self.as_ref().key.cmp(&other.as_ref().key) }
                 }
 
-                fn get_parent_ptr(&self) -> Option<NodePtr<K, V>> {
-                    self.parent().as_ref().map(|p| p.to_strong_ptr())
-                }
-
-                fn take_parent(&mut self) -> Option<ParentPtr<K, V>> {
-                    self.as_ref().borrow_mut().parent.take()
+                fn take_parent(&mut self) -> Option<NodePtr<K, V>> {
+                    unsafe { self.as_mut().parent.take() }
                 }
 
                 fn take_parent_strong(&mut self) -> Option<NodePtr<K, V>> {
-                    self.as_ref()
-                        .borrow_mut()
-                        .parent
-                        .take()
-                        .map(|p| p.upgrade().unwrap())
+                    unsafe { self.as_mut().parent.take().map(|p| p) }
                 }
 
                 fn take_left(&mut self) -> Option<NodePtr<K, V>> {
-                    let mut left = self.as_ref().borrow_mut().left.take();
-                    if let Some(left_inner) = left.as_mut() {
-                        *left_inner.parent_mut() = None;
+                    unsafe {
+                        let mut left = self.as_mut().left.take();
+                        if let Some(left_inner) = left.as_mut() {
+                            *left_inner.parent_mut() = None;
+                        }
+                        left
                     }
-                    left
                 }
 
                 fn take_right(&mut self) -> Option<NodePtr<K, V>> {
-                    let mut right = self.as_ref().borrow_mut().right.take();
-                    if let Some(right_inner) = right.as_mut() {
-                        *right_inner.parent_mut() = None;
+                    unsafe {
+                        let mut right = self.as_mut().right.take();
+                        if let Some(right_inner) = right.as_mut() {
+                            *right_inner.parent_mut() = None;
+                        }
+                        right
                     }
-                    right
-                }
-
-                fn to_weak_ptr(&self) -> ParentPtr<K, V> {
-                    Rc::downgrade(self)
                 }
 
                 // 不変参照用のgetterを生成
-                generate_getters!(parent, parent, Ref<Option<ParentPtr<K, V>>>);
-                generate_getters!(left, left, Ref<Option<NodePtr<K, V>>>);
-                generate_getters!(right, right, Ref<Option<NodePtr<K, V>>>);
-                generate_getters!(key, key, Ref<K>);
-                generate_getters!(value, value, Ref<V>);
+                generate_getters!(parent, parent, &Option<NodePtr<K, V>>);
+                generate_getters!(left, left, &Option<NodePtr<K, V>>);
+                generate_getters!(right, right, &Option<NodePtr<K, V>>);
+                generate_getters!(key, key, &K);
+                generate_getters!(value, value, &V);
 
                 // 可変参照用のgetterを生成
-                generate_getters!(parent_mut, parent, RefMut<Option<ParentPtr<K, V>>>, mut);
-                generate_getters!(left_mut, left, RefMut<Option<NodePtr<K, V>>>, mut);
-                generate_getters!(right_mut, right, RefMut<Option<NodePtr<K, V>>>, mut);
-                generate_getters!(value_mut, value, RefMut<V>, mut);
-            }
-
-            /// 弱参照の操作
-            pub trait ParentOps<K: Ord, V> {
-                /// NodePtrへの変換
-                fn to_strong_ptr(&self) -> NodePtr<K, V>;
-            }
-
-            impl<K: Ord, V> ParentOps<K, V> for ParentPtr<K, V> {
-                fn to_strong_ptr(&self) -> NodePtr<K, V> {
-                    self.upgrade()
-                        .unwrap_or_else(|| panic!("Failed to upgrade weak reference"))
-                }
+                generate_getters!(parent_mut, parent, &mut Option<NodePtr<K, V>>, mut);
+                generate_getters!(left_mut, left, &mut Option<NodePtr<K, V>>, mut);
+                generate_getters!(right_mut, right, &mut Option<NodePtr<K, V>>, mut);
+                generate_getters!(value_mut, value, &mut V, mut);
             }
         }
-
         pub mod remove {
             use super::{
                 iterator::get_min,
@@ -1006,7 +964,7 @@ pub mod multiset {
 
                 // right.left <- left
                 if let Some(mut left_inner) = left.clone() {
-                    *left_inner.parent_mut() = right.clone().map(|ptr| ptr.to_weak_ptr());
+                    *left_inner.parent_mut() = right.clone();
                 }
                 if let Some(mut right_inner) = right.clone() {
                     *right_inner.left_mut() = left;
@@ -1017,12 +975,9 @@ pub mod multiset {
                 (right, root)
             }
         }
-
         pub mod splay {
-            use std::rc::Rc;
-
             use super::{
-                pointer::{NodeOps, NodePtr, ParentOps},
+                pointer::{NodeOps, NodePtr},
                 state::NodeState,
             };
 
@@ -1040,14 +995,14 @@ pub mod multiset {
                         }
 
                         // 親はかならず存在する
-                        let mut par_inner = par.unwrap().to_strong_ptr();
+                        let mut par_inner = par.unwrap();
 
                         // 親の左の子←自分の右の子
                         *par_inner.left_mut() = right;
 
                         // 自分の親←親の親
                         let par_state = par_inner.get_state();
-                        let mut parpar = par_inner.get_parent_ptr();
+                        let parpar = par_inner.parent_mut();
 
                         if let Some(parpar_inner) = parpar.as_mut() {
                             match par_state {
@@ -1061,10 +1016,10 @@ pub mod multiset {
                             }
                         }
 
-                        *node.parent_mut() = parpar.map(|f| Rc::downgrade(&f));
+                        *node.parent_mut() = parpar.clone();
 
                         // 自分の右の子←親
-                        *par_inner.parent_mut() = Some(node.to_weak_ptr());
+                        *par_inner.parent_mut() = Some(node);
                         node.right_mut().replace(par_inner);
 
                         node
@@ -1079,14 +1034,14 @@ pub mod multiset {
                         }
 
                         // 親はかならず存在する
-                        let mut par_inner = par.unwrap().to_strong_ptr();
+                        let mut par_inner = par.unwrap();
 
                         // 親の右の子←自分の左の子
                         *par_inner.right_mut() = left;
 
                         // 自分の親←親の親
                         let par_state = par_inner.get_state();
-                        let mut parpar = par_inner.get_parent_ptr();
+                        let parpar = par_inner.parent_mut();
 
                         if let Some(parpar_inner) = parpar.as_mut() {
                             match par_state {
@@ -1100,10 +1055,10 @@ pub mod multiset {
                             }
                         }
 
-                        *node.parent_mut() = parpar.map(|f| Rc::downgrade(&f));
+                        *node.parent_mut() = parpar.clone();
 
                         // 自分の左の子←親
-                        *par_inner.parent_mut() = Some(node.to_weak_ptr());
+                        *par_inner.parent_mut() = Some(node);
                         node.left_mut().replace(par_inner);
 
                         node
@@ -1117,7 +1072,7 @@ pub mod multiset {
                     // 頂点の状態
                     let state = node.get_state();
                     // 親頂点の状態（親は存在する）
-                    let par = node.get_parent_ptr().unwrap();
+                    let par = node.parent().unwrap();
                     let par_state = par.get_state();
 
                     match (state, par_state) {
@@ -1138,7 +1093,7 @@ pub mod multiset {
                         (NodeState::LeftChild, NodeState::LeftChild)
                         | (NodeState::RightChild, NodeState::RightChild) => {
                             // 親を先にrotate（オブジェクトをdropさせないため，変数に代入する）
-                            let _par = rotate(node.get_parent_ptr().unwrap());
+                            let _par = rotate(node.parent().unwrap());
                             node = rotate(node);
                         }
                         _ => unreachable!(),
@@ -1148,7 +1103,6 @@ pub mod multiset {
                 node
             }
         }
-
         pub mod state {
             //! ノードの状態を返す列挙子
 
@@ -1164,13 +1118,12 @@ pub mod multiset {
             }
         }
     }
-
     pub mod print_util {
         //! 木を整形して表示するための関数
 
         use std::fmt::Debug;
 
-        use super::node::pointer::NodePtr;
+        use super::node::pointer::{NodeOps, NodePtr};
 
         const BLUE: &str = "\x1b[94m";
         const END: &str = "\x1b[0m";
@@ -1205,16 +1158,16 @@ pub mod multiset {
                 }
                 fill.push(last);
                 // 左の子
-                fmt_inner_binary_tree(&node.borrow().left, fill, LEFT);
+                fmt_inner_binary_tree(&node.left(), fill, LEFT);
                 // 自分を出力
                 eprintln!(
                     "{BLUE}│{END}{} Node {{ key: {:?}, value: {:?} }}",
                     fill.iter().fold(String::new(), |s, x| s + x),
-                    node.borrow().key,
-                    node.borrow().value,
+                    node.key(),
+                    node.value(),
                 );
                 // 右の子
-                fmt_inner_binary_tree(&node.borrow().right, fill, RIGHT);
+                fmt_inner_binary_tree(&node.right(), fill, RIGHT);
                 fill.pop();
                 // 戻す
                 if let Some(tmp) = tmp {
