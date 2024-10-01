@@ -15,6 +15,7 @@ members = [
     "skiplist",
     "splay_tree",
     "splay_tree_2",
+    "splay_tree_unsafe",
     "splay_tree_simple",
     "treap",
     "trie",

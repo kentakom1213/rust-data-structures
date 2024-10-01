@@ -162,6 +162,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "splay_tree_unsafe"
+version = "0.1.0"
+
+[[package]]
 name = "superslice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
