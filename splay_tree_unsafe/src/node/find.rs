@@ -1,4 +1,4 @@
-use super::{
+use crate::node::{
     iterator::NodePosition,
     pointer::{NodeOps, NodePtr},
     splay::splay,
@@ -101,7 +101,7 @@ pub fn find<K: Ord, V>(
 mod test_find {
     use crate::{
         node::{find::find, insert::insert, pointer::NodeOps},
-        print_util::print_as_tree,
+        utils::print::print_as_tree,
     };
 
     use super::{lower_bound, upper_bound};

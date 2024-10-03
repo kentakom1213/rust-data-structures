@@ -14,7 +14,7 @@ use crate::{
         remove::remove,
         splay::splay,
     },
-    print_util::print_as_tree,
+    utils::print::print_as_tree,
 };
 
 /// Multiset

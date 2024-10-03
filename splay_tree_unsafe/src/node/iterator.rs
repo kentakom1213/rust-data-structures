@@ -1,6 +1,6 @@
 use std::{cmp, fmt::Debug};
 
-use super::{
+use crate::node::{
     pointer::{NodeOps, NodePtr},
     state::NodeState,
 };
@@ -317,7 +317,7 @@ mod test_prev_next {
             pointer::NodeOps,
             splay::splay,
         },
-        print_util::print_as_tree,
+        utils::print::print_as_tree,
     };
 
     use super::{NodeIterator, NodeRangeIterator};

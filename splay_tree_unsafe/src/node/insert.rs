@@ -1,7 +1,6 @@
 use std::{cmp::Ordering, mem};
 
-use super::pointer::NodePtr;
-use super::pointer::{Node, NodeOps};
+use crate::node::pointer::{Node, NodeOps, NodePtr};
 
 /// rootを根とする木に(key, value)を挿入し，挿入後のノードの参照を返す．
 /// すでに同一のキーを持つノードが存在した場合，値を置き換える．
@@ -109,7 +108,7 @@ pub fn insert_right<K: Ord, V>(node: Option<NodePtr<K, V>>, key: K, value: V) ->
 
 #[cfg(test)]
 mod test_insert {
-    use crate::{node::pointer::NodeOps, print_util::print_as_tree};
+    use crate::{node::pointer::NodeOps, utils::print::print_as_tree};
 
     use super::{insert, insert_left, insert_right};
 

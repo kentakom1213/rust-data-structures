@@ -15,7 +15,7 @@ pub enum NodeState {
 mod test_node_state {
     use crate::{
         node::{insert::insert, pointer::NodeOps, state::NodeState},
-        print_util::print_as_tree,
+        utils::print::print_as_tree,
     };
 
     #[test]

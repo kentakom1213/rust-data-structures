@@ -24,7 +24,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use super::state::NodeState;
+use crate::node::state::NodeState;
 
 /// ノードの構造体
 pub struct Node<K: Ord, V> {

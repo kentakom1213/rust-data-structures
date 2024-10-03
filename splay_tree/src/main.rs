@@ -1,4 +1,4 @@
-use splay_tree::multiset::Multiset;
+use splay_tree::collections::multiset::Multiset;
 
 fn main() {
     let mut mset = Multiset::new();

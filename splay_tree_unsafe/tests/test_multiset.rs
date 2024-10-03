@@ -1,4 +1,4 @@
-use splay_tree_unsafe::{multiset::Multiset, node::pointer::NodeOps};
+use splay_tree_unsafe::{collections::multiset::Multiset, node::pointer::NodeOps};
 
 #[test]
 fn test_insert() {

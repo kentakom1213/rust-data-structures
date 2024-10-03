@@ -1,4 +1,4 @@
-use super::{
+use crate::node::{
     pointer::{NodeOps, NodePtr},
     state::NodeState,
 };
@@ -129,7 +129,7 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
 mod test_splay {
     use crate::{
         node::{find::find, insert::insert, pointer::NodeOps, splay::rotate},
-        print_util::print_as_tree,
+        utils::print::print_as_tree,
     };
 
     #[test]

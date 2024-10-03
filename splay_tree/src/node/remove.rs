@@ -1,4 +1,4 @@
-use super::{
+use crate::node::{
     iterator::get_min,
     pointer::{NodeOps, NodePtr},
     splay::splay,
@@ -45,7 +45,7 @@ pub fn remove<K: Ord, V>(mut node: NodePtr<K, V>) -> (Option<NodePtr<K, V>>, Nod
 mod test_remove {
     use crate::{
         node::{find::find, insert::insert, pointer::NodeOps},
-        print_util::print_as_tree,
+        utils::print::print_as_tree,
     };
 
     use super::remove;

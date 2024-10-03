@@ -1,6 +1,6 @@
 use splay_tree::{
     node::{find::find, insert::insert},
-    print_util::print_as_tree,
+    utils::print::print_as_tree,
 };
 
 #[test]
