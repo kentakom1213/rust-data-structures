@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use rand::*;
-use splay_tree::multiset::*;
-use splay_tree::tree_multiset;
+use splay_tree_simple::multiset::*;
+use splay_tree_simple::tree_multiset;
 use superslice::Ext;
 
 #[test]

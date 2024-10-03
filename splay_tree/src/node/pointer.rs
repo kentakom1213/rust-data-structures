@@ -3,17 +3,17 @@
 macro_rules! generate_getters {
     // 不変参照用のgetterを生成
     ($name:ident, $field:ident, $return_type:ty) => {
-        fn $name(&self) -> Option<$return_type> {
-            let node_ref = self.as_ref()?.borrow();
-            Some(std::cell::Ref::map(node_ref, |node| &node.$field))
+        fn $name(&self) -> $return_type {
+            let node_ref = self.borrow();
+            std::cell::Ref::map(node_ref, |node| &node.$field)
         }
     };
 
     // 可変参照用のgetterを生成
     ($name:ident, $field:ident, $return_type:ty, mut) => {
-        fn $name(&mut self) -> Option<$return_type> {
-            let node_mut = self.as_ref()?.borrow_mut();
-            Some(std::cell::RefMut::map(node_mut, |node| &mut node.$field))
+        fn $name(&mut self) -> $return_type {
+            let node_mut = self.borrow_mut();
+            std::cell::RefMut::map(node_mut, |node| &mut node.$field)
         }
     };
 }
@@ -30,9 +30,9 @@ use super::state::NodeState;
 pub struct Node<K: Ord, V> {
     pub key: K,
     pub value: V,
-    pub parent: Option<Weak<RefCell<Node<K, V>>>>,
-    pub left: Option<Rc<RefCell<Node<K, V>>>>,
-    pub right: Option<Rc<RefCell<Node<K, V>>>>,
+    pub parent: Option<ParentPtr<K, V>>,
+    pub left: Option<NodePtr<K, V>>,
+    pub right: Option<NodePtr<K, V>>,
 }
 
 impl<K: Ord, V> Node<K, V> {
@@ -49,7 +49,7 @@ impl<K: Ord, V> Node<K, V> {
 
     /// ノードのポインタを確保する
     pub fn node_ptr(key: K, value: V) -> NodePtr<K, V> {
-        Some(Rc::new(RefCell::new(Self::new(key, value))))
+        Rc::new(RefCell::new(Self::new(key, value)))
     }
 }
 
@@ -85,10 +85,10 @@ impl<K: Ord + Debug, V: Debug> Debug for Node<K, V> {
 }
 
 /// ノードのポインタ
-pub type NodePtr<K, V> = Option<Rc<RefCell<Node<K, V>>>>;
+pub type NodePtr<K, V> = Rc<RefCell<Node<K, V>>>;
 
 /// 親ノードのポインタ
-pub type ParentPtr<K, V> = Option<Weak<RefCell<Node<K, V>>>>;
+pub type ParentPtr<K, V> = Weak<RefCell<Node<K, V>>>;
 
 /// ポインタに対する操作
 pub trait NodeOps<K: Ord, V> {
@@ -109,36 +109,36 @@ pub trait NodeOps<K: Ord, V> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering>;
 
     /// 親のポインタを取得する
-    fn get_parent_ptr(&self) -> Self;
+    fn get_parent_ptr(&self) -> Option<NodePtr<K, V>>;
 
     /// 親へのポインタを切り離す
-    fn take_parent(&mut self) -> ParentPtr<K, V>;
+    fn take_parent(&mut self) -> Option<ParentPtr<K, V>>;
     /// 親へのポインタを切り離し，強参照を取得する
-    fn take_parent_strong(&mut self) -> NodePtr<K, V>;
+    fn take_parent_strong(&mut self) -> Option<NodePtr<K, V>>;
     /// 左の子へのポインタを切り離す
-    fn take_left(&mut self) -> NodePtr<K, V>;
+    fn take_left(&mut self) -> Option<NodePtr<K, V>>;
     /// 右の子へのポインタを切り離す
-    fn take_right(&mut self) -> NodePtr<K, V>;
+    fn take_right(&mut self) -> Option<NodePtr<K, V>>;
 
     /// 親の参照を取得する
-    fn parent(&self) -> Option<Ref<ParentPtr<K, V>>>;
+    fn parent(&self) -> Ref<Option<ParentPtr<K, V>>>;
     /// 親の可変参照を取得する
-    fn parent_mut(&mut self) -> Option<RefMut<ParentPtr<K, V>>>;
+    fn parent_mut(&mut self) -> RefMut<Option<ParentPtr<K, V>>>;
     /// 左の子への参照を取得する
-    fn left(&self) -> Option<Ref<NodePtr<K, V>>>;
+    fn left(&self) -> Ref<Option<NodePtr<K, V>>>;
     /// 左の子への可変参照を取得する
-    fn left_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
+    fn left_mut(&mut self) -> RefMut<Option<NodePtr<K, V>>>;
     /// 右の子への参照を取得する
-    fn right(&self) -> Option<Ref<NodePtr<K, V>>>;
+    fn right(&self) -> Ref<Option<NodePtr<K, V>>>;
     /// 右の子への可変参照を取得する
-    fn right_mut(&mut self) -> Option<RefMut<NodePtr<K, V>>>;
+    fn right_mut(&mut self) -> RefMut<Option<NodePtr<K, V>>>;
 
     /// キーへの参照を取得する
-    fn key(&self) -> Option<Ref<K>>;
+    fn key(&self) -> Ref<K>;
     /// バリューへの参照を取得する
-    fn value(&self) -> Option<Ref<V>>;
+    fn value(&self) -> Ref<V>;
     /// バリューへの可変参照を取得する
-    fn value_mut(&mut self) -> Option<RefMut<V>>;
+    fn value_mut(&mut self) -> RefMut<V>;
 
     /// 親ポインタに変換する
     fn to_weak_ptr(&self) -> ParentPtr<K, V>;
@@ -146,25 +146,28 @@ pub trait NodeOps<K: Ord, V> {
 
 impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     fn is_child(&self) -> bool {
-        self.parent().is_some_and(|node| node.is_some())
+        self.parent().is_some()
     }
 
     fn get_state(&self) -> NodeState {
-        if self.is_none() {
-            return NodeState::Nil;
-        }
-
         let par = self.get_parent_ptr();
 
         if par.is_none() {
             return NodeState::Root;
         }
 
-        if par.left().is_some_and(|left| left.is_same(self)) {
+        if par
+            .clone()
+            .is_some_and(|ptr| ptr.left().as_ref().is_some_and(|left| left.is_same(self)))
+        {
             return NodeState::LeftChild;
         }
 
-        if par.right().is_some_and(|right| right.is_same(self)) {
+        if par.is_some_and(|ptr| {
+            ptr.right()
+                .as_ref()
+                .is_some_and(|right| right.is_same(self))
+        }) {
             return NodeState::RightChild;
         }
 
@@ -172,63 +175,60 @@ impl<K: Ord, V> NodeOps<K, V> for NodePtr<K, V> {
     }
 
     fn is_same(&self, other: &Self) -> bool {
-        self.as_ref()
-            .zip(other.as_ref())
-            .map(|(s, o)| Rc::ptr_eq(s, o))
-            .unwrap_or(false)
+        Rc::ptr_eq(self, other)
     }
 
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.key().zip(other.key()).map(|(s, o)| s.cmp(&o))
+        self.borrow().key.partial_cmp(&other.borrow().key)
     }
 
-    fn get_parent_ptr(&self) -> Self {
-        self.parent()?.to_strong_ptr()
+    fn get_parent_ptr(&self) -> Option<NodePtr<K, V>> {
+        self.parent().as_ref().map(|p| p.to_strong_ptr())
     }
 
-    fn take_parent(&mut self) -> ParentPtr<K, V> {
-        self.as_ref()?.borrow_mut().parent.take()
+    fn take_parent(&mut self) -> Option<ParentPtr<K, V>> {
+        self.as_ref().borrow_mut().parent.take()
     }
 
-    fn take_parent_strong(&mut self) -> NodePtr<K, V> {
-        self.as_ref()?
+    fn take_parent_strong(&mut self) -> Option<NodePtr<K, V>> {
+        self.as_ref()
             .borrow_mut()
             .parent
             .take()
             .map(|p| p.upgrade().unwrap())
     }
 
-    fn take_left(&mut self) -> NodePtr<K, V> {
-        let mut left = self.as_ref()?.borrow_mut().left.take();
-        if let Some(mut left_par) = left.parent_mut() {
-            *left_par = None;
+    fn take_left(&mut self) -> Option<NodePtr<K, V>> {
+        let mut left = self.as_ref().borrow_mut().left.take();
+        if let Some(left_inner) = left.as_mut() {
+            *left_inner.parent_mut() = None;
         }
         left
     }
 
-    fn take_right(&mut self) -> NodePtr<K, V> {
-        let mut right = self.as_ref()?.borrow_mut().right.take();
-        if let Some(mut right_par) = right.parent_mut() {
-            *right_par = None;
+    fn take_right(&mut self) -> Option<NodePtr<K, V>> {
+        let mut right = self.as_ref().borrow_mut().right.take();
+        if let Some(right_inner) = right.as_mut() {
+            *right_inner.parent_mut() = None;
         }
         right
     }
 
     fn to_weak_ptr(&self) -> ParentPtr<K, V> {
-        self.as_ref().map(|node| Rc::downgrade(node))
+        Rc::downgrade(self)
     }
 
     // 不変参照用のgetterを生成
-    generate_getters!(parent, parent, Ref<ParentPtr<K, V>>);
-    generate_getters!(left, left, Ref<NodePtr<K, V>>);
-    generate_getters!(right, right, Ref<NodePtr<K, V>>);
+    generate_getters!(parent, parent, Ref<Option<ParentPtr<K, V>>>);
+    generate_getters!(left, left, Ref<Option<NodePtr<K, V>>>);
+    generate_getters!(right, right, Ref<Option<NodePtr<K, V>>>);
     generate_getters!(key, key, Ref<K>);
     generate_getters!(value, value, Ref<V>);
 
     // 可変参照用のgetterを生成
-    generate_getters!(parent_mut, parent, RefMut<ParentPtr<K, V>>, mut);
-    generate_getters!(left_mut, left, RefMut<NodePtr<K, V>>, mut);
-    generate_getters!(right_mut, right, RefMut<NodePtr<K, V>>, mut);
+    generate_getters!(parent_mut, parent, RefMut<Option<ParentPtr<K, V>>>, mut);
+    generate_getters!(left_mut, left, RefMut<Option<NodePtr<K, V>>>, mut);
+    generate_getters!(right_mut, right, RefMut<Option<NodePtr<K, V>>>, mut);
     generate_getters!(value_mut, value, RefMut<V>, mut);
 }
 
@@ -240,7 +240,8 @@ pub trait ParentOps<K: Ord, V> {
 
 impl<K: Ord, V> ParentOps<K, V> for ParentPtr<K, V> {
     fn to_strong_ptr(&self) -> NodePtr<K, V> {
-        self.as_ref()?.upgrade()
+        self.upgrade()
+            .unwrap_or_else(|| panic!("Failed to upgrade weak reference"))
     }
 }
 
@@ -263,19 +264,19 @@ mod test_pointer {
         {
             let node_ref = node.key();
             println!("node_ref = {node_ref:?}");
-            assert_eq!(*node_ref.unwrap(), 1);
+            assert_eq!(*node_ref, 1);
 
             let val_ref = node.value();
             println!("val_ref = {val_ref:?}");
-            assert_eq!(*val_ref.unwrap(), "first");
+            assert_eq!(*val_ref, "first");
         }
 
         // 可変参照
         {
-            let val_mut = node.value_mut();
+            let mut val_mut = node.value_mut();
             println!("val_mut = {val_mut:?}");
 
-            *val_mut.unwrap() = "changed";
+            *val_mut = "changed";
         }
 
         println!("node = {node:?}");
@@ -284,11 +285,11 @@ mod test_pointer {
         {
             let node_ref = node.key();
             println!("node_ref = {node_ref:?}");
-            assert_eq!(*node_ref.unwrap(), 1);
+            assert_eq!(*node_ref, 1);
 
             let val_ref = node.value();
             println!("val_ref = {val_ref:?}");
-            assert_eq!(*val_ref.unwrap(), "changed");
+            assert_eq!(*val_ref, "changed");
         }
     }
 }

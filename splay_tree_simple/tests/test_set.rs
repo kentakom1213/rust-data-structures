@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use splay_tree::set::*;
+use splay_tree_simple::set::*;
 
 #[test]
 fn test_from_range() {

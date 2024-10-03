@@ -1,4 +1,4 @@
-use splay_tree::{multiset::Multiset, node::pointer::NodeOps, print_util::print_as_tree};
+use splay_tree::{multiset::Multiset, node::pointer::NodeOps};
 
 #[test]
 fn test_insert() {
@@ -109,7 +109,8 @@ fn test_iter() {
     data.sort();
 
     for (node, &i) in mset.iter().zip(&data) {
-        assert_eq!(*node.key().unwrap(), i);
+        let key = node.key();
+        assert_eq!(*key, i);
     }
 }
 
@@ -130,43 +131,43 @@ fn test_range() {
     let range = mset.range(20..);
 
     for node in range {
-        print!("{}, ", *node.key().unwrap());
+        print!("{}, ", *node.key());
     }
     println!();
 
     let range = mset.range(1..3);
 
     for (node, i) in range.zip([1, 1, 1, 2].into_iter()) {
-        assert_eq!(*node.key().unwrap(), i);
+        assert_eq!(*node.key(), i);
     }
 
     let range = mset.range(3..=6);
 
     for (node, i) in range.zip([3, 4, 5, 6, 6].into_iter()) {
-        assert_eq!(*node.key().unwrap(), i);
+        assert_eq!(*node.key(), i);
     }
 
     let range = mset.range(7..);
 
     for (node, i) in range.zip([7, 7, 8, 9].into_iter()) {
-        assert_eq!(*node.key().unwrap(), i);
+        assert_eq!(*node.key(), i);
     }
 
     let range = mset.range(..3);
 
     for (node, i) in range.zip([0, 1, 1, 1, 2].into_iter()) {
-        assert_eq!(*node.key().unwrap(), i);
+        assert_eq!(*node.key(), i);
     }
 
     let range = mset.range(..);
 
     for (node, i) in range.zip([0, 1, 1, 1, 2, 3, 4, 5, 6, 6, 7, 7, 8, 9].into_iter()) {
-        assert_eq!(*node.key().unwrap(), i);
+        assert_eq!(*node.key(), i);
     }
 
     let range = mset.range(..=3);
 
     for (node, i) in range.rev().zip([3, 2, 1, 1, 1, 0].into_iter()) {
-        assert_eq!(*node.key().unwrap(), i);
+        assert_eq!(*node.key(), i);
     }
 }

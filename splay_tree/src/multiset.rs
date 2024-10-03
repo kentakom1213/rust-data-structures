@@ -1,7 +1,6 @@
 //! 多重集合
 
 use std::{
-    cmp,
     fmt::Debug,
     ops::{Bound, RangeBounds},
 };
@@ -21,11 +20,11 @@ use crate::{
 /// Multiset
 /// - 多重集合
 pub struct Multiset<K: Ord> {
-    pub root: NodePtr<K, usize>,
+    pub root: Option<NodePtr<K, usize>>,
     size: usize,
 }
 
-impl<K: Ord + Debug> Multiset<K> {
+impl<K: Ord> Multiset<K> {
     /// 新規作成
     pub fn new() -> Self {
         Self {
@@ -45,7 +44,7 @@ impl<K: Ord + Debug> Multiset<K> {
     }
 
     /// 値 `x` を持つノードのうち，最も右側にあるものを探索する
-    fn find_rightmost_node(&mut self, key: &K) -> NodePtr<K, usize> {
+    fn find_rightmost_node(&mut self, key: &K) -> Option<NodePtr<K, usize>> {
         let upperbound = prev(
             {
                 let ub;
@@ -56,7 +55,7 @@ impl<K: Ord + Debug> Multiset<K> {
         );
 
         match upperbound {
-            NodePosition::Node(node) if node.key().is_some_and(|k| &*k == key) => node,
+            NodePosition::Node(node) if &*node.key() == key => Some(node),
             _ => None,
         }
     }
@@ -67,27 +66,25 @@ impl<K: Ord + Debug> Multiset<K> {
         let rightmost = self.find_rightmost_node(&key);
 
         let new_node;
-        if rightmost.is_some() {
-            let cnt = *rightmost.value().unwrap();
-            new_node = insert_right(rightmost, key, cnt + 1);
+        if let Some(rightmost) = rightmost {
+            let cnt = *rightmost.value();
+            new_node = insert_right(Some(rightmost), key, cnt + 1);
         } else {
             (_, new_node, _) = insert(self.root.clone(), key, 1);
         }
 
         self.size += 1;
-        self.root = splay(new_node);
+        self.root = Some(splay(new_node));
     }
 
     /// 要素の削除
     pub fn remove(&mut self, key: &K) -> bool {
         // 最も右側の頂点を探索
-        let rightmost = self.find_rightmost_node(&key);
-
-        if rightmost.is_none() {
+        let Some(rightmost) = self.find_rightmost_node(&key) else {
             return false;
-        }
+        };
 
-        (self.root, _) = remove(self.root.clone(), rightmost);
+        (self.root, _) = remove(rightmost);
 
         self.size -= 1;
         true
@@ -98,8 +95,8 @@ impl<K: Ord + Debug> Multiset<K> {
         // 最も右側の頂点を探索
         let rightmost = self.find_rightmost_node(&key);
 
-        if rightmost.is_some() {
-            *rightmost.value().unwrap()
+        if let Some(rightmost) = rightmost {
+            *rightmost.value()
         } else {
             0
         }
@@ -152,7 +149,7 @@ impl<K: Ord + Debug> Multiset<K> {
 impl<K: Ord + Clone + Debug> Debug for Multiset<K> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set()
-            .entries(NodeIterator::first(&self.root).map(|node| node.key().unwrap().clone()))
+            .entries(NodeIterator::first(&self.root).map(|node| node.key().clone()))
             .finish()
     }
 }

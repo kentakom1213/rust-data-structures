@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use splay_tree::map::*;
+use splay_tree_simple::map::*;
 
 #[test]
 fn test_insert_random() {

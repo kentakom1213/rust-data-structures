@@ -3,8 +3,6 @@
 /// ノードの状態を調べる
 #[derive(Debug, PartialEq)]
 pub enum NodeState {
-    /// ノードが存在しない
-    Nil,
     /// 根ノード（親を持たない）
     Root,
     /// 親の左の子
@@ -23,7 +21,7 @@ mod test_node_state {
     #[test]
     fn test_nodestate() {
         let (find_1, find_3, find_5, find_15, find_30);
-        let mut find_20 = None;
+        let find_20;
 
         let mut root = None;
         (root, find_5, _) = insert(root, 5, "first");
@@ -37,7 +35,6 @@ mod test_node_state {
         assert_eq!(find_3.get_state(), NodeState::RightChild);
         assert_eq!(find_5.get_state(), NodeState::Root);
         assert_eq!(find_15.get_state(), NodeState::RightChild);
-        assert_eq!(find_20.get_state(), NodeState::Nil);
         assert_eq!(find_30.get_state(), NodeState::RightChild);
 
         (root, find_20, _) = insert(root, 20, "sixth");

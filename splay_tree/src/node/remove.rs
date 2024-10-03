@@ -13,33 +13,27 @@ use super::{
 /// **戻り値**
 /// - NodePtr\<K, V\>: 削除後の木の根のポインタ
 /// - NodePtr\<K, V\>: 削除されたノードのポインタ
-pub fn remove<K: Ord, V>(
-    mut root: NodePtr<K, V>,
-    node: NodePtr<K, V>,
-) -> (NodePtr<K, V>, NodePtr<K, V>) {
-    // nodeが存在しない場合
-    if node.is_none() {
-        return (root, node);
-    }
-
+pub fn remove<K: Ord, V>(mut node: NodePtr<K, V>) -> (Option<NodePtr<K, V>>, NodePtr<K, V>) {
     // nodeを根に持ってくる
-    root = splay(node);
+    let root = splay(node.clone());
 
     // 左右に分割
-    let mut left = root.take_left();
-    let mut right = root.take_right();
+    let left = node.take_left();
+    let mut right = node.take_right();
 
     // 右部分木の最小値を取得
     let right_min = get_min(right.clone());
 
-    right = splay(right_min);
+    if let Some(right_min_inner) = right_min {
+        right = Some(splay(right_min_inner));
+    }
 
     // right.left <- left
-    if let Some(mut left_par) = left.parent_mut() {
-        *left_par = right.to_weak_ptr();
+    if let Some(mut left_inner) = left.clone() {
+        *left_inner.parent_mut() = right.clone().map(|ptr| ptr.to_weak_ptr());
     }
-    if let Some(mut right_left) = right.left_mut() {
-        *right_left = left;
+    if let Some(mut right_inner) = right.clone() {
+        *right_inner.left_mut() = left;
     } else {
         return (left, root);
     }
@@ -72,8 +66,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &7);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 7);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 7);
 
             let node;
             (root, node) = find(root.clone(), &7);
@@ -86,8 +80,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &6);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 6);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 6);
 
             let node;
             (root, node) = find(root.clone(), &6);
@@ -99,9 +93,7 @@ mod test_remove {
         {
             let node;
             (root, node) = find(root.clone(), &7);
-            let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert!(removed_node.is_none());
+            assert!(node.is_none());
 
             let node;
             (root, node) = find(root.clone(), &7);
@@ -114,8 +106,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &4);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 4);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 4);
 
             let node;
             (root, node) = find(root.clone(), &4);
@@ -128,8 +120,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &2);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 2);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 2);
 
             let node;
             (root, node) = find(root.clone(), &2);
@@ -142,8 +134,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &1);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 1);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 1);
 
             let node;
             (root, node) = find(root.clone(), &1);
@@ -156,8 +148,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &3);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 3);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 3);
 
             let node;
             (root, node) = find(root.clone(), &3);
@@ -170,8 +162,8 @@ mod test_remove {
             let node;
             (root, node) = find(root.clone(), &5);
             let removed_node;
-            (root, removed_node) = remove(root, node);
-            assert_eq!(*removed_node.key().unwrap(), 5);
+            (root, removed_node) = remove(node.unwrap());
+            assert_eq!(*removed_node.key(), 5);
 
             let node;
             (root, node) = find(root.clone(), &5);
@@ -197,9 +189,9 @@ mod test_remove {
 
         print_as_tree(&root);
 
-        (root, removed) = remove(root, node);
+        (root, removed) = remove(node.unwrap());
 
-        assert_eq!(*removed.key().unwrap(), 0);
+        assert_eq!(*removed.key(), 0);
 
         print_as_tree(&root);
     }

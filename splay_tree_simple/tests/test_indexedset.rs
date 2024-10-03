@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use rand::*;
-use splay_tree::indexedset::*;
+use splay_tree_simple::indexedset::*;
 use std::collections::BTreeSet;
 use superslice::Ext;
 

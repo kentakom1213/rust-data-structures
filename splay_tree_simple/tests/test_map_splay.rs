@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use splay_tree::{encode::Encode, map::*, tree_map};
+use splay_tree_simple::{encode::Encode, map::*, tree_map};
 
 #[test]
 fn test_splay_left() {

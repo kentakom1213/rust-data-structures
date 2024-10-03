@@ -98,29 +98,29 @@ impl<K: Ord, V> NodePosition<K, V> {
 /// 次に小さい値を持つノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn prev<K: Ord, V>(iter: NodePosition<K, V>, root: &NodePtr<K, V>) -> NodePosition<K, V> {
+pub fn prev<K: Ord, V>(
+    iter: NodePosition<K, V>,
+    root: &Option<NodePtr<K, V>>,
+) -> NodePosition<K, V> {
     match iter {
         NodePosition::INF => NodePosition::INF,
         NodePosition::Node(mut node) => {
-            if let Some(left) = node.left().map(|node| node.clone()) {
-                if let Some(mut prv) = left {
-                    while let Some(right) =
-                        Some(prv.clone()).right().map(|node| node.clone()).unwrap()
-                    {
-                        prv = right;
-                    }
-                    return NodePosition::Node(Some(prv));
+            if let Some(mut prv) = node.left().as_ref().map(|node| node.clone()) {
+                while let Some(right) = prv.clone().right().as_ref().map(|node| node.clone()) {
+                    prv = right;
                 }
+                return NodePosition::Node(prv);
             }
 
             // 親をたどる
             while node.is_child() {
                 match node.get_state() {
                     NodeState::LeftChild => {
-                        node = node.get_parent_ptr();
+                        // 親は存在する
+                        node = node.get_parent_ptr().unwrap();
                     }
                     NodeState::RightChild => {
-                        return NodePosition::Node(node.get_parent_ptr());
+                        return NodePosition::Node(node.get_parent_ptr().unwrap());
                     }
                     _ => unreachable!(),
                 }
@@ -128,36 +128,42 @@ pub fn prev<K: Ord, V>(iter: NodePosition<K, V>, root: &NodePtr<K, V>) -> NodePo
 
             NodePosition::INF
         }
-        NodePosition::SUP => NodePosition::Node(get_max(root.clone())),
+        NodePosition::SUP => match get_max(root.clone()) {
+            Some(node) => NodePosition::Node(node),
+            None => NodePosition::SUP,
+        },
     }
 }
 
 /// 次に大きい値をもつノードを返す
 ///
 /// - 計算量： `O(1) amotized`
-pub fn next<K: Ord, V>(iter: NodePosition<K, V>, root: &NodePtr<K, V>) -> NodePosition<K, V> {
+pub fn next<K: Ord, V>(
+    iter: NodePosition<K, V>,
+    root: &Option<NodePtr<K, V>>,
+) -> NodePosition<K, V> {
     match iter {
-        NodePosition::INF => NodePosition::Node(get_min(root.clone())),
+        NodePosition::INF => match get_min(root.clone()) {
+            Some(node) => NodePosition::Node(node),
+            None => NodePosition::INF,
+        },
         NodePosition::Node(mut node) => {
-            if let Some(right) = node.right().map(|node| node.clone()) {
-                if let Some(mut nxt) = right {
-                    while let Some(left) =
-                        Some(nxt.clone()).left().map(|node| node.clone()).unwrap()
-                    {
-                        nxt = left;
-                    }
-                    return NodePosition::Node(Some(nxt));
+            if let Some(mut nxt) = node.right().as_ref().map(|node| node.clone()) {
+                while let Some(left) = nxt.clone().left().as_ref().map(|node| node.clone()) {
+                    nxt = left;
                 }
+                return NodePosition::Node(nxt);
             }
 
             // 親をたどる
             while node.is_child() {
                 match node.get_state() {
                     NodeState::RightChild => {
-                        node = node.get_parent_ptr();
+                        // 親は存在する
+                        node = node.get_parent_ptr().unwrap();
                     }
                     NodeState::LeftChild => {
-                        return NodePosition::Node(node.get_parent_ptr());
+                        return NodePosition::Node(node.get_parent_ptr().unwrap());
                     }
                     _ => unreachable!(),
                 }
@@ -170,10 +176,10 @@ pub fn next<K: Ord, V>(iter: NodePosition<K, V>, root: &NodePtr<K, V>) -> NodePo
 }
 
 /// rootを根とする木のうち，最も左側の子を返す
-pub fn get_min<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
+pub fn get_min<K: Ord, V>(root: Option<NodePtr<K, V>>) -> Option<NodePtr<K, V>> {
     let mut node = root;
 
-    while let left @ Some(_) = node.left().map(|node| node.clone())? {
+    while let left @ Some(_) = node.as_ref().map(|node| node.left().clone())? {
         node = left;
     }
 
@@ -181,10 +187,10 @@ pub fn get_min<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
 }
 
 /// rootを根とする木のうち，最も右側の子を返す
-pub fn get_max<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
+pub fn get_max<K: Ord, V>(root: Option<NodePtr<K, V>>) -> Option<NodePtr<K, V>> {
     let mut node = root;
 
-    while let right @ Some(_) = node.right().map(|node| node.clone())? {
+    while let right @ Some(_) = node.as_ref().map(|node| node.right().clone())? {
         node = right;
     }
 
@@ -194,14 +200,14 @@ pub fn get_max<K: Ord, V>(root: NodePtr<K, V>) -> NodePtr<K, V> {
 /// ノードのイテレータ
 pub struct NodeIterator<'a, K: Ord, V> {
     /// 根のポインタ
-    root: &'a NodePtr<K, V>,
+    root: &'a Option<NodePtr<K, V>>,
     /// 現在の位置
     pos: NodePosition<K, V>,
 }
 
 impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     /// 新しいイテレータを返す
-    pub fn new(root: &'a NodePtr<K, V>, node: NodePtr<K, V>) -> Self {
+    pub fn new(root: &'a Option<NodePtr<K, V>>, node: NodePtr<K, V>) -> Self {
         NodeIterator {
             root,
             pos: NodePosition::Node(node),
@@ -209,7 +215,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     }
 
     /// 左端のイテレータを返す
-    pub fn first(root: &'a NodePtr<K, V>) -> Self {
+    pub fn first(root: &'a Option<NodePtr<K, V>>) -> Self {
         NodeIterator {
             root,
             pos: NodePosition::INF,
@@ -217,7 +223,7 @@ impl<'a, K: Ord, V> NodeIterator<'a, K, V> {
     }
 
     /// 右端のイテレータを返す
-    pub fn last(root: &'a NodePtr<K, V>) -> Self {
+    pub fn last(root: &'a Option<NodePtr<K, V>>) -> Self {
         NodeIterator {
             root,
             pos: NodePosition::SUP,
@@ -231,9 +237,9 @@ impl<'a, K: Ord, V> Iterator for NodeIterator<'a, K, V> {
         // posを次に進める
         self.pos = next(self.pos.clone(), self.root);
 
-        let val = self.pos.as_ref().map(|node| node.clone())??;
+        let val = self.pos.as_ref().map(|node| node.clone())?;
 
-        Some(Some(val))
+        Some(val)
     }
 }
 
@@ -242,16 +248,16 @@ impl<'a, K: Ord, V> DoubleEndedIterator for NodeIterator<'a, K, V> {
         // posを前に進める
         self.pos = prev(self.pos.clone(), self.root);
 
-        let val = self.pos.as_ref().map(|node| node.clone())??;
+        let val = self.pos.as_ref().map(|node| node.clone())?;
 
-        Some(Some(val))
+        Some(val)
     }
 }
 
 /// 範囲をもつイテレータ
 pub struct NodeRangeIterator<'a, K: Ord, V> {
     /// 根のポインタ
-    root: &'a NodePtr<K, V>,
+    root: &'a Option<NodePtr<K, V>>,
     /// 左端の位置
     left: NodePosition<K, V>,
     /// 右端の位置
@@ -261,7 +267,7 @@ pub struct NodeRangeIterator<'a, K: Ord, V> {
 impl<'a, K: Ord, V> NodeRangeIterator<'a, K, V> {
     /// 新しいイテレータを返す
     pub fn new(
-        root: &'a NodePtr<K, V>,
+        root: &'a Option<NodePtr<K, V>>,
         left: NodePosition<K, V>,
         right: NodePosition<K, V>,
     ) -> Self {
@@ -280,9 +286,9 @@ impl<'a, K: Ord, V> Iterator for NodeRangeIterator<'a, K, V> {
             return None;
         }
 
-        let val = self.left.as_ref().map(|node| node.clone())??;
+        let val = self.left.as_ref().map(|node| node.clone())?;
 
-        Some(Some(val))
+        Some(val)
     }
 }
 
@@ -296,9 +302,9 @@ impl<'a, K: Ord, V> DoubleEndedIterator for NodeRangeIterator<'a, K, V> {
             return None;
         }
 
-        let val = self.right.as_ref().map(|node| node.clone())??;
+        let val = self.right.as_ref().map(|node| node.clone())?;
 
-        Some(Some(val))
+        Some(val)
     }
 }
 
@@ -329,7 +335,7 @@ mod test_prev_next {
 
         let min = get_min(root.clone());
 
-        assert_eq!(*min.key().unwrap(), -1);
+        assert_eq!(*min.unwrap().key(), -1);
     }
 
     #[test]
@@ -350,7 +356,7 @@ mod test_prev_next {
         items.sort();
 
         for i in items.iter().rev() {
-            assert_eq!(*itr.as_ref().unwrap().key().unwrap(), *i);
+            assert_eq!(*itr.as_ref().unwrap().key(), *i);
 
             itr = prev(itr, &root);
             println!("itr: {:?}", itr);
@@ -376,7 +382,7 @@ mod test_prev_next {
         items.sort();
 
         for i in items {
-            assert_eq!(*itr.as_ref().unwrap().key().unwrap(), i);
+            assert_eq!(*itr.as_ref().unwrap().key(), i);
 
             itr = next(itr, &root);
         }
@@ -395,7 +401,7 @@ mod test_prev_next {
             let inserted;
             (root, inserted, _) = insert(root, i, i);
             if i == 4 {
-                node_4 = inserted;
+                node_4 = Some(inserted);
             }
         }
 
@@ -404,20 +410,20 @@ mod test_prev_next {
         let itr = NodeIterator::first(&root);
 
         for (x, ans) in itr.zip([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
-            assert_eq!(*x.key().unwrap(), ans);
+            assert_eq!(*x.key(), ans);
         }
 
         let itr = NodeIterator::last(&root);
 
         for (x, ans) in itr.rev().zip([10, 9, 8, 7, 6, 5, 4, 3, 2, 1]) {
-            assert_eq!(*x.key().unwrap(), ans);
+            assert_eq!(*x.key(), ans);
         }
 
-        let mut itr = NodeIterator::new(&root, node_4);
+        let mut itr = NodeIterator::new(&root, node_4.unwrap());
         itr.next_back();
 
         for (x, ans) in itr.zip([4, 5, 6, 7, 8, 9, 10]) {
-            assert_eq!(*x.key().unwrap(), ans);
+            assert_eq!(*x.key(), ans);
         }
     }
 
@@ -430,14 +436,14 @@ mod test_prev_next {
         for &i in data.iter() {
             let inserted;
             (_, inserted, _) = insert(root.clone(), i, i);
-            root = splay(inserted);
+            root = Some(splay(inserted));
         }
 
         print_as_tree(&root);
 
         let mut itr = NodeRangeIterator::new(&root, NodePosition::INF, NodePosition::SUP);
 
-        assert_eq!(*itr.next().unwrap().key().unwrap(), -200);
-        assert_eq!(*itr.next_back().unwrap().key().unwrap(), 1000);
+        assert_eq!(*itr.next().unwrap().key(), -200);
+        assert_eq!(*itr.next_back().unwrap().key(), 1000);
     }
 }

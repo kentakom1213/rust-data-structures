@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use rand::random;
-use splay_tree::multiset::*;
+use splay_tree_simple::multiset::*;
 
 #[test]
 fn test_count_hand() {

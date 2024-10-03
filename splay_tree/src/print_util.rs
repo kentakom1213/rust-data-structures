@@ -13,7 +13,7 @@ const NULL: &str = "";
 const BLANK: &str = "    ";
 
 /// 2分木として出力する
-pub fn print_as_tree<K: Ord + Debug, V: Debug>(root: &NodePtr<K, V>) {
+pub fn print_as_tree<K: Ord + Debug, V: Debug>(root: &Option<NodePtr<K, V>>) {
     eprintln!("{BLUE}┌─ BinaryTree ──────────────────────────────────────────{END}");
     fmt_inner_binary_tree(root, &mut vec![], NULL);
     eprintln!("{BLUE}└───────────────────────────────────────────────────────{END}");
@@ -21,7 +21,7 @@ pub fn print_as_tree<K: Ord + Debug, V: Debug>(root: &NodePtr<K, V>) {
 
 /// print recursive
 fn fmt_inner_binary_tree<K: Ord + Debug, V: Debug>(
-    node: &NodePtr<K, V>,
+    node: &Option<NodePtr<K, V>>,
     fill: &mut Vec<&'static str>,
     last: &'static str,
 ) {

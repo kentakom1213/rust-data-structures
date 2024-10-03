@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use rand::prelude::*;
-use splay_tree::map::*;
+use splay_tree_simple::map::*;
 use std::collections::BTreeMap;
 
 #[test]
