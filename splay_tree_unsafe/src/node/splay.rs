@@ -118,7 +118,6 @@ pub fn splay<K: Ord, V>(mut node: NodePtr<K, V>) -> NodePtr<K, V> {
                 let _par = rotate(node.parent().unwrap());
                 node = rotate(node);
             }
-            _ => unreachable!(),
         }
     }
 
