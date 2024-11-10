@@ -16,10 +16,7 @@ macro_rules! generate_getters {
     };
 }
 
-use std::{
-    fmt::Debug,
-    ptr::{self, NonNull},
-};
+use std::{fmt::Debug, ptr::NonNull};
 
 use super::state::NodeState;
 
@@ -234,7 +231,7 @@ mod test_pointer {
 
         // 可変参照
         {
-            let mut val_mut = node.value_mut();
+            let val_mut = node.value_mut();
             println!("val_mut = {val_mut:?}");
 
             *val_mut = "changed";

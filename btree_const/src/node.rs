@@ -13,10 +13,10 @@ pub const CHILDREN: usize = DEGREE;
 pub const CAPACITY: usize = DEGREE - 1;
 
 /// B木のノード
-pub type BTreeNode<K, V> = Option<Rc<RefCell<Node<K, V>>>>;
+pub type BTreeNode<K, V> = Rc<RefCell<Node<K, V>>>;
 
 /// 親方向へのポインタ
-pub type ParentNode<K, V> = Option<Weak<RefCell<Node<K, V>>>>;
+pub type ParentNode<K, V> = Weak<RefCell<Node<K, V>>>;
 
 /// B木のノード（内部）
 /// ### Generics
@@ -27,7 +27,7 @@ pub enum Node<K, V> {
     /// 葉ノード
     Leaf {
         /// 親へのポインタ
-        parent: ParentNode<K, V>,
+        parent: Option<ParentNode<K, V>>,
         /// キーの配列
         keys: [Option<K>; CAPACITY],
         /// 値の配列
@@ -38,13 +38,13 @@ pub enum Node<K, V> {
     /// 内部ノード
     Internal {
         /// 親へのポインタ
-        parent: ParentNode<K, V>,
+        parent: Option<ParentNode<K, V>>,
         /// キーの配列
         keys: [Option<K>; CAPACITY],
         /// 値の配列
         vals: [Option<V>; CAPACITY],
         /// 子
-        children: [BTreeNode<K, V>; CHILDREN],
+        children: [Option<BTreeNode<K, V>>; CHILDREN],
         /// ノードにあるデータの数
         len: usize,
     },
@@ -53,12 +53,12 @@ pub enum Node<K, V> {
 impl<K: Ord, V> Node<K, V> {
     /// 空の葉ノードの作成
     pub fn alloc_leaf() -> BTreeNode<K, V> {
-        Some(Rc::new(RefCell::new(Node::Leaf {
+        Rc::new(RefCell::new(Node::Leaf {
             parent: None,
             keys: Default::default(),
             vals: Default::default(),
             len: 0,
-        })))
+        }))
     }
 
     /// 葉ノードの新規作成
@@ -71,12 +71,12 @@ impl<K: Ord, V> Node<K, V> {
         let mut vals: [Option<V>; CAPACITY] = Default::default();
         vals[0] = Some(value);
 
-        Some(Rc::new(RefCell::new(Node::Leaf {
+        Rc::new(RefCell::new(Node::Leaf {
             parent: None,
             keys,
             vals,
             len: 1,
-        })))
+        }))
     }
 
     /// 内部ノードの新規作成
@@ -89,13 +89,13 @@ impl<K: Ord, V> Node<K, V> {
         let mut vals: [Option<V>; CAPACITY] = Default::default();
         vals[0] = Some(value);
 
-        Some(Rc::new(RefCell::new(Node::Internal {
+        Rc::new(RefCell::new(Node::Internal {
             parent: None,
             keys,
             vals,
-            children: Default::default(),
+            children: std::array::from_fn(|_| None),
             len: 1,
-        })))
+        }))
     }
 
     /// ノードに空きがあるか
