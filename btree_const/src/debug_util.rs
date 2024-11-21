@@ -52,7 +52,7 @@ where
 
     // 表示の調整
     let mut tmp = None;
-    if fill.last().is_some_and(|x| x == &last) {
+    if fill.last().is_some_and(|x| x == &last && x != &SEP) {
         tmp = fill.pop();
         fill.push(BLANK);
     } else if fill.last().is_some_and(|x| x != &NULL && x != &BLANK) {
@@ -75,10 +75,10 @@ where
                 dbg_inner(&children[i], fill, if i == 0 { LEFT } else { SEP });
                 // キー，値を表示
                 eprintln!(
-                    "│{} [key: {:?}, val: {:?}]",
+                    "│{} Node {{ key: {:?}, val: {:?} }}",
                     modify_fill(fill, last, i, size),
-                    keys[i],
-                    vals[i],
+                    keys[i].as_ref().unwrap(),
+                    vals[i].as_ref().unwrap(),
                 );
             }
             // 右の子ノードを表示
@@ -91,10 +91,10 @@ where
             for i in 0..*size {
                 // キー，値を表示
                 eprintln!(
-                    "│{} [key: {:?}, val: {:?}]",
+                    "│{} Node {{ key: {:?}, val: {:?} }}",
                     modify_fill(fill, last, i, size),
-                    keys[i],
-                    vals[i],
+                    keys[i].as_ref().unwrap(),
+                    vals[i].as_ref().unwrap(),
                 );
             }
         }
