@@ -1,12 +1,21 @@
 //! B木にデータを挿入する
 
-use crate::node::{Node, NodePtr, CAPACITY};
+use crate::node::{Node, NodePtr};
 
 /// B木に値を挿入する
 /// - `root`：挿入対象の木のルート
 /// - `key`：挿入するキー
 /// - `value`：挿入する値
-pub fn insert<K: Ord, V>(root: Option<NodePtr<K, V>>, key: K, value: V) -> Option<NodePtr<K, V>> {
+pub fn insert<const D: usize, K: Ord, V>(
+    root: Option<NodePtr<D, K, V>>,
+    key: K,
+    value: V,
+) -> Option<NodePtr<D, K, V>>
+where
+    [(); D + 1]:,
+    [Option<K>; D]: Default,
+    [Option<V>; D]: Default,
+{
     let Some(T) = root else {
         // 葉を新規作成する
         return Some(Node::alloc_leaf_with_data(key, value));
@@ -29,8 +38,8 @@ pub fn insert<K: Ord, V>(root: Option<NodePtr<K, V>>, key: K, value: V) -> Optio
             size,
         } => {
             // ノードに空きがあるとき
-            if *size < CAPACITY {
-                insert_leaf_with_vacent(keys, vals, key, value);
+            if *size < D {
+                insert_leaf_with_vacent::<D, _, _>(keys, vals, key, value);
                 *size += 1;
             }
             // ノードに空きがないとき
@@ -44,7 +53,7 @@ pub fn insert<K: Ord, V>(root: Option<NodePtr<K, V>>, key: K, value: V) -> Optio
 }
 
 /// 空きのある葉ノードにデータを挿入する
-fn insert_leaf_with_vacent<K: Ord, V>(
+fn insert_leaf_with_vacent<const D: usize, K: Ord, V>(
     keys: &mut [Option<K>],
     vals: &mut [Option<V>],
     key: K,
@@ -58,7 +67,7 @@ fn insert_leaf_with_vacent<K: Ord, V>(
     // 3. [1, 2, 3]: idx=1に2を挿入して終了
 
     // 挿入する位置（末尾）
-    let mut idx = CAPACITY - 1;
+    let mut idx = D - 1;
 
     keys[idx] = Some(key);
     vals[idx] = Some(value);

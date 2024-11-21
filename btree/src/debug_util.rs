@@ -1,72 +1,146 @@
 //! デバッグ用関数群
 
-use crate::node::Node;
+use colored::Colorize;
+
+use crate::node::{Node, NodePtr};
 use std::fmt::Debug;
 
-const GREEN: &str = "\x1b[92m";
-const END: &str = "\x1b[0m";
+const LEFT: &str = "  ┌─";
+const MID: &str = "  │ ";
+const SEP: &str = "  ├─";
+const RIGHT: &str = "  └─";
+const NULL: &str = "";
+const BLANK: &str = "    ";
 
-pub trait MyDebug {
-    fn dbg(&self);
-}
-
-impl<K, V, const DEG: usize> MyDebug for Node<K, V, DEG>
+impl<const D: usize, K: Debug, V: Debug> Debug for Node<D, K, V>
 where
-    K: Debug,
-    V: Debug,
-    [(); DEG - 1]:,
+    [(); D + 1]:,
 {
-    /// 木の形でデバッグ出力を行う
-    fn dbg(&self) {
-        #![cfg(debug_assertions)]
-        eprintln!("{GREEN}┌─ BTree ───────────────────────────{END}");
-        dbg_inner(&self, 0);
-        eprintln!("{GREEN}└───────────────────────────────────{END}");
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Node::Internal {
+                keys,
+                vals,
+                children,
+                ..
+            } => f
+                .debug_struct("Internal")
+                .field("keys", &keys)
+                .field("vals", &vals)
+                .field("children", &children)
+                .finish(),
+            Node::Leaf { keys, vals, .. } => f
+                .debug_struct("Leaf")
+                .field("keys", &keys)
+                .field("vals", &vals)
+                .finish(),
+        }
     }
 }
 
-/// 再帰的に表示
-pub fn dbg_inner<K, V, const DEG: usize>(root: &Node<K, V, DEG>, depth: usize)
+/// 2分木として出力する
+pub fn print_as_tree<const D: usize, K: Ord + Debug, V: Debug>(root: &Option<NodePtr<D, K, V>>)
 where
+    [(); D + 1]:,
+{
+    eprintln!(
+        "{}",
+        "┌─ B-Tree ──────────────────────────────────────────────".blue()
+    );
+    dbg_inner(root, &mut vec![], NULL);
+    eprintln!(
+        "{}",
+        "└───────────────────────────────────────────────────────".blue()
+    );
+}
+
+/// 再帰的に表示
+fn dbg_inner<const D: usize, K, V>(
+    root: &Option<NodePtr<D, K, V>>,
+    fill: &mut Vec<&'static str>,
+    last: &'static str,
+) where
+    [(); D + 1]:,
     K: Debug,
     V: Debug,
-    [(); DEG - 1]:,
 {
-    match &root {
+    let Some(T) = root else {
+        return;
+    };
+
+    // 表示の調整
+    let mut tmp = None;
+    if fill.last().is_some_and(|x| x == &last && x != &SEP) {
+        tmp = fill.pop();
+        fill.push(BLANK);
+    } else if fill.last().is_some_and(|x| x != &NULL && x != &BLANK) {
+        tmp = fill.pop();
+        fill.push(MID);
+    }
+    fill.push(last);
+
+    match &*T.borrow() {
         Node::Internal {
             keys,
             vals,
             children,
-            len,
+            size,
             ..
         } => {
-            // 最も左のノードを表示（少なくとも1つの子は持つ）
-            dbg_inner(&children[0].as_ref().unwrap().borrow(), depth + 1);
             // 子ノードと値を表示
-            for i in 0..*len {
+            for i in 0..*size {
+                // 子ノードを表示
+                dbg_inner(&children[i], fill, if i == 0 { LEFT } else { SEP });
                 // キー，値を表示
-                eprintln!(
-                    "{GREEN}│{END}{} [key: {:?}, val: {:?}]",
-                    "  ".repeat(depth),
-                    keys[i],
-                    vals[i],
-                );
-                // 右の子ノードを表示
-                dbg_inner(&children[i + 1].as_ref().unwrap().borrow(), depth + 1);
+                print_node(keys, vals, fill, last, i, size);
             }
+            // 右の子ノードを表示
+            dbg_inner(&children[*size], fill, RIGHT);
         }
+
         Node::Leaf {
-            keys, vals, len, ..
+            keys, vals, size, ..
         } => {
-            for i in 0..*len {
+            for i in 0..*size {
                 // キー，値を表示
-                eprintln!(
-                    "{GREEN}│{END}{} [key: {:?}, val: {:?}]",
-                    "  ".repeat(depth),
-                    keys[i],
-                    vals[i],
-                );
+                print_node(keys, vals, fill, last, i, size);
             }
         }
     }
+
+    // 戻す
+    fill.pop();
+    if let Some(tmp) = tmp {
+        fill.pop();
+        fill.push(tmp);
+    }
+}
+
+/// ノードを出力する
+fn print_node<const D: usize, K: Debug, V: Debug>(
+    keys: &[Option<K>; D],
+    vals: &[Option<V>; D],
+    fill: &Vec<&'static str>,
+    last: &'static str,
+    i: usize,
+    size: &usize,
+) {
+    let fill = if last == LEFT && i != 0 || last == RIGHT && i != size - 1 {
+        let mut fill = fill.clone();
+        if let Some(prv) = fill.last_mut() {
+            *prv = SEP;
+        }
+        fill.join("")
+    } else {
+        fill.join("")
+    };
+
+    // キー，値を表示
+    eprintln!(
+        "{} {} Node {{ key: {:?}, val: {:?} }}",
+        "│".blue(),
+        fill,
+        keys[i].as_ref().unwrap(),
+        vals[i].as_ref().unwrap(),
+    );
 }

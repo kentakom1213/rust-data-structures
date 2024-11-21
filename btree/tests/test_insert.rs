@@ -1,4 +1,4 @@
-use btree_const::{
+use btree::{
     debug_util::print_as_tree,
     insert::insert,
     node::{Node, NodePtr},
@@ -7,7 +7,7 @@ use btree_const::{
 /// 空きのあるノードに挿入
 #[test]
 fn test_insert_with_vacent() {
-    let mut tree: Option<NodePtr<u8, &str>> = Some(Node::alloc_leaf());
+    let mut tree: Option<NodePtr<3, u8, &str>> = Some(Node::alloc_leaf());
 
     // 空きがある
     assert_eq!(tree.as_ref().unwrap().borrow().has_vacant(), true);

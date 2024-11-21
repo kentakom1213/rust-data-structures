@@ -5,7 +5,6 @@ members = [
     "aa_tree_traversable",
     "binary_tree",
     "btree",
-    "btree_const",
     "double_linked_list",
     "dynamic_lazy_segment_tree",
     "dynamic_segment_tree",
