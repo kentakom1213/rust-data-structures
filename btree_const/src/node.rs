@@ -13,10 +13,10 @@ pub const CHILDREN: usize = DEGREE;
 pub const CAPACITY: usize = DEGREE - 1;
 
 /// B木のノード
-pub type BTreeNode<K, V> = Rc<RefCell<Node<K, V>>>;
+pub type NodePtr<K, V> = Rc<RefCell<Node<K, V>>>;
 
 /// 親方向へのポインタ
-pub type ParentNode<K, V> = Weak<RefCell<Node<K, V>>>;
+pub type ParentPtr<K, V> = Weak<RefCell<Node<K, V>>>;
 
 /// B木のノード（内部）
 /// ### Generics
@@ -27,42 +27,42 @@ pub enum Node<K, V> {
     /// 葉ノード
     Leaf {
         /// 親へのポインタ
-        parent: Option<ParentNode<K, V>>,
+        parent: Option<ParentPtr<K, V>>,
         /// キーの配列
         keys: [Option<K>; CAPACITY],
         /// 値の配列
         vals: [Option<V>; CAPACITY],
         /// ノードにあるデータの数
-        len: usize,
+        size: usize,
     },
     /// 内部ノード
     Internal {
         /// 親へのポインタ
-        parent: Option<ParentNode<K, V>>,
+        parent: Option<ParentPtr<K, V>>,
         /// キーの配列
         keys: [Option<K>; CAPACITY],
         /// 値の配列
         vals: [Option<V>; CAPACITY],
         /// 子
-        children: [Option<BTreeNode<K, V>>; CHILDREN],
+        children: [Option<NodePtr<K, V>>; CHILDREN],
         /// ノードにあるデータの数
-        len: usize,
+        size: usize,
     },
 }
 
 impl<K: Ord, V> Node<K, V> {
     /// 空の葉ノードの作成
-    pub fn alloc_leaf() -> BTreeNode<K, V> {
+    pub fn alloc_leaf() -> NodePtr<K, V> {
         Rc::new(RefCell::new(Node::Leaf {
             parent: None,
             keys: Default::default(),
             vals: Default::default(),
-            len: 0,
+            size: 0,
         }))
     }
 
     /// 葉ノードの新規作成
-    pub fn alloc_leaf_with_data(key: K, value: V) -> BTreeNode<K, V> {
+    pub fn alloc_leaf_with_data(key: K, value: V) -> NodePtr<K, V> {
         // キー配列の初期化
         let mut keys: [Option<K>; CAPACITY] = Default::default();
         keys[0] = Some(key);
@@ -75,12 +75,12 @@ impl<K: Ord, V> Node<K, V> {
             parent: None,
             keys,
             vals,
-            len: 1,
+            size: 1,
         }))
     }
 
     /// 内部ノードの新規作成
-    pub fn alloc_inernal_with_data(key: K, value: V) -> BTreeNode<K, V> {
+    pub fn alloc_inernal_with_data(key: K, value: V) -> NodePtr<K, V> {
         // キー配列の初期化
         let mut keys: [Option<K>; CAPACITY] = Default::default();
         keys[0] = Some(key);
@@ -94,15 +94,15 @@ impl<K: Ord, V> Node<K, V> {
             keys,
             vals,
             children: std::array::from_fn(|_| None),
-            len: 1,
+            size: 1,
         }))
     }
 
     /// ノードに空きがあるか
     pub fn has_vacant(&self) -> bool {
         match self {
-            Node::Internal { len, .. } => *len < CAPACITY,
-            Node::Leaf { len, .. } => *len < CAPACITY,
+            Node::Internal { size, .. } => *size < CAPACITY,
+            Node::Leaf { size, .. } => *size < CAPACITY,
         }
     }
 }

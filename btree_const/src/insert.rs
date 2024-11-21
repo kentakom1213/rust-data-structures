@@ -1,15 +1,15 @@
 //! B木にデータを挿入する
 
-use crate::node::{BTreeNode, Node, CAPACITY};
+use crate::node::{Node, NodePtr, CAPACITY};
 
 /// B木に値を挿入する
 /// - `root`：挿入対象の木のルート
 /// - `key`：挿入するキー
 /// - `value`：挿入する値
-pub fn insert<K: Ord, V>(root: BTreeNode<K, V>, key: K, value: V) -> BTreeNode<K, V> {
+pub fn insert<K: Ord, V>(root: Option<NodePtr<K, V>>, key: K, value: V) -> Option<NodePtr<K, V>> {
     let Some(T) = root else {
         // 葉を新規作成する
-        return Node::alloc_leaf_with_data(key, value);
+        return Some(Node::alloc_leaf_with_data(key, value));
     };
 
     match &mut *T.borrow_mut() {
@@ -18,7 +18,7 @@ pub fn insert<K: Ord, V>(root: BTreeNode<K, V>, key: K, value: V) -> BTreeNode<K
             keys,
             vals,
             children,
-            len,
+            size,
         } => {
             todo!()
         }
@@ -26,12 +26,12 @@ pub fn insert<K: Ord, V>(root: BTreeNode<K, V>, key: K, value: V) -> BTreeNode<K
             parent,
             keys,
             vals,
-            len,
+            size,
         } => {
             // ノードに空きがあるとき
-            if *len < CAPACITY {
+            if *size < CAPACITY {
                 insert_leaf_with_vacent(keys, vals, key, value);
-                *len += 1;
+                *size += 1;
             }
             // ノードに空きがないとき
             else {

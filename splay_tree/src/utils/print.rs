@@ -36,19 +36,21 @@ fn fmt_inner_binary_tree<K: Ord + Debug, V: Debug>(
             fill.push(MID);
         }
         fill.push(last);
+
         // 左の子
         fmt_inner_binary_tree(&node.borrow().left, fill, LEFT);
         // 自分を出力
         eprintln!(
             "{BLUE}│{END}{} Node {{ key: {:?}, value: {:?} }}",
-            fill.iter().fold(String::new(), |s, x| s + x),
+            fill.join(""),
             node.borrow().key,
             node.borrow().value,
         );
         // 右の子
         fmt_inner_binary_tree(&node.borrow().right, fill, RIGHT);
-        fill.pop();
+
         // 戻す
+        fill.pop();
         if let Some(tmp) = tmp {
             fill.pop();
             fill.push(tmp);
