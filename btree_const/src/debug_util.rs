@@ -1,6 +1,8 @@
 //! デバッグ用関数群
 
-use crate::node::{Node, NodePtr};
+use colored::Colorize;
+
+use crate::node::{Node, NodePtr, CAPACITY, CHILDREN};
 use std::fmt::Debug;
 
 const LEFT: &str = "  ┌─";
@@ -35,9 +37,15 @@ impl<K: Debug, V: Debug> Debug for Node<K, V> {
 
 /// 2分木として出力する
 pub fn print_as_tree<K: Ord + Debug, V: Debug>(root: &Option<NodePtr<K, V>>) {
-    eprintln!("┌─ BinaryTree ──────────────────────────────────────────");
+    eprintln!(
+        "{}",
+        "┌─ B-Tree ──────────────────────────────────────────────".blue()
+    );
     dbg_inner(root, &mut vec![], NULL);
-    eprintln!("└───────────────────────────────────────────────────────");
+    eprintln!(
+        "{}",
+        "└───────────────────────────────────────────────────────".blue()
+    );
 }
 
 /// 再帰的に表示
@@ -74,12 +82,7 @@ where
                 // 子ノードを表示
                 dbg_inner(&children[i], fill, if i == 0 { LEFT } else { SEP });
                 // キー，値を表示
-                eprintln!(
-                    "│{} Node {{ key: {:?}, val: {:?} }}",
-                    modify_fill(fill, last, i, size),
-                    keys[i].as_ref().unwrap(),
-                    vals[i].as_ref().unwrap(),
-                );
+                print_node(keys, vals, fill, last, i, size);
             }
             // 右の子ノードを表示
             dbg_inner(&children[*size], fill, RIGHT);
@@ -90,12 +93,7 @@ where
         } => {
             for i in 0..*size {
                 // キー，値を表示
-                eprintln!(
-                    "│{} Node {{ key: {:?}, val: {:?} }}",
-                    modify_fill(fill, last, i, size),
-                    keys[i].as_ref().unwrap(),
-                    vals[i].as_ref().unwrap(),
-                );
+                print_node(keys, vals, fill, last, i, size);
             }
         }
     }
@@ -108,9 +106,16 @@ where
     }
 }
 
-/// 自分の前に表示する文字列を調整する
-fn modify_fill(fill: &Vec<&'static str>, last: &'static str, i: usize, size: &usize) -> String {
-    if last == LEFT && i != 0 || last == RIGHT && i != size - 1 {
+/// ノードを出力する
+fn print_node<K: Debug, V: Debug>(
+    keys: &[Option<K>; CAPACITY],
+    vals: &[Option<V>; CAPACITY],
+    fill: &Vec<&'static str>,
+    last: &'static str,
+    i: usize,
+    size: &usize,
+) {
+    let fill = if last == LEFT && i != 0 || last == RIGHT && i != size - 1 {
         let mut fill = fill.clone();
         if let Some(prv) = fill.last_mut() {
             *prv = SEP;
@@ -118,5 +123,14 @@ fn modify_fill(fill: &Vec<&'static str>, last: &'static str, i: usize, size: &us
         fill.join("")
     } else {
         fill.join("")
-    }
+    };
+
+    // キー，値を表示
+    eprintln!(
+        "{} {} Node {{ key: {:?}, val: {:?} }}",
+        "│".blue(),
+        fill,
+        keys[i].as_ref().unwrap(),
+        vals[i].as_ref().unwrap(),
+    );
 }
