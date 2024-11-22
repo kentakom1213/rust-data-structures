@@ -1,3 +1,5 @@
+#![feature(generic_const_exprs)]
+
 use btree::{
     debug_util::print_as_tree,
     insert::insert,
