@@ -2,7 +2,7 @@
 
 use colored::Colorize;
 
-use crate::node::{Node, NodePtr};
+use crate::node::{Internal, Leaf, Node, NodePtr};
 use std::fmt::Debug;
 
 const LEFT: &str = "  ┌─";
@@ -18,18 +18,18 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Node::Internal {
+            Node::Internal(Internal {
                 keys,
                 vals,
                 children,
                 ..
-            } => f
+            }) => f
                 .debug_struct("Internal")
                 .field("keys", &keys)
                 .field("vals", &vals)
                 .field("children", &children)
                 .finish(),
-            Node::Leaf { keys, vals, .. } => f
+            Node::Leaf(Leaf { keys, vals, .. }) => f
                 .debug_struct("Leaf")
                 .field("keys", &keys)
                 .field("vals", &vals)
@@ -80,13 +80,13 @@ fn dbg_inner<const D: usize, K, V>(
     fill.push(last);
 
     match &*T.borrow() {
-        Node::Internal {
+        Node::Internal(Internal {
             keys,
             vals,
             children,
             size,
             ..
-        } => {
+        }) => {
             // 子ノードと値を表示
             for i in 0..*size {
                 // 子ノードを表示
@@ -98,9 +98,9 @@ fn dbg_inner<const D: usize, K, V>(
             dbg_inner(&children[*size], fill, RIGHT);
         }
 
-        Node::Leaf {
+        Node::Leaf(Leaf {
             keys, vals, size, ..
-        } => {
+        }) => {
             for i in 0..*size {
                 // キー，値を表示
                 print_node(keys, vals, fill, last, i, size);

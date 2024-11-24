@@ -1,6 +1,6 @@
 //! B木にデータを挿入する
 
-use crate::node::{Node, NodePtr};
+use crate::node::{Internal, Leaf, Node, NodePtr};
 
 /// B木に値を挿入する
 /// - `root`：挿入対象の木のルート
@@ -22,25 +22,19 @@ where
     };
 
     match &mut *T.borrow_mut() {
-        Node::Internal {
+        Node::Internal(Internal {
             parent,
             keys,
             vals,
             children,
             size,
-        } => {
+        }) => {
             todo!()
         }
-        Node::Leaf {
-            parent,
-            keys,
-            vals,
-            size,
-        } => {
+        Node::Leaf(node) => {
             // ノードに空きがあるとき
-            if *size < D {
-                insert_leaf_with_vacent::<D, _, _>(keys, vals, key, value);
-                *size += 1;
+            if node.size < D {
+                insert_leaf_with_vacent::<D, _, _>(node, key, value);
             }
             // ノードに空きがないとき
             else {
@@ -53,12 +47,10 @@ where
 }
 
 /// 空きのある葉ノードにデータを挿入する
-fn insert_leaf_with_vacent<const D: usize, K: Ord, V>(
-    keys: &mut [Option<K>],
-    vals: &mut [Option<V>],
-    key: K,
-    value: V,
-) {
+fn insert_leaf_with_vacent<const D: usize, K: Ord, V>(node: &mut Leaf<D, K, V>, key: K, value: V)
+where
+    [(); D + 1]:,
+{
     // 後ろにデータを移動し，挿入する位置を見つける
     // insert([1, 3, -], 2)
     // ---
@@ -69,18 +61,20 @@ fn insert_leaf_with_vacent<const D: usize, K: Ord, V>(
     // 挿入する位置（末尾）
     let mut idx = D - 1;
 
-    keys[idx] = Some(key);
-    vals[idx] = Some(value);
+    node.keys[idx] = Some(key);
+    node.vals[idx] = Some(value);
 
     // 正しく整列するまでswap
     while idx > 0 {
         // key以上の値を右に1つずらす
-        if keys[idx - 1].is_none() || keys[idx - 1] >= keys[idx] {
-            keys.swap(idx - 1, idx);
-            vals.swap(idx - 1, idx);
+        if node.keys[idx - 1].is_none() || node.keys[idx - 1] >= node.keys[idx] {
+            node.keys.swap(idx - 1, idx);
+            node.vals.swap(idx - 1, idx);
             idx -= 1;
         } else {
             break;
         }
     }
+
+    node.size += 1;
 }

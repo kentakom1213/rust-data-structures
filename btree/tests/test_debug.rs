@@ -1,9 +1,7 @@
-#![feature(generic_const_exprs)]
-
 use btree::{
     btree,
     debug_util::print_as_tree,
-    node::{Node, NodePtr},
+    node::{Internal, Leaf, Node, NodePtr},
 };
 use std::{cell::RefCell, rc::Rc};
 

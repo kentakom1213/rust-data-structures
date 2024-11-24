@@ -11,7 +11,39 @@ pub type NodePtr<const D: usize, K, V> = Rc<RefCell<Node<D, K, V>>>;
 /// 親方向へのポインタ
 pub type ParentPtr<const D: usize, K, V> = Weak<RefCell<Node<D, K, V>>>;
 
-/// B木のノード（内部）
+/// 葉ノード
+pub struct Leaf<const D: usize, K, V>
+where
+    [(); D + 1]:,
+{
+    /// 親へのポインタ
+    pub parent: Option<ParentPtr<D, K, V>>,
+    /// キーの配列
+    pub keys: [Option<K>; D],
+    /// 値の配列
+    pub vals: [Option<V>; D],
+    /// ノードにあるデータの数
+    pub size: usize,
+}
+
+/// 内部ノード
+pub struct Internal<const D: usize, K, V>
+where
+    [(); D + 1]:,
+{
+    /// 親へのポインタ
+    pub parent: Option<ParentPtr<D, K, V>>,
+    /// キーの配列
+    pub keys: [Option<K>; D],
+    /// 値の配列
+    pub vals: [Option<V>; D],
+    /// 子
+    pub children: [Option<NodePtr<D, K, V>>; D + 1],
+    /// ノードにあるデータの数
+    pub size: usize,
+}
+
+/// B木のノード
 /// ### Generics
 /// - `K`：キーの型
 /// - `V`：値の型
@@ -21,29 +53,9 @@ where
     [(); D + 1]:,
 {
     /// 葉ノード
-    Leaf {
-        /// 親へのポインタ
-        parent: Option<ParentPtr<D, K, V>>,
-        /// キーの配列
-        keys: [Option<K>; D],
-        /// 値の配列
-        vals: [Option<V>; D],
-        /// ノードにあるデータの数
-        size: usize,
-    },
+    Leaf(Leaf<D, K, V>),
     /// 内部ノード
-    Internal {
-        /// 親へのポインタ
-        parent: Option<ParentPtr<D, K, V>>,
-        /// キーの配列
-        keys: [Option<K>; D],
-        /// 値の配列
-        vals: [Option<V>; D],
-        /// 子
-        children: [Option<NodePtr<D, K, V>>; D + 1],
-        /// ノードにあるデータの数
-        size: usize,
-    },
+    Internal(Internal<D, K, V>),
 }
 
 impl<const D: usize, K, V> Node<D, K, V>
@@ -54,12 +66,12 @@ where
 {
     /// 空の葉ノードの作成
     pub fn alloc_leaf() -> NodePtr<D, K, V> {
-        Rc::new(RefCell::new(Node::Leaf {
+        Rc::new(RefCell::new(Node::Leaf(Leaf {
             parent: None,
             keys: Default::default(),
             vals: Default::default(),
             size: 0,
-        }))
+        })))
     }
 
     /// 葉ノードの新規作成
@@ -72,12 +84,12 @@ where
         let mut vals: [Option<V>; D] = Default::default();
         vals[0] = Some(value);
 
-        Rc::new(RefCell::new(Node::Leaf {
+        Rc::new(RefCell::new(Node::Leaf(Leaf {
             parent: None,
             keys,
             vals,
             size: 1,
-        }))
+        })))
     }
 
     /// 内部ノードの新規作成
@@ -90,20 +102,20 @@ where
         let mut vals: [Option<V>; D] = Default::default();
         vals[0] = Some(value);
 
-        Rc::new(RefCell::new(Node::Internal {
+        Rc::new(RefCell::new(Node::Internal(Internal {
             parent: None,
             keys,
             vals,
             children: std::array::from_fn(|_| None),
             size: 1,
-        }))
+        })))
     }
 
     /// ノードに空きがあるか
     pub fn has_vacant(&self) -> bool {
         match self {
-            Node::Internal { size, .. } => *size < D,
-            Node::Leaf { size, .. } => *size < D,
+            Node::Internal(Internal { size, .. }) => *size < D,
+            Node::Leaf(Leaf { size, .. }) => *size < D,
         }
     }
 }
