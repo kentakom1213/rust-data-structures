@@ -14,7 +14,7 @@ const BLANK: &str = "    ";
 
 impl<const D: usize, K: Debug, V: Debug> Debug for Node<D, K, V>
 where
-    [(); D + 1]:,
+    [(); 2 * D - 1]:,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -41,7 +41,7 @@ where
 /// 2分木として出力する
 pub fn print_as_tree<const D: usize, K: Ord + Debug, V: Debug>(root: &Option<NodePtr<D, K, V>>)
 where
-    [(); D + 1]:,
+    [(); 2 * D - 1]:,
 {
     eprintln!(
         "{}",
@@ -60,7 +60,7 @@ fn dbg_inner<const D: usize, K, V>(
     fill: &mut Vec<&'static str>,
     last: &'static str,
 ) where
-    [(); D + 1]:,
+    [(); 2 * D - 1]:,
     K: Debug,
     V: Debug,
 {
@@ -118,8 +118,8 @@ fn dbg_inner<const D: usize, K, V>(
 
 /// ノードを出力する
 fn print_node<const D: usize, K: Debug, V: Debug>(
-    keys: &[Option<K>; D],
-    vals: &[Option<V>; D],
+    keys: &[Option<K>; 2 * D - 1],
+    vals: &[Option<V>; 2 * D - 1],
     fill: &Vec<&'static str>,
     last: &'static str,
     i: usize,

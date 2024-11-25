@@ -5,6 +5,8 @@ use std::{
     rc::{Rc, Weak},
 };
 
+use crate::node_util::NodeUtil;
+
 /// B木のノード
 pub type NodePtr<const D: usize, K, V> = Rc<RefCell<Node<D, K, V>>>;
 
@@ -14,14 +16,15 @@ pub type ParentPtr<const D: usize, K, V> = Weak<RefCell<Node<D, K, V>>>;
 /// 葉ノード
 pub struct Leaf<const D: usize, K, V>
 where
-    [(); D + 1]:,
+    [(); 2 * D - 1]:,
+    [(); 2 * D]:,
 {
     /// 親へのポインタ
     pub parent: Option<ParentPtr<D, K, V>>,
     /// キーの配列
-    pub keys: [Option<K>; D],
+    pub keys: [Option<K>; 2 * D - 1],
     /// 値の配列
-    pub vals: [Option<V>; D],
+    pub vals: [Option<V>; 2 * D - 1],
     /// ノードにあるデータの数
     pub size: usize,
 }
@@ -29,16 +32,17 @@ where
 /// 内部ノード
 pub struct Internal<const D: usize, K, V>
 where
-    [(); D + 1]:,
+    [(); 2 * D - 1]:,
+    [(); 2 * D]:,
 {
     /// 親へのポインタ
     pub parent: Option<ParentPtr<D, K, V>>,
     /// キーの配列
-    pub keys: [Option<K>; D],
+    pub keys: [Option<K>; 2 * D - 1],
     /// 値の配列
-    pub vals: [Option<V>; D],
+    pub vals: [Option<V>; 2 * D - 1],
     /// 子
-    pub children: [Option<NodePtr<D, K, V>>; D + 1],
+    pub children: [Option<NodePtr<D, K, V>>; 2 * D],
     /// ノードにあるデータの数
     pub size: usize,
 }
@@ -50,7 +54,8 @@ where
 /// - `DEG`：ノードの持つ子ノードの数の最大値
 pub enum Node<const D: usize, K, V>
 where
-    [(); D + 1]:,
+    [(); 2 * D - 1]:,
+    [(); 2 * D]:,
 {
     /// 葉ノード
     Leaf(Leaf<D, K, V>),
@@ -60,9 +65,10 @@ where
 
 impl<const D: usize, K, V> Node<D, K, V>
 where
-    [(); D + 1]:,
-    [Option<K>; D]: Default,
-    [Option<V>; D]: Default,
+    [(); 2 * D - 1]:,
+    [(); 2 * D]:,
+    [Option<K>; 2 * D - 1]: Default,
+    [Option<V>; 2 * D - 1]: Default,
 {
     /// 空の葉ノードの作成
     pub fn alloc_leaf() -> NodePtr<D, K, V> {
@@ -77,11 +83,11 @@ where
     /// 葉ノードの新規作成
     pub fn alloc_leaf_with_data(key: K, value: V) -> NodePtr<D, K, V> {
         // キー配列の初期化
-        let mut keys: [Option<K>; D] = Default::default();
+        let mut keys: [Option<K>; 2 * D - 1] = Default::default();
         keys[0] = Some(key);
 
         // 値配列の初期化
-        let mut vals: [Option<V>; D] = Default::default();
+        let mut vals: [Option<V>; 2 * D - 1] = Default::default();
         vals[0] = Some(value);
 
         Rc::new(RefCell::new(Node::Leaf(Leaf {
@@ -93,13 +99,13 @@ where
     }
 
     /// 内部ノードの新規作成
-    pub fn alloc_inernal_with_data(key: K, value: V) -> NodePtr<D, K, V> {
+    pub fn alloc_internal_with_data(key: K, value: V) -> NodePtr<D, K, V> {
         // キー配列の初期化
-        let mut keys: [Option<K>; D] = Default::default();
+        let mut keys: [Option<K>; 2 * D - 1] = Default::default();
         keys[0] = Some(key);
 
         // 値配列の初期化
-        let mut vals: [Option<V>; D] = Default::default();
+        let mut vals: [Option<V>; 2 * D - 1] = Default::default();
         vals[0] = Some(value);
 
         Rc::new(RefCell::new(Node::Internal(Internal {
@@ -112,10 +118,10 @@ where
     }
 
     /// ノードに空きがあるか
-    pub fn has_vacant(&self) -> bool {
+    pub fn is_filled(&self) -> bool {
         match self {
-            Node::Internal(Internal { size, .. }) => *size < D,
-            Node::Leaf(Leaf { size, .. }) => *size < D,
+            Node::Internal(node) => node.is_filled(),
+            Node::Leaf(node) => node.is_filled(),
         }
     }
 }

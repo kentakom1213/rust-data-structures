@@ -8,7 +8,7 @@ use std::{cell::RefCell, rc::Rc};
 #[test]
 fn test_debug_print() {
     // DEG=3（2-3木）
-    let tree: Option<NodePtr<3, u8, &str>> = btree! {
+    let tree: Option<NodePtr<2, u8, &str>> = btree! {
         keys: [Some(5), Some(25), Some(40)],
         vals: [Some("0005"), Some("0025"), Some("0040")],
         children: [
