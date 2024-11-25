@@ -1,7 +1,7 @@
 use btree::{
     debug_util::print_as_tree,
     insert::insert,
-    node::{Internal, Leaf, Node, NodePtr},
+    node::{Node, NodePtr},
 };
 
 /// 空きのあるノードに挿入

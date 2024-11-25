@@ -1,6 +1,6 @@
 //! B木にデータを挿入する
 
-use crate::node::{Internal, Leaf, Node, NodePtr};
+use crate::{node::{Internal, Leaf, Node, NodePtr}, node_util::NodeUtil};
 
 /// B木に値を挿入する
 /// - `root`：挿入対象の木のルート
@@ -34,7 +34,7 @@ where
         Node::Leaf(node) => {
             // ノードに空きがあるとき
             if node.size < D {
-                insert_leaf_with_vacent::<D, _, _>(node, key, value);
+                insert_non_full::<D, _, _, _>(node, key, value);
             }
             // ノードに空きがないとき
             else {
@@ -47,9 +47,11 @@ where
 }
 
 /// 空きのある葉ノードにデータを挿入する
-fn insert_leaf_with_vacent<const D: usize, K: Ord, V>(node: &mut Leaf<D, K, V>, key: K, value: V)
+fn insert_non_full<const D: usize, K, V, N>(node: &mut N, key: K, value: V)
 where
     [(); D + 1]:,
+    K: Ord,
+    N: NodeUtil<D, K, V>,
 {
     // 後ろにデータを移動し，挿入する位置を見つける
     // insert([1, 3, -], 2)
@@ -60,21 +62,33 @@ where
 
     // 挿入する位置（末尾）
     let mut idx = D - 1;
-
-    node.keys[idx] = Some(key);
-    node.vals[idx] = Some(value);
+    
+    let (keys, vals) = node.keys_and_vals_mut();
+    
+    keys[idx] = Some(key);
+    vals[idx] = Some(value);
 
     // 正しく整列するまでswap
     while idx > 0 {
         // key以上の値を右に1つずらす
-        if node.keys[idx - 1].is_none() || node.keys[idx - 1] >= node.keys[idx] {
-            node.keys.swap(idx - 1, idx);
-            node.vals.swap(idx - 1, idx);
+        if keys[idx - 1].is_none() || keys[idx - 1] >= keys[idx] {
+            keys.swap(idx - 1, idx);
+            vals.swap(idx - 1, idx);
             idx -= 1;
         } else {
             break;
         }
     }
 
-    node.size += 1;
+    *node.size_mut() += 1;
+}
+
+/// 空きのない葉ノードにデータを挿入する
+fn insert_split_child<const D: usize, K, V, N>(node: &mut N, key: K, value: V)
+where
+    [(); D + 1]:,
+    K: Ord,
+    N: NodeUtil<D, K, V>
+{
+    todo!()
 }
