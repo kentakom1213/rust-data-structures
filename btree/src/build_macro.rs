@@ -3,20 +3,21 @@
 #[macro_export]
 macro_rules! btree {
     ( keys: $keys:expr , vals: $vals:expr , size: $size:expr $(,)* ) => {
-        Some(Rc::new(RefCell::new(Node::Leaf(Leaf {
+        Some(Rc::new(RefCell::new(BTreeNode {
             parent: None,
             keys: $keys,
             vals: $vals,
+            children: None,
             size: $size,
-        }))))
+        })))
     };
     ( keys: $keys:expr , vals: $vals:expr , children: $children:expr , size: $size:expr $(,)* ) => {
-        Some(Rc::new(RefCell::new(Node::Internal(Internal {
+        Some(Rc::new(RefCell::new(BTreeNode {
             parent: None,
             keys: $keys,
             vals: $vals,
-            children: $children,
+            children: Some($children),
             size: $size,
-        }))))
+        })))
     };
 }

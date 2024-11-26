@@ -96,6 +96,6 @@ where
 
     /// ノードに空きがあるか
     pub fn is_filled(&self) -> bool {
-        todo!()
+        self.size == 2 * D - 1
     }
 }

@@ -3,13 +3,13 @@
 use btree::{
     debug_util::print_as_tree,
     insert::insert,
-    node::{Node, NodePtr},
+    node::{BTreeNode, NodePtr},
 };
 
 /// 空きのあるノードに挿入
 #[test]
 fn test_insert_with_vacent() {
-    let mut tree: Option<NodePtr<2, u8, &str>> = Some(Node::alloc_leaf());
+    let mut tree: Option<NodePtr<2, u8, &str>> = Some(BTreeNode::alloc_leaf());
 
     // 空きがある
     assert_eq!(tree.as_ref().unwrap().borrow().is_filled(), false);

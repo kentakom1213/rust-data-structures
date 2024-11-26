@@ -1,7 +1,3 @@
-//! B木にデータを挿入する
-
-use std::borrow::BorrowMut;
-
 use crate::{
     node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
@@ -21,38 +17,46 @@ where
     [Option<K>; 2 * D - 1]: Default,
     [Option<V>; 2 * D - 1]: Default,
 {
-    let Some(T) = root else {
+    let Some(mut node) = root else {
         // 葉を新規作成する
         return Some(BTreeNode::alloc_leaf_with_data(key, value));
     };
 
-    match *T.borrow_mut() {
-        // BTreeNode {
-        //     parent,
-        //     keys,
-        //     vals,
-        //     children: Some(children),
-        //     size,
-        // } => {
-        //     todo!()
-        // }
-        node => {
-            // ノードに空きがあるとき
-            if !node.is_filled() {
-                insert_non_full::<D, _, _>(node, key, value);
-            }
-            // ノードに空きがないとき
-            else {
-                todo!()
-            }
-        }
+    if !node.is_filled() {
+        node = insert_non_full::<D, _, _>(node, key, value);
     }
 
-    Some(T)
+    // match &mut *T.borrow_mut() {
+    //     // BTreeNode {
+    //     //     parent,
+    //     //     keys,
+    //     //     vals,
+    //     //     children: Some(children),
+    //     //     size,
+    //     // } => {
+    //     //     todo!()
+    //     // }
+    //     node => {
+    //         // ノードに空きがあるとき
+    //         if !node.is_filled() {
+    //             insert_non_full::<D, _, _>(node, key, value);
+    //         }
+    //         // ノードに空きがないとき
+    //         else {
+    //             todo!()
+    //         }
+    //     }
+    // }
+
+    Some(node)
 }
 
 /// 空きのある葉ノードにデータを挿入する
-fn insert_non_full<const D: usize, K, V>(node: &mut BTreeNode<D, K, V>, key: K, value: V)
+fn insert_non_full<const D: usize, K, V>(
+    mut node: NodePtr<D, K, V>,
+    key: K,
+    value: V,
+) -> NodePtr<D, K, V>
 where
     [(); 2 * D - 1]:,
     K: Ord,
@@ -67,25 +71,24 @@ where
     // 挿入する位置（末尾）
     let mut idx = 2 * D - 2;
 
-    let keys = &mut node.keys;
-    let vals = &mut node.vals;
-
-    keys[idx] = Some(key);
-    vals[idx] = Some(value);
+    node.keys_mut()[idx] = Some(key);
+    node.vals_mut()[idx] = Some(value);
 
     // 正しく整列するまでswap
     while idx > 0 {
         // key以上の値を右に1つずらす
-        if keys[idx - 1].is_none() || keys[idx - 1] >= keys[idx] {
-            keys.swap(idx - 1, idx);
-            vals.swap(idx - 1, idx);
+        if node.keys()[idx - 1].is_none() || node.keys()[idx - 1] >= node.keys()[idx] {
+            node.keys_mut().swap(idx - 1, idx);
+            node.vals_mut().swap(idx - 1, idx);
             idx -= 1;
         } else {
             break;
         }
     }
 
-    node.size += 1;
+    *node.size_mut() += 1;
+
+    node
 }
 
 /// ノード`x`の`i`番目の子`y`が飽和しているとき，頂点を分割する
@@ -102,7 +105,8 @@ fn insert_split_child<const D: usize, K, V, N>(
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    let mut y = x.children.unwrap()[i].unwrap();
+    // let mut y = x.children.as_mut().unwrap()[i].unwrap();
+    let y = x.children.as_mut().unwrap()[i].as_mut().unwrap();
 
     let z_keys = &mut z.keys;
     let z_vals = &mut z.vals;
@@ -114,7 +118,7 @@ fn insert_split_child<const D: usize, K, V, N>(
     }
 
     // 子を付け替える
-    if let Some((mut y_children, mut z_children)) = y.children_mut().as_mut().zip(z.children) {
+    if let Some((y_children, z_children)) = y.children_mut().as_mut().zip(z.children.as_mut()) {
         for j in 0..D {
             z_children[j] = y_children[j + D].take();
         }

@@ -1,7 +1,7 @@
 use btree::{
     btree,
     debug_util::print_as_tree,
-    node::{Internal, Leaf, Node, NodePtr},
+    node::{BTreeNode, NodePtr},
 };
 use std::{cell::RefCell, rc::Rc};
 
