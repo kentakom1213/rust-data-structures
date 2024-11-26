@@ -2,7 +2,7 @@
 
 use colored::Colorize;
 
-use crate::node::{Internal, Leaf, Node, NodePtr};
+use crate::node::{BTreeNode, NodePtr};
 use std::fmt::Debug;
 
 const LEFT: &str = "  ┌─";
@@ -12,24 +12,26 @@ const RIGHT: &str = "  └─";
 const NULL: &str = "";
 const BLANK: &str = "    ";
 
-impl<const D: usize, K: Debug, V: Debug> Debug for Node<D, K, V>
+impl<const D: usize, K: Debug, V: Debug> Debug for BTreeNode<D, K, V>
 where
     [(); 2 * D - 1]:,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Node::Internal(Internal {
-                keys,
-                vals,
-                children,
-                ..
-            }) => f
+        let BTreeNode {
+            keys,
+            vals,
+            children,
+            ..
+        } = self;
+
+        match children {
+            Some(children) => f
                 .debug_struct("Internal")
                 .field("keys", &keys)
                 .field("vals", &vals)
                 .field("children", &children)
                 .finish(),
-            Node::Leaf(Leaf { keys, vals, .. }) => f
+            None => f
                 .debug_struct("Leaf")
                 .field("keys", &keys)
                 .field("vals", &vals)
@@ -80,13 +82,13 @@ fn dbg_inner<const D: usize, K, V>(
     fill.push(last);
 
     match &*T.borrow() {
-        Node::Internal(Internal {
+        BTreeNode {
             keys,
             vals,
-            children,
+            children: Some(children),
             size,
             ..
-        }) => {
+        } => {
             // 子ノードと値を表示
             for i in 0..*size {
                 // 子ノードを表示
@@ -98,9 +100,9 @@ fn dbg_inner<const D: usize, K, V>(
             dbg_inner(&children[*size], fill, RIGHT);
         }
 
-        Node::Leaf(Leaf {
+        BTreeNode {
             keys, vals, size, ..
-        }) => {
+        } => {
             for i in 0..*size {
                 // キー，値を表示
                 print_node(keys, vals, fill, last, i, size);

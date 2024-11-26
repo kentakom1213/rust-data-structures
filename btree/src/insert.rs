@@ -1,7 +1,9 @@
 //! B木にデータを挿入する
 
+use std::borrow::BorrowMut;
+
 use crate::{
-    node::{Internal, Leaf, Node, NodePtr},
+    node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
 };
 
@@ -21,23 +23,23 @@ where
 {
     let Some(T) = root else {
         // 葉を新規作成する
-        return Some(Node::alloc_leaf_with_data(key, value));
+        return Some(BTreeNode::alloc_leaf_with_data(key, value));
     };
 
-    match &mut *T.borrow_mut() {
-        Node::Internal(Internal {
-            parent,
-            keys,
-            vals,
-            children,
-            size,
-        }) => {
-            todo!()
-        }
-        Node::Leaf(node) => {
+    match *T.borrow_mut() {
+        // BTreeNode {
+        //     parent,
+        //     keys,
+        //     vals,
+        //     children: Some(children),
+        //     size,
+        // } => {
+        //     todo!()
+        // }
+        node => {
             // ノードに空きがあるとき
             if !node.is_filled() {
-                insert_non_full::<D, _, _, _>(node, key, value);
+                insert_non_full::<D, _, _>(node, key, value);
             }
             // ノードに空きがないとき
             else {
@@ -50,11 +52,10 @@ where
 }
 
 /// 空きのある葉ノードにデータを挿入する
-fn insert_non_full<const D: usize, K, V, N>(node: &mut N, key: K, value: V)
+fn insert_non_full<const D: usize, K, V>(node: &mut BTreeNode<D, K, V>, key: K, value: V)
 where
     [(); 2 * D - 1]:,
     K: Ord,
-    N: NodeUtil<D, K, V>,
 {
     // 後ろにデータを移動し，挿入する位置を見つける
     // insert([1, 3, -], 2)
@@ -66,7 +67,8 @@ where
     // 挿入する位置（末尾）
     let mut idx = 2 * D - 2;
 
-    let (keys, vals) = node.keys_and_vals_mut();
+    let keys = &mut node.keys;
+    let vals = &mut node.vals;
 
     keys[idx] = Some(key);
     vals[idx] = Some(value);
@@ -83,15 +85,40 @@ where
         }
     }
 
-    *node.size_mut() += 1;
+    node.size += 1;
 }
 
-/// 空きのない葉ノードにデータを挿入する
-fn insert_split_child<const D: usize, K, V, N>(node: &mut N, key: K, value: V)
-where
+/// ノード`x`の`i`番目の子`y`が飽和しているとき，頂点を分割する
+///
+/// **引数**
+/// - `x`：分割する親ノード
+/// - `i`：分割する子ノードのインデックス
+/// - `y`：分割する子ノード（予め確保する）
+fn insert_split_child<const D: usize, K, V, N>(
+    x: &mut BTreeNode<D, K, V>,
+    i: usize,
+    z: &mut BTreeNode<D, K, V>,
+) where
     [(); 2 * D - 1]:,
     K: Ord,
-    N: NodeUtil<D, K, V>,
 {
-    todo!()
+    let mut y = x.children.unwrap()[i].unwrap();
+
+    let z_keys = &mut z.keys;
+    let z_vals = &mut z.vals;
+
+    // キー，値を付け替える
+    for j in 0..D - 1 {
+        z_keys[j] = y.keys_mut()[j + D].take();
+        z_vals[j] = y.vals_mut()[j + D].take();
+    }
+
+    // 子を付け替える
+    if let Some((mut y_children, mut z_children)) = y.children_mut().as_mut().zip(z.children) {
+        for j in 0..D {
+            z_children[j] = y_children[j + D].take();
+        }
+    }
+
+    *y.size_mut() = D - 1;
 }
