@@ -79,7 +79,7 @@ where
     }
 
     /// ノードに空きがあるか
-    pub fn is_filled(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.size == 2 * D - 1
     }
 }

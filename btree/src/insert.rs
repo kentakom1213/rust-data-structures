@@ -1,3 +1,5 @@
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
+
 use crate::{
     node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
@@ -7,62 +9,47 @@ use crate::{
 /// - `root`：挿入対象の木のルート
 /// - `key`：挿入するキー
 /// - `value`：挿入する値
-pub fn insert<const D: usize, K: Ord, V>(
-    root: Option<NodePtr<D, K, V>>,
-    key: K,
-    value: V,
-) -> Option<NodePtr<D, K, V>>
+pub fn insert<const D: usize, K, V>(root: NodePtr<D, K, V>, key: K, value: V) -> NodePtr<D, K, V>
 where
     [(); 2 * D - 1]:,
-    [Option<K>; 2 * D - 1]: Default,
-    [Option<V>; 2 * D - 1]: Default,
+    K: Ord + Debug,
 {
-    let Some(mut node) = root else {
-        // 葉を新規作成する
-        let mut new_node = BTreeNode::alloc_leaf();
-        new_node = insert_non_full::<D, _, _>(new_node, key, value);
-        return Some(new_node);
-    };
+    if root.is_full() {
+        // 新しい葉ノードを作成
+        let mut s = BTreeNode::new_internal();
 
-    if !node.is_filled() {
-        node = insert_non_full::<D, _, _>(node, key, value);
+        s.children.as_mut().unwrap()[0] = Some(root);
+
+        // 分割
+        insert_split_child(&mut s, 0);
+
+        // sにデータを挿入
+        insert_non_full(&mut s, key, value);
+
+        Rc::new(RefCell::new(s))
+    } else {
+        insert_non_full::<D, _, _>(&mut *root.borrow_mut(), key, value);
+
+        root
     }
-
-    // match &mut *T.borrow_mut() {
-    //     // BTreeNode {
-    //     //     parent,
-    //     //     keys,
-    //     //     vals,
-    //     //     children: Some(children),
-    //     //     size,
-    //     // } => {
-    //     //     todo!()
-    //     // }
-    //     node => {
-    //         // ノードに空きがあるとき
-    //         if !node.is_filled() {
-    //             insert_non_full::<D, _, _>(node, key, value);
-    //         }
-    //         // ノードに空きがないとき
-    //         else {
-    //             todo!()
-    //         }
-    //     }
-    // }
-
-    Some(node)
 }
 
 /// 空きのある葉ノードにデータを挿入する
-fn insert_non_full<const D: usize, K, V>(
-    mut node: NodePtr<D, K, V>,
-    key: K,
-    value: V,
-) -> NodePtr<D, K, V>
+fn insert_non_full<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, key: K, value: V)
 where
     [(); 2 * D - 1]:,
-    K: Ord,
+    K: Ord + Debug,
 {
+    // if x.size == 0 {
+    //     // 新しいノードを確保
+    //     let mut new_node = BTreeNode::new_leaf();
+
+    //     new_node.keys[0] = Some(key);
+    //     new_node.vals[0] = Some(value);
+
+    //     return;
+    // }
+
     // 後ろにデータを移動し，挿入する位置を見つける
     // insert([1, 3, -], 2)
     // ---
@@ -70,27 +57,45 @@ where
     // 2. [1, -, 3]: idx=1
     // 3. [1, 2, 3]: idx=1に2を挿入して終了
 
-    // 挿入する位置（末尾）
-    let mut idx = 2 * D - 2;
+    // 挿入する位置
+    let mut i = x.size;
 
-    node.keys_mut()[idx] = Some(key);
-    node.vals_mut()[idx] = Some(value);
-
-    // 正しく整列するまでswap
-    while idx > 0 {
-        // key以上の値を右に1つずらす
-        if node.keys()[idx - 1].is_none() || node.keys()[idx - 1] >= node.keys()[idx] {
-            node.keys_mut().swap(idx - 1, idx);
-            node.vals_mut().swap(idx - 1, idx);
-            idx -= 1;
-        } else {
-            break;
+    if x.is_leaf() {
+        // keyより大きい要素を1つずつ後ろに移動
+        while i > 0 && &key < x.keys[i - 1].as_ref().unwrap() {
+            x.keys[i] = x.keys[i - 1].take();
+            x.vals[i] = x.vals[i - 1].take();
+            i -= 1;
         }
+
+        // キー，値を挿入
+        x.keys[i] = Some(key);
+        x.vals[i] = Some(value);
+
+        x.size += 1;
+    } else {
+        // 挿入対象の子ノードを見つける
+        while i > 0 && &key < x.keys[i - 1].as_ref().unwrap() {
+            i -= 1;
+        }
+        i += 1;
+
+        let ch_l = x.children.as_ref().unwrap()[i - 1].clone();
+
+        // 子ノードに空きがない場合，分割
+        if ch_l.as_ref().unwrap().is_full() {
+            // 左の子を分割
+            insert_split_child(x, i - 1);
+
+            // 右の子に挿入するか判定
+            if &key > x.keys[i - 1].as_ref().unwrap() {
+                i += 1;
+            }
+        }
+
+        let ith_child = x.children.as_ref().unwrap()[i - 1].clone().unwrap();
+        insert_non_full(&mut *ith_child.borrow_mut(), key, value);
     }
-
-    *node.size_mut() += 1;
-
-    node
 }
 
 /// ノード`x`の`i`番目の子`y`が飽和しているとき，頂点を分割する
@@ -99,15 +104,18 @@ where
 /// - `x`：分割する親ノード
 /// - `i`：分割する子ノードのインデックス
 /// - `y`：分割する子ノード（予め確保する）
-fn insert_split_child<const D: usize, K, V, N>(x: &mut BTreeNode<D, K, V>, i: usize)
+fn insert_split_child<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, i: usize)
 where
     [(); 2 * D - 1]:,
     K: Ord,
 {
     assert!(!x.is_leaf());
-    assert!(x.is_filled());
+    assert!(!x.is_full());
+    assert!(x.children.as_ref().unwrap()[i].is_some());
 
-    let mut y = x.children.as_mut().and_then(|ch| ch[i].clone()).unwrap();
+    let x_children = x.children.as_mut().unwrap();
+
+    let mut y = x_children[i].clone().unwrap();
 
     let mut z = if y.is_leaf() {
         BTreeNode::new_leaf()
@@ -121,6 +129,8 @@ where
         z.vals[j] = y.vals_mut()[j + D].take();
     }
 
+    z.size = D - 1;
+
     // 子を付け替える
     if let Some((y_children, z_children)) = y.children_mut().as_mut().zip(z.children.as_mut()) {
         for j in 0..D {
@@ -129,4 +139,23 @@ where
     }
 
     *y.size_mut() = D - 1;
+
+    // xのi番目より右の子を1つづつ右にずらす
+    for j in (i + 1..x.size + 1).rev() {
+        x_children[j + 1] = x_children[j].take();
+    }
+
+    // zをxのi+1番目の子にする
+    x_children[i + 1] = Some(Rc::new(RefCell::new(z)));
+
+    // xのi番目より右のキー，値を1つづつ右にずらす
+    for j in (i..x.size).rev() {
+        x.keys[j + 1] = x.keys[j].take();
+        x.vals[j + 1] = x.vals[j].take();
+    }
+
+    x.keys[i] = y.keys_mut()[D - 1].take();
+    x.vals[i] = y.vals_mut()[D - 1].take();
+
+    x.size += 1;
 }

@@ -31,7 +31,7 @@ where
     /// 葉ノードか判定する
     fn is_leaf(&self) -> bool;
     /// 空きが存在するか判定
-    fn is_filled(&self) -> bool {
+    fn is_full(&self) -> bool {
         *self.size() == 2 * D - 1
     }
 }
