@@ -5,8 +5,6 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::node_util::NodeUtil;
-
 /// B木のノード
 pub type NodePtr<const D: usize, K, V> = Rc<RefCell<BTreeNode<D, K, V>>>;
 
@@ -42,56 +40,42 @@ impl<const D: usize, K, V> BTreeNode<D, K, V>
 where
     [(); 2 * D - 1]:,
     [(); 2 * D]:,
-    [Option<K>; 2 * D - 1]: Default,
-    [Option<V>; 2 * D - 1]: Default,
 {
-    /// 空の葉ノードの作成
-    pub fn alloc_leaf() -> NodePtr<D, K, V> {
-        Rc::new(RefCell::new(BTreeNode {
+    /// 空の葉ノードの新規作成
+    pub fn new_leaf() -> BTreeNode<D, K, V> {
+        BTreeNode {
             parent: None,
-            keys: Default::default(),
-            vals: Default::default(),
+            keys: std::array::from_fn(|_| None),
+            vals: std::array::from_fn(|_| None),
             children: None,
             size: 0,
-        }))
+        }
     }
 
-    /// 葉ノードの新規作成
-    pub fn alloc_leaf_with_data(key: K, value: V) -> NodePtr<D, K, V> {
-        // キー配列の初期化
-        let mut keys: [Option<K>; 2 * D - 1] = Default::default();
-        keys[0] = Some(key);
-
-        // 値配列の初期化
-        let mut vals: [Option<V>; 2 * D - 1] = Default::default();
-        vals[0] = Some(value);
-
-        Rc::new(RefCell::new(BTreeNode {
-            parent: None,
-            keys,
-            vals,
-            children: None,
-            size: 1,
-        }))
+    /// 空の葉ノードを作成し，ポインタを返す
+    pub fn alloc_leaf() -> NodePtr<D, K, V> {
+        Rc::new(RefCell::new(BTreeNode::new_leaf()))
     }
 
-    /// 内部ノードの新規作成
-    pub fn alloc_internal_with_data(key: K, value: V) -> NodePtr<D, K, V> {
-        // キー配列の初期化
-        let mut keys: [Option<K>; 2 * D - 1] = Default::default();
-        keys[0] = Some(key);
-
-        // 値配列の初期化
-        let mut vals: [Option<V>; 2 * D - 1] = Default::default();
-        vals[0] = Some(value);
-
-        Rc::new(RefCell::new(BTreeNode {
+    /// 空の内部ノードの新規作成
+    pub fn new_internal() -> BTreeNode<D, K, V> {
+        BTreeNode {
             parent: None,
-            keys,
-            vals,
+            keys: std::array::from_fn(|_| None),
+            vals: std::array::from_fn(|_| None),
             children: Some(std::array::from_fn(|_| None)),
-            size: 1,
-        }))
+            size: 0,
+        }
+    }
+
+    /// 空の内部ノードを作成し，ポインタを返す
+    pub fn alloc_internal() -> NodePtr<D, K, V> {
+        Rc::new(RefCell::new(BTreeNode::new_internal()))
+    }
+
+    /// ノードが葉であるか判定する
+    pub fn is_leaf(&self) -> bool {
+        self.children.is_none()
     }
 
     /// ノードに空きがあるか

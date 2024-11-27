@@ -19,7 +19,9 @@ where
 {
     let Some(mut node) = root else {
         // 葉を新規作成する
-        return Some(BTreeNode::alloc_leaf_with_data(key, value));
+        let mut new_node = BTreeNode::alloc_leaf();
+        new_node = insert_non_full::<D, _, _>(new_node, key, value);
+        return Some(new_node);
     };
 
     if !node.is_filled() {
@@ -97,24 +99,26 @@ where
 /// - `x`：分割する親ノード
 /// - `i`：分割する子ノードのインデックス
 /// - `y`：分割する子ノード（予め確保する）
-fn insert_split_child<const D: usize, K, V, N>(
-    x: &mut BTreeNode<D, K, V>,
-    i: usize,
-    z: &mut BTreeNode<D, K, V>,
-) where
+fn insert_split_child<const D: usize, K, V, N>(x: &mut BTreeNode<D, K, V>, i: usize)
+where
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    // let mut y = x.children.as_mut().unwrap()[i].unwrap();
-    let y = x.children.as_mut().unwrap()[i].as_mut().unwrap();
+    assert!(!x.is_leaf());
+    assert!(x.is_filled());
 
-    let z_keys = &mut z.keys;
-    let z_vals = &mut z.vals;
+    let mut y = x.children.as_mut().and_then(|ch| ch[i].clone()).unwrap();
+
+    let mut z = if y.is_leaf() {
+        BTreeNode::new_leaf()
+    } else {
+        BTreeNode::new_internal()
+    };
 
     // キー，値を付け替える
     for j in 0..D - 1 {
-        z_keys[j] = y.keys_mut()[j + D].take();
-        z_vals[j] = y.vals_mut()[j + D].take();
+        z.keys[j] = y.keys_mut()[j + D].take();
+        z.vals[j] = y.vals_mut()[j + D].take();
     }
 
     // 子を付け替える

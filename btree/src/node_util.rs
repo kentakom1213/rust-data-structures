@@ -2,7 +2,7 @@
 
 use std::cell::{Ref, RefMut};
 
-use crate::node::NodePtr;
+use crate::node::{NodePtr, ParentPtr};
 
 pub trait NodeUtil<const D: usize, K, V>
 where
@@ -20,10 +20,16 @@ where
     fn vals(&self) -> Ref<[Option<V>; 2 * D - 1]>;
     /// 値の配列への可変参照を取得する
     fn vals_mut(&mut self) -> RefMut<[Option<V>; 2 * D - 1]>;
+    /// 親ノードへの不変参照を取得する
+    fn parent(&self) -> Ref<Option<ParentPtr<D, K, V>>>;
+    /// 親ノードへの可変参照を取得する
+    fn parent_mut(&mut self) -> RefMut<Option<ParentPtr<D, K, V>>>;
     /// 子ノードの配列への不変参照を取得する
     fn children(&self) -> Ref<Option<[Option<NodePtr<D, K, V>>; 2 * D]>>;
     /// 子ノードの配列への可変参照を取得する
     fn children_mut(&mut self) -> RefMut<Option<[Option<NodePtr<D, K, V>>; 2 * D]>>;
+    /// 葉ノードか判定する
+    fn is_leaf(&self) -> bool;
     /// 空きが存在するか判定
     fn is_filled(&self) -> bool {
         *self.size() == 2 * D - 1
@@ -54,6 +60,8 @@ where
     impl_get_ref!(keys_mut, keys, RefMut<[Option<K>; 2 * D - 1]>, mut);
     impl_get_ref!(vals, vals, Ref<[Option<V>; 2 * D - 1]>);
     impl_get_ref!(vals_mut, vals, RefMut<[Option<V>; 2 * D - 1]>, mut);
+    impl_get_ref!(parent, parent, Ref<Option<ParentPtr<D, K, V>>>);
+    impl_get_ref!(parent_mut, parent, RefMut<Option<ParentPtr<D, K, V>>>, mut);
     impl_get_ref!(
         children,
         children,
@@ -65,4 +73,7 @@ where
         RefMut<Option<[Option<NodePtr<D, K, V>>; 2 * D]>>,
         mut
     );
+    fn is_leaf(&self) -> bool {
+        self.borrow().is_leaf()
+    }
 }
