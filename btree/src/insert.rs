@@ -9,11 +9,17 @@ use crate::{
 /// - `root`：挿入対象の木のルート
 /// - `key`：挿入するキー
 /// - `value`：挿入する値
-pub fn insert<const D: usize, K, V>(root: NodePtr<D, K, V>, key: K, value: V) -> NodePtr<D, K, V>
+pub fn insert<const D: usize, K, V>(
+    root: Option<NodePtr<D, K, V>>,
+    key: K,
+    value: V,
+) -> Option<NodePtr<D, K, V>>
 where
     [(); 2 * D - 1]:,
     K: Ord + Debug,
 {
+    let root = root.unwrap_or_else(BTreeNode::alloc_leaf);
+
     if root.is_full() {
         // 新しい葉ノードを作成
         let mut s = BTreeNode::new_internal();
@@ -26,11 +32,11 @@ where
         // sにデータを挿入
         insert_non_full(&mut s, key, value);
 
-        Rc::new(RefCell::new(s))
+        Some(Rc::new(RefCell::new(s)))
     } else {
         insert_non_full::<D, _, _>(&mut *root.borrow_mut(), key, value);
 
-        root
+        Some(root)
     }
 }
 
