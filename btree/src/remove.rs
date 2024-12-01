@@ -171,7 +171,7 @@ mod test {
         }
     }
 
-    fn build_tree() -> Option<NodePtr<3, char, String>> {
+    fn build_tree_1() -> Option<NodePtr<3, char, String>> {
         btree! {
             keys: [Some('b'), Some('e'), Some('g'), None, None],
             vals: [Some("Bob".to_string()), Some("Emily".to_string()), Some("Grace".to_string()), None, None],
@@ -207,7 +207,7 @@ mod test {
     fn test_merge_childs() {
         println!("> merge at 0");
         {
-            let mut tree = build_tree();
+            let mut tree = build_tree_1();
 
             print_as_tree(&tree);
 
@@ -218,7 +218,7 @@ mod test {
 
         println!("> merge at 1");
         {
-            let mut tree = build_tree();
+            let mut tree = build_tree_1();
 
             print_as_tree(&tree);
 
@@ -229,11 +229,104 @@ mod test {
 
         println!("> merge at 2");
         {
-            let mut tree = build_tree();
+            let mut tree = build_tree_1();
 
             print_as_tree(&tree);
 
             merge_childs(&mut *tree.as_mut().unwrap().borrow_mut(), 2);
+
+            print_as_tree(&tree);
+        }
+    }
+
+    fn build_tree_2() -> Option<NodePtr<2, char, String>> {
+        btree! {
+            keys: [Some('d'), Some('h'), None],
+            vals: [Some("Doughnut".to_string()), Some("Honey".to_string()), None],
+            children: [
+                btree! {
+                    keys: [Some('b'), None, None],
+                    vals: [Some("Banana".to_string()), None, None],
+                    children: [
+                        btree! {
+                            keys: [Some('a'), None, None],
+                            vals: [Some("Apple".to_string()), None, None],
+                            size: 1,
+                        },
+                        btree! {
+                            keys: [Some('c'), None, None],
+                            vals: [Some("Cherry".to_string()), None, None],
+                            size: 1,
+                        },
+                        None,
+                        None,
+                    ],
+                    size: 1,
+                },
+                btree! {
+                    keys: [Some('f'), None, None],
+                    vals: [Some("Fruit".to_string()), None, None],
+                    children: [
+                        btree! {
+                            keys: [Some('e'), None, None],
+                            vals: [Some("Eggplant".to_string()), None, None],
+                            size: 1,
+                        },
+                        btree! {
+                            keys: [Some('g'), None, None],
+                            vals: [Some("Grape".to_string()), None, None],
+                            size: 1,
+                        },
+                        None,
+                        None,
+                    ],
+                    size: 1,
+                },
+                btree! {
+                    keys: [Some('j'), None, None],
+                    vals: [Some("Jam".to_string()), None, None],
+                    children: [
+                        btree! {
+                            keys: [Some('i'), None, None],
+                            vals: [Some("Ice".to_string()), None, None],
+                            size: 1,
+                        },
+                        btree! {
+                            keys: [Some('k'), None, None],
+                            vals: [Some("Kiwi".to_string()), None, None],
+                            size: 1,
+                        },
+                        None,
+                        None,
+                    ],
+                    size: 1,
+                },
+                None,
+            ],
+            size: 2
+        }
+    }
+
+    #[test]
+    fn test_merge_childs_2() {
+        println!("> merge at 0");
+        {
+            let mut tree = build_tree_2();
+
+            print_as_tree(&tree);
+
+            merge_childs(&mut tree.as_mut().unwrap().borrow_mut(), 0);
+
+            print_as_tree(&tree);
+        }
+
+        println!("> merge at 1");
+        {
+            let mut tree = build_tree_2();
+
+            print_as_tree(&tree);
+
+            merge_childs(&mut tree.as_mut().unwrap().borrow_mut(), 1);
 
             print_as_tree(&tree);
         }
