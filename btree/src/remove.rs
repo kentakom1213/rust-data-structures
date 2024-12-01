@@ -1,6 +1,6 @@
 //! B木からデータを削除する
 
-use std::fmt::Debug;
+use std::rc::Rc;
 
 use crate::{
     node::{BTreeNode, NodePtr},
@@ -83,8 +83,7 @@ where
 fn merge_childs<const D: usize, K, V>(node: &mut BTreeNode<D, K, V>, i: usize)
 where
     [(); 2 * D - 1]:,
-    K: Ord + Debug,
-    V: Debug,
+    K: Ord,
 {
     debug_assert!(!node.is_leaf());
     debug_assert!(node.nth_child(i).is_some_and(|x| *x.size() <= D - 1));
@@ -134,6 +133,19 @@ where
     }
 
     *lch.size_mut() = lch_size + 1 + rch_size;
+
+    // ノードが空になった場合，左の子で置き換える
+    if node.size == 0 {
+        drop(lch);
+
+        let lch = node.children.as_mut().unwrap()[0].take().unwrap();
+
+        // 中身を取り出す
+        let lch_data = Rc::try_unwrap(lch).ok().unwrap().into_inner();
+
+        // 親を更新
+        *node = lch_data;
+    }
 }
 
 #[cfg(test)]
@@ -241,8 +253,8 @@ mod test {
 
     fn build_tree_2() -> Option<NodePtr<2, char, String>> {
         btree! {
-            keys: [Some('d'), Some('h'), None],
-            vals: [Some("Doughnut".to_string()), Some("Honey".to_string()), None],
+            keys: [Some('d'), None, None],
+            vals: [Some("Doughnut".to_string()), None, None],
             children: [
                 btree! {
                     keys: [Some('b'), None, None],
@@ -282,28 +294,10 @@ mod test {
                     ],
                     size: 1,
                 },
-                btree! {
-                    keys: [Some('j'), None, None],
-                    vals: [Some("Jam".to_string()), None, None],
-                    children: [
-                        btree! {
-                            keys: [Some('i'), None, None],
-                            vals: [Some("Ice".to_string()), None, None],
-                            size: 1,
-                        },
-                        btree! {
-                            keys: [Some('k'), None, None],
-                            vals: [Some("Kiwi".to_string()), None, None],
-                            size: 1,
-                        },
-                        None,
-                        None,
-                    ],
-                    size: 1,
-                },
+                None,
                 None,
             ],
-            size: 2
+            size: 1
         }
     }
 
@@ -316,17 +310,6 @@ mod test {
             print_as_tree(&tree);
 
             merge_childs(&mut tree.as_mut().unwrap().borrow_mut(), 0);
-
-            print_as_tree(&tree);
-        }
-
-        println!("> merge at 1");
-        {
-            let mut tree = build_tree_2();
-
-            print_as_tree(&tree);
-
-            merge_childs(&mut tree.as_mut().unwrap().borrow_mut(), 1);
 
             print_as_tree(&tree);
         }
