@@ -1,21 +1,42 @@
 //! B木からデータを削除する
 
-use crate::node::{BTreeNode, NodePtr};
+use std::fmt::Debug;
+
+use crate::{
+    node::{BTreeNode, NodePtr},
+    node_util::NodeUtil,
+};
 
 /// B木から値を削除する．複数の値が存在する場合，そのうち一つのキーとそれに対応する値を削除する．
 /// - `root`：削除対象の木のルート
 /// - `key`：削除するキー
 pub fn remove<const D: usize, K, V>(
     root: Option<NodePtr<D, K, V>>,
-    _key: K,
-) -> Option<NodePtr<D, K, V>>
+    key: &K,
+) -> (Option<NodePtr<D, K, V>>, Option<(K, V)>)
 where
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    let Some(_root) = root else {
-        return None;
+    let Some(node) = root else {
+        return (None, None);
     };
+
+    // 葉である場合
+    if node.is_leaf() {
+        let removed_key_value = remove_from_leaf(&mut *node.borrow_mut(), key);
+
+        return (Some(node), removed_key_value);
+    }
+
+    let size = *node.size();
+
+    for i in 0..size {
+        if key < &*node.nth_key(i).unwrap() {
+            // i番目の子から削除する
+            todo!()
+        }
+    }
 
     todo!()
 }
@@ -28,7 +49,7 @@ where
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    assert!(leaf.is_leaf());
+    debug_assert!(leaf.is_leaf());
 
     let mut removed_key = None;
     let mut removed_val = None;
@@ -54,65 +75,65 @@ where
     removed_key.zip(removed_val)
 }
 
-/// ノード`x`の`i`番目の子`y`が飽和しているとき，頂点を分割する
+/// ノード`node`の`i`番目の子と`i+1`番目の子をマージする
 ///
 /// **引数**
-/// - `x`：分割する親ノード
-/// - `i`：分割する子ノードのインデックス
-fn merge_child<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, _i: usize)
+/// - `node`：分割する親ノード
+/// - `i`：マージする子の左側のインデックス
+fn merge_childs<const D: usize, K, V>(node: &mut BTreeNode<D, K, V>, i: usize)
 where
     [(); 2 * D - 1]:,
-    K: Ord,
+    K: Ord + Debug,
+    V: Debug,
 {
-    assert!(!x.is_leaf());
-    // assert!(!x.is_full());
-    // assert!(x.children.as_ref().unwrap()[i].is_some());
+    debug_assert!(!node.is_leaf());
+    debug_assert!(node.nth_child(i).is_some_and(|x| *x.size() <= D - 1));
+    debug_assert!(node.nth_child(i + 1).is_some_and(|x| *x.size() <= D - 1));
 
-    // let x_children = x.children.as_mut().unwrap();
+    let mut lch = node.nth_child(i).unwrap();
+    let mut rch = node.children.as_mut().unwrap()[i + 1].take().unwrap();
 
-    // let mut y = x_children[i].clone().unwrap();
+    // 親のi番目の値を左の子に移植
+    let lch_size = *lch.size();
+    lch.vals_mut()[lch_size] = node.vals[i].take();
+    lch.keys_mut()[lch_size] = node.keys[i].take();
 
-    // let mut z = if y.is_leaf() {
-    //     BTreeNode::new_leaf()
-    // } else {
-    //     BTreeNode::new_internal()
-    // };
+    // 親のキー，値，子へのポインタを1つずつ左にずらす
+    for j in i + 1..node.size {
+        node.keys[j - 1] = node.keys[j].take();
+        node.vals[j - 1] = node.vals[j].take();
+        node.children.as_mut().unwrap().swap(j, j + 1);
+    }
+    node.children
+        .as_mut()
+        .unwrap()
+        .swap(node.size, node.size + 1);
 
-    // // キー，値を付け替える
-    // for j in 0..D - 1 {
-    //     z.keys[j] = y.keys_mut()[j + D].take();
-    //     z.vals[j] = y.vals_mut()[j + D].take();
-    // }
+    node.size -= 1;
 
-    // z.size = D - 1;
+    // 右の子の値を左の子に移植
+    let mut j = lch_size + 1;
+    let rch_size = *rch.size();
 
-    // // 子を付け替える
-    // if let Some((y_children, z_children)) = y.children_mut().as_mut().zip(z.children.as_mut()) {
-    //     for j in 0..D {
-    //         z_children[j] = y_children[j + D].take();
-    //     }
-    // }
+    for k in 0..rch_size {
+        lch.keys_mut()[j] = rch.keys_mut()[k].take();
+        lch.vals_mut()[j] = rch.vals_mut()[k].take();
+        j += 1;
+    }
 
-    // *y.size_mut() = D - 1;
+    // 内部ノードの場合は右の子の子も移植
+    if let Some((lch_ch, rch_ch)) = lch.children_mut().as_mut().zip(rch.children_mut().as_mut()) {
+        let mut j = lch_size + 1;
 
-    // // xのi番目より右の子を1つづつ右にずらす
-    // for j in (i + 1..x.size + 1).rev() {
-    //     x_children[j + 1] = x_children[j].take();
-    // }
+        for k in 0..rch_size {
+            lch_ch[j] = rch_ch[k].take();
+            j += 1;
+        }
 
-    // // zをxのi+1番目の子にする
-    // x_children[i + 1] = Some(Rc::new(RefCell::new(z)));
+        lch_ch[j] = rch_ch[rch_size].take();
+    }
 
-    // // xのi番目より右のキー，値を1つづつ右にずらす
-    // for j in (i..x.size).rev() {
-    //     x.keys[j + 1] = x.keys[j].take();
-    //     x.vals[j + 1] = x.vals[j].take();
-    // }
-
-    // x.keys[i] = y.keys_mut()[D - 1].take();
-    // x.vals[i] = y.vals_mut()[D - 1].take();
-
-    // x.size += 1;
+    *lch.size_mut() = lch_size + 1 + rch_size;
 }
 
 #[cfg(test)]
@@ -125,7 +146,7 @@ mod test {
         node::{BTreeNode, NodePtr},
     };
 
-    use super::remove_from_leaf;
+    use super::{merge_childs, remove_from_leaf};
 
     #[test]
     fn test_remove_from_leaf() {
@@ -147,6 +168,74 @@ mod test {
             if let Some((k, _)) = res {
                 assert_eq!(k, c);
             }
+        }
+    }
+
+    fn build_tree() -> Option<NodePtr<3, char, String>> {
+        btree! {
+            keys: [Some('b'), Some('e'), Some('g'), None, None],
+            vals: [Some("Bob".to_string()), Some("Emily".to_string()), Some("Grace".to_string()), None, None],
+            children: [
+                btree! {
+                    keys: [Some('a'), None, None, None, None],
+                    vals: [Some("Alice".to_string()), None, None, None, None],
+                    size: 1,
+                },
+                btree! {
+                    keys: [Some('c'), Some('d'), None, None, None],
+                    vals: [Some("Charlie".to_string()), Some("David".to_string()), None, None, None],
+                    size: 2,
+                },
+                btree! {
+                    keys: [Some('f'), None, None, None, None],
+                    vals: [Some("Frank".to_string()), None, None, None, None],
+                    size: 1,
+                },
+                btree! {
+                    keys: [Some('h'), None, None, None, None],
+                    vals: [Some("Helen".to_string()), None, None, None, None],
+                    size: 1,
+                },
+                None,
+                None,
+            ],
+            size: 3
+        }
+    }
+
+    #[test]
+    fn test_merge_childs() {
+        println!("> merge at 0");
+        {
+            let mut tree = build_tree();
+
+            print_as_tree(&tree);
+
+            merge_childs(&mut *tree.as_mut().unwrap().borrow_mut(), 0);
+
+            print_as_tree(&tree);
+        }
+
+        println!("> merge at 1");
+        {
+            let mut tree = build_tree();
+
+            print_as_tree(&tree);
+
+            merge_childs(&mut *tree.as_mut().unwrap().borrow_mut(), 1);
+
+            print_as_tree(&tree);
+        }
+
+        println!("> merge at 2");
+        {
+            let mut tree = build_tree();
+
+            print_as_tree(&tree);
+
+            merge_childs(&mut *tree.as_mut().unwrap().borrow_mut(), 2);
+
+            print_as_tree(&tree);
         }
     }
 }

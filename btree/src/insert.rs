@@ -114,9 +114,9 @@ where
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    assert!(!x.is_leaf());
-    assert!(!x.is_full());
-    assert!(x.children.as_ref().unwrap()[i].is_some());
+    debug_assert!(!x.is_leaf());
+    debug_assert!(!x.is_full());
+    debug_assert!(x.children.as_ref().unwrap()[i].is_some());
 
     let x_children = x.children.as_mut().unwrap();
 
