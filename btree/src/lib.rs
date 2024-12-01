@@ -8,6 +8,7 @@ pub mod node;
 pub mod get;
 pub mod insert;
 pub mod remove;
+pub mod search;
 
 // ユーティリティ
 pub mod build_macro;

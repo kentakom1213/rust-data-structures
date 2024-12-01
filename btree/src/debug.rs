@@ -25,11 +25,11 @@ where
         } = self;
 
         match children {
-            Some(children) => f
+            Some(_children) => f
                 .debug_struct("Internal")
                 .field("keys", &keys)
                 .field("vals", &vals)
-                .field("children", &children)
+                // .field("children", &children)
                 .finish(),
             None => f
                 .debug_struct("Leaf")

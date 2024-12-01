@@ -1,6 +1,6 @@
 use btree::{
     btree,
-    debug_util::print_as_tree,
+    debug::print_as_tree,
     node::{BTreeNode, NodePtr},
 };
 use std::{cell::RefCell, rc::Rc};

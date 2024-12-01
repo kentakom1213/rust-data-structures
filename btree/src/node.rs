@@ -73,6 +73,26 @@ where
         Rc::new(RefCell::new(BTreeNode::new_internal()))
     }
 
+    /// `n`番目のキーを取得する
+    pub fn nth_key(&self, n: usize) -> Option<&K> {
+        self.keys.get(n).and_then(|x| x.as_ref())
+    }
+
+    /// `n`番目の値を取得する
+    pub fn nth_val(&self, n: usize) -> Option<&V> {
+        self.vals.get(n).and_then(|x| x.as_ref())
+    }
+
+    /// `n`番目の値を取得する（可変参照）
+    pub fn nth_val_mut(&mut self, n: usize) -> Option<&mut V> {
+        self.vals.get_mut(n).and_then(|x| x.as_mut())
+    }
+
+    /// `n`番目の子を取得する
+    pub fn nth_child(&self, n: usize) -> Option<NodePtr<D, K, V>> {
+        self.children.as_ref()?.get(n)?.clone()
+    }
+
     /// ノードが葉であるか判定する
     pub fn is_leaf(&self) -> bool {
         self.children.is_none()

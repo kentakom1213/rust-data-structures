@@ -1,22 +1,19 @@
 //! B木からデータを削除する
 
-use crate::{
-    node::{BTreeNode, NodePtr},
-    node_util::NodeUtil,
-};
+use crate::node::{BTreeNode, NodePtr};
 
 /// B木から値を削除する．複数の値が存在する場合，そのうち一つのキーとそれに対応する値を削除する．
 /// - `root`：削除対象の木のルート
 /// - `key`：削除するキー
 pub fn remove<const D: usize, K, V>(
     root: Option<NodePtr<D, K, V>>,
-    key: K,
+    _key: K,
 ) -> Option<NodePtr<D, K, V>>
 where
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    let Some(root) = root else {
+    let Some(_root) = root else {
         return None;
     };
 
@@ -55,6 +52,67 @@ where
     }
 
     removed_key.zip(removed_val)
+}
+
+/// ノード`x`の`i`番目の子`y`が飽和しているとき，頂点を分割する
+///
+/// **引数**
+/// - `x`：分割する親ノード
+/// - `i`：分割する子ノードのインデックス
+fn merge_child<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, _i: usize)
+where
+    [(); 2 * D - 1]:,
+    K: Ord,
+{
+    assert!(!x.is_leaf());
+    // assert!(!x.is_full());
+    // assert!(x.children.as_ref().unwrap()[i].is_some());
+
+    // let x_children = x.children.as_mut().unwrap();
+
+    // let mut y = x_children[i].clone().unwrap();
+
+    // let mut z = if y.is_leaf() {
+    //     BTreeNode::new_leaf()
+    // } else {
+    //     BTreeNode::new_internal()
+    // };
+
+    // // キー，値を付け替える
+    // for j in 0..D - 1 {
+    //     z.keys[j] = y.keys_mut()[j + D].take();
+    //     z.vals[j] = y.vals_mut()[j + D].take();
+    // }
+
+    // z.size = D - 1;
+
+    // // 子を付け替える
+    // if let Some((y_children, z_children)) = y.children_mut().as_mut().zip(z.children.as_mut()) {
+    //     for j in 0..D {
+    //         z_children[j] = y_children[j + D].take();
+    //     }
+    // }
+
+    // *y.size_mut() = D - 1;
+
+    // // xのi番目より右の子を1つづつ右にずらす
+    // for j in (i + 1..x.size + 1).rev() {
+    //     x_children[j + 1] = x_children[j].take();
+    // }
+
+    // // zをxのi+1番目の子にする
+    // x_children[i + 1] = Some(Rc::new(RefCell::new(z)));
+
+    // // xのi番目より右のキー，値を1つづつ右にずらす
+    // for j in (i..x.size).rev() {
+    //     x.keys[j + 1] = x.keys[j].take();
+    //     x.vals[j + 1] = x.vals[j].take();
+    // }
+
+    // x.keys[i] = y.keys_mut()[D - 1].take();
+    // x.vals[i] = y.vals_mut()[D - 1].take();
+
+    // x.size += 1;
 }
 
 #[cfg(test)]

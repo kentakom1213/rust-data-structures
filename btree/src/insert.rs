@@ -109,7 +109,6 @@ where
 /// **引数**
 /// - `x`：分割する親ノード
 /// - `i`：分割する子ノードのインデックス
-/// - `y`：分割する子ノード（予め確保する）
 fn split_child<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, i: usize)
 where
     [(); 2 * D - 1]:,
