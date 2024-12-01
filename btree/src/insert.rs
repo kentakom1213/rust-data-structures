@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     node::{BTreeNode, NodePtr},
@@ -16,7 +16,7 @@ pub fn insert<const D: usize, K, V>(
 ) -> Option<NodePtr<D, K, V>>
 where
     [(); 2 * D - 1]:,
-    K: Ord + Debug,
+    K: Ord,
 {
     let root = root.unwrap_or_else(BTreeNode::alloc_leaf);
 
@@ -27,7 +27,7 @@ where
         s.children.as_mut().unwrap()[0] = Some(root);
 
         // 分割
-        insert_split_child(&mut s, 0);
+        split_child(&mut s, 0);
 
         // sにデータを挿入
         insert_non_full(&mut s, key, value);
@@ -44,7 +44,7 @@ where
 fn insert_non_full<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, key: K, value: V)
 where
     [(); 2 * D - 1]:,
-    K: Ord + Debug,
+    K: Ord,
 {
     // if x.size == 0 {
     //     // 新しいノードを確保
@@ -91,7 +91,7 @@ where
         // 子ノードに空きがない場合，分割
         if ch_l.as_ref().unwrap().is_full() {
             // 左の子を分割
-            insert_split_child(x, i - 1);
+            split_child(x, i - 1);
 
             // 右の子に挿入するか判定
             if &key > x.keys[i - 1].as_ref().unwrap() {
@@ -110,7 +110,7 @@ where
 /// - `x`：分割する親ノード
 /// - `i`：分割する子ノードのインデックス
 /// - `y`：分割する子ノード（予め確保する）
-fn insert_split_child<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, i: usize)
+fn split_child<const D: usize, K, V>(x: &mut BTreeNode<D, K, V>, i: usize)
 where
     [(); 2 * D - 1]:,
     K: Ord,

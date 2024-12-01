@@ -5,9 +5,9 @@
 pub mod node;
 
 // 各種操作
-pub mod delete;
 pub mod get;
 pub mod insert;
+pub mod remove;
 
 // ユーティリティ
 pub mod build_macro;
