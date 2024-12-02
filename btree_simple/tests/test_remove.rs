@@ -202,36 +202,22 @@ fn test_hand_2() {
     case(30, 100),
     case(30, 100),
     case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100),
-    case(30, 100)
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 10000),
+    case(100, 10000),
+    case(100, 10000),
+    case(1000, 1000),
+    case(1000, 1000),
+    case(1000, 1000),
+    case(10000, 10000),
+    case(10000, 10000),
+    case(10000, 10000)
 )]
-fn test_random_1(max: u32, count: u32) {
+fn test_random_D2(max: u32, count: u32) {
     let mut rng = rand::thread_rng();
     let mut set = FxHashMap::default();
 
@@ -243,20 +229,11 @@ fn test_random_1(max: u32, count: u32) {
         *set.entry(x).or_insert(0) += 1;
     }
 
-    print_as_tree(&tree);
-
     for _ in 0..count {
         let x = rng.gen_range(0..max);
 
-        println!("> remove {x}");
-
         let removed;
         (tree, removed) = remove(tree, RemoveKey::Key(&x));
-
-        print_as_tree(&tree);
-
-        let tmp = tree.clone();
-        let tmp_set = set.clone();
 
         match (set.get_mut(&x), removed) {
             (Some(cnt), Some((key, _))) => {
@@ -268,10 +245,120 @@ fn test_random_1(max: u32, count: u32) {
             }
             (None, None) => {}
             (ans @ _, act @ _) => {
-                // println!("> remove {}", x);
-                // print_as_tree(&tmp);
-                let mut tmp_set = tmp_set.into_iter().collect::<Vec<_>>();
-                tmp_set.sort();
+                panic!("answer: {:?}, actually: {:?}", ans, act);
+            }
+        }
+    }
+}
+
+#[rstest(
+    max,
+    count,
+    case(30, 100),
+    case(30, 100),
+    case(30, 100),
+    case(30, 100),
+    case(30, 100),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 10000),
+    case(100, 10000),
+    case(100, 10000),
+    case(1000, 1000),
+    case(1000, 1000),
+    case(1000, 1000),
+    case(10000, 10000),
+    case(10000, 10000),
+    case(10000, 10000)
+)]
+fn test_random_D3(max: u32, count: u32) {
+    let mut rng = rand::thread_rng();
+    let mut set = FxHashMap::default();
+
+    let mut tree: Option<NodePtr<3, u32, String>> = None;
+
+    for _ in 0..count {
+        let x = rng.gen_range(0..max);
+        tree = insert(tree, x, x.to_string());
+        *set.entry(x).or_insert(0) += 1;
+    }
+
+    for _ in 0..count {
+        let x = rng.gen_range(0..max);
+
+        let removed;
+        (tree, removed) = remove(tree, RemoveKey::Key(&x));
+
+        match (set.get_mut(&x), removed) {
+            (Some(cnt), Some((key, _))) => {
+                assert_eq!(key, x);
+                *cnt -= 1;
+                if *cnt == 0 {
+                    set.remove(&x);
+                }
+            }
+            (None, None) => {}
+            (ans @ _, act @ _) => {
+                panic!("answer: {:?}, actually: {:?}", ans, act);
+            }
+        }
+    }
+}
+
+#[rstest(
+    max,
+    count,
+    case(30, 100),
+    case(30, 100),
+    case(30, 100),
+    case(30, 100),
+    case(30, 100),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 1000),
+    case(100, 10000),
+    case(100, 10000),
+    case(100, 10000),
+    case(1000, 1000),
+    case(1000, 1000),
+    case(1000, 1000),
+    case(10000, 10000),
+    case(10000, 10000),
+    case(10000, 10000)
+)]
+fn test_random_D4(max: u32, count: u32) {
+    let mut rng = rand::thread_rng();
+    let mut set = FxHashMap::default();
+
+    let mut tree: Option<NodePtr<4, u32, String>> = None;
+
+    for _ in 0..count {
+        let x = rng.gen_range(0..max);
+        tree = insert(tree, x, x.to_string());
+        *set.entry(x).or_insert(0) += 1;
+    }
+
+    for _ in 0..count {
+        let x = rng.gen_range(0..max);
+
+        let removed;
+        (tree, removed) = remove(tree, RemoveKey::Key(&x));
+
+        match (set.get_mut(&x), removed) {
+            (Some(cnt), Some((key, _))) => {
+                assert_eq!(key, x);
+                *cnt -= 1;
+                if *cnt == 0 {
+                    set.remove(&x);
+                }
+            }
+            (None, None) => {}
+            (ans @ _, act @ _) => {
                 panic!("answer: {:?}, actually: {:?}", ans, act);
             }
         }
