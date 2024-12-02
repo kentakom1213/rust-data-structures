@@ -134,42 +134,64 @@ fn test_hand_1() {
 #[test]
 fn test_hand_2() {
     let mut tree: Option<NodePtr<2, u32, ()>> = btree! {
-        keys: [Some(7), Some(18), Some(27)],
-        vals: [Some(()), Some(()), Some(())],
+        keys: [Some(11), None, None],
+        vals: [Some(()), None, None],
         children: [
             btree! {
-                keys: [Some(1), Some(1), Some(3)],
-                vals: [Some(()), Some(()), Some(())],
-                size: 3
-            },
-            btree! {
-                keys: [Some(7), Some(17), None],
-                vals: [Some(()), Some(()), None],
-                size: 2
-            },
-            btree! {
-                keys: [Some(22), None, None],
+                keys: [Some(8), None, None],
                 vals: [Some(()), None, None],
+                children: [
+                    btree! {
+                        keys: [Some(4), Some(7), None],
+                        vals: [Some(()), Some(()), None],
+                        size: 2
+                    },
+                    btree! {
+                        keys: [Some(9), Some(10), None],
+                        vals: [Some(()), Some(()), None],
+                        size: 2
+                    },
+                    None,
+                    None,
+                ],
                 size: 1
             },
             btree! {
-                keys: [Some(32), Some(43), Some(49)],
-                vals: [Some(()), Some(()), Some(())],
-                size: 3
+                keys: [Some(18), None, None],
+                vals: [Some(()), None, None],
+                children: [
+                    btree! {
+                        keys: [Some(14), Some(15), None],
+                        vals: [Some(()), Some(()), None],
+                        size: 2
+                    },
+                    btree! {
+                        keys: [Some(18), Some(20), Some(20)],
+                        vals: [Some(()), Some(()), Some(())],
+                        size: 3
+                    },
+                    None,
+                    None,
+                ],
+                size: 1
             },
+            None,
+            None,
         ],
-        size: 3,
+        size: 1,
     };
 
+    let rm = 11;
+
     print_as_tree(&tree);
 
-    println!("> remove 12");
+    println!("> remove {rm}");
 
     let removed;
-    (tree, removed) = remove(tree, RemoveKey::Key(&12));
+    (tree, removed) = remove(tree, RemoveKey::Key(&rm));
 
     print_as_tree(&tree);
-    assert_eq!(removed.unwrap().0, 12);
+    assert_eq!(removed.unwrap().0, rm);
 }
 
 #[rstest(
@@ -205,11 +227,11 @@ fn test_hand_2() {
     case(30, 20),
     case(30, 20),
     case(30, 20),
-    // case(100, 10000),
-    // case(1000, 1000),
-    // case(1000, 10000),
+    case(30, 20),
+    case(30, 20),
+    case(30, 20)
 )]
-fn test_random(max: u32, count: u32) {
+fn test_random_1(max: u32, count: u32) {
     let mut rng = rand::thread_rng();
     let mut set = FxHashMap::default();
 
@@ -221,19 +243,20 @@ fn test_random(max: u32, count: u32) {
         *set.entry(x).or_insert(0) += 1;
     }
 
-    // print_as_tree(&tree);
+    print_as_tree(&tree);
 
     for _ in 0..count {
         let x = rng.gen_range(0..max);
 
-        // println!("> remove {x}");
+        println!("> remove {x}");
 
         let removed;
         (tree, removed) = remove(tree, RemoveKey::Key(&x));
 
-        // print_as_tree(&tree);
+        print_as_tree(&tree);
 
         let tmp = tree.clone();
+        let tmp_set = set.clone();
 
         match (set.get_mut(&x), removed) {
             (Some(cnt), Some((key, _))) => {
@@ -245,8 +268,10 @@ fn test_random(max: u32, count: u32) {
             }
             (None, None) => {}
             (ans @ _, act @ _) => {
-                println!("> remove {}", x);
-                print_as_tree(&tmp);
+                // println!("> remove {}", x);
+                // print_as_tree(&tmp);
+                let mut tmp_set = tmp_set.into_iter().collect::<Vec<_>>();
+                tmp_set.sort();
                 panic!("answer: {:?}, actually: {:?}", ans, act);
             }
         }
