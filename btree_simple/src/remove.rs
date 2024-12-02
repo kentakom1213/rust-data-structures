@@ -3,7 +3,6 @@
 use std::fmt::Debug;
 
 use crate::{
-    debug::print_as_tree,
     node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
 };
