@@ -3,7 +3,6 @@ use btree_simple::{
     debug::print_as_tree,
     node::{BTreeNode, NodePtr},
 };
-use std::{cell::RefCell, rc::Rc};
 
 #[test]
 fn test_debug_print() {

@@ -3,11 +3,18 @@
 use crate::{
     node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
+    search::{max_key, min_key},
 };
 
 /// B木から値を削除する．複数の値が存在する場合，そのうち一つのキーとそれに対応する値を削除する．
+///
+/// **引数**
 /// - `root`：削除対象の木のルート
 /// - `key`：削除するキー
+///
+/// **戻り値**
+/// - `Option<NodePtr<D, K, V>>`：削除後の木のルート
+/// - `Option<(K, V)>)`：削除されたキーと値
 pub fn remove<const D: usize, K, V>(
     root: Option<NodePtr<D, K, V>>,
     key: &K,
@@ -30,9 +37,30 @@ where
     let size = *node.size();
 
     for i in 0..size {
-        if key < &*node.nth_key(i).unwrap() {
+        if key < node.nth_key(i).unwrap() {
             // i番目の子から削除する
             todo!()
+        }
+        if key == node.nth_key(i).unwrap() {
+            // i番目の値を削除する
+            let removed_key = node.keys[i].take();
+            let removed_val = node.vals[i].take();
+
+            let lch_size = *node.nth_child(i).unwrap().size();
+            let rch_size = *node.nth_child(i + 1).unwrap().size();
+
+            if lch_size >= D {
+                // 左の子がD以上の場合，左の子から最大値を削除する
+                todo!()
+            } else if rch_size >= D {
+                // 右の子がD以上の場合，右の子から最小値を削除する
+                todo!()
+            } else {
+                // 左右の子をマージする
+                todo!()
+            }
+
+            return (Some(node), removed_key.zip(removed_val));
         }
     }
 
