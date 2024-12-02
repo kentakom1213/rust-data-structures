@@ -1,0 +1,15 @@
+> remove 18
+┌─ B-Tree ──────────────────────────────────────────────
+│   ┌─ Node { key: 1, val: "1" }
+│   ├─ Node { key: 1, val: "1" }
+│   ├─ Node { key: 3, val: "3" }
+│  Node { key: 7, val: "7" }
+│   ├─ Node { key: 7, val: "7" }
+│   ├─ Node { key: 17, val: "17" }
+│  Node { key: 18, val: "18" }
+│   ├─ Node { key: 22, val: "22" }
+│  Node { key: 27, val: "27" }
+│   ├─ Node { key: 32, val: "32" }
+│   ├─ Node { key: 43, val: "43" }
+│   └─ Node { key: 49, val: "49" }
+└───────────────────────────────────────────────────────
