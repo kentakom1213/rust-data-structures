@@ -209,10 +209,10 @@ where
                 node = merge_childs(Some(node), i).unwrap();
 
                 // i番目の子から削除する
-                let ch;
-                (ch, removed_key_value) = remove(node.take_nth_child(i), key);
+                let new_node;
+                (new_node, removed_key_value) = remove(Some(node), key);
 
-                node.children.as_mut().unwrap()[i] = ch;
+                node = new_node.unwrap();
             }
 
             return (Some(node), removed_key_value);
