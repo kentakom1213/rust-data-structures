@@ -3,7 +3,6 @@
 use crate::{
     node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
-    search::{max_key, min_key},
 };
 
 /// B木から値を削除する．複数の値が存在する場合，そのうち一つのキーとそれに対応する値を削除する．
@@ -29,7 +28,7 @@ where
 
     // 葉である場合
     if node.is_leaf() {
-        let removed_key_value = remove_from_leaf(&mut *node.as_mut(), key);
+        let removed_key_value = remove_from_leaf(&mut *node.as_mut(), RemoveKey::Key(key));
 
         return (Some(node), removed_key_value);
     }
@@ -67,10 +66,23 @@ where
     todo!()
 }
 
+/// 削除するキーを指定するための列挙型
+enum RemoveKey<'a, K: Ord> {
+    /// 最小値を削除
+    Min,
+    /// 指定したキーを削除
+    Key(&'a K),
+    /// 最大値を削除
+    Max,
+}
+
 /// 葉からキー`key`を削除する
 /// - `root`：削除対象の木のルート
 /// - `key`：削除するキー
-fn remove_from_leaf<const D: usize, K, V>(leaf: &mut BTreeNode<D, K, V>, key: &K) -> Option<(K, V)>
+fn remove_from_leaf<const D: usize, K, V>(
+    leaf: &mut BTreeNode<D, K, V>,
+    key: RemoveKey<K>,
+) -> Option<(K, V)>
 where
     [(); 2 * D - 1]:,
     K: Ord,
@@ -85,11 +97,19 @@ where
             // 削除済の場合，左に1つづつずらす
             leaf.keys[i - 1] = leaf.keys[i].take();
             leaf.vals[i - 1] = leaf.vals[i].take();
-        } else if leaf.keys[i].as_ref().unwrap() == key {
+        } else if match key {
+            RemoveKey::Min => i == 0,
+            RemoveKey::Key(k) => leaf.keys[i].as_ref().unwrap() == k,
+            RemoveKey::Max => i == leaf.size - 1,
+        } {
             // 値が一致する場合，削除
             removed_key = leaf.keys[i].take();
             removed_val = leaf.vals[i].take();
-        } else if leaf.keys[i].as_ref().unwrap() > key {
+        } else if match key {
+            RemoveKey::Min => true,
+            RemoveKey::Key(k) => leaf.keys[i].as_ref().unwrap() > k,
+            RemoveKey::Max => false,
+        } {
             break;
         }
     }
@@ -184,7 +204,7 @@ mod test {
         node::{BTreeNode, NodePtr},
     };
 
-    use super::{merge_childs, remove_from_leaf};
+    use super::*;
 
     #[test]
     fn test_remove_from_leaf() {
@@ -198,7 +218,7 @@ mod test {
 
         for c in ['g', 'x', 'i', 'a', 'c', 'e', 'a', 'k'] {
             println!("> remove \'{c}\'");
-            let res = remove_from_leaf(tree.as_mut().unwrap(), &c);
+            let res = remove_from_leaf(tree.as_mut().unwrap(), RemoveKey::Key(&c));
 
             print_as_tree(&tree);
             println!("removed (key, val) = {:?}", res);
@@ -207,6 +227,31 @@ mod test {
                 assert_eq!(k, c);
             }
         }
+    }
+
+    #[test]
+    fn test_remove_min_max() {
+        let mut tree: Option<NodePtr<4, char, i32>> = btree! {
+            keys: [Some('a'), Some('c'), Some('e'), Some('g'), Some('i'), Some('k'), None],
+            vals: [Some(434), Some(112), Some(605), Some(705), Some(334), Some(963), None],
+            size: 6
+        };
+
+        print_as_tree(&tree);
+
+        println!("> remove min");
+        let min = remove_from_leaf(tree.as_mut().unwrap(), RemoveKey::Min);
+        print_as_tree(&tree);
+
+        assert!(min.is_some());
+        assert_eq!(min.unwrap(), ('a', 434));
+
+        println!("> remove max");
+        let max = remove_from_leaf(tree.as_mut().unwrap(), RemoveKey::Max);
+        print_as_tree(&tree);
+
+        assert!(max.is_some());
+        assert_eq!(max.unwrap(), ('k', 963));
     }
 
     fn build_tree_1() -> Option<NodePtr<3, char, String>> {
