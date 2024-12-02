@@ -1,8 +1,4 @@
-use btree_simple::{
-    btree,
-    debug::print_as_tree,
-    node::{BTreeNode, NodePtr},
-};
+use btree_simple::{btree, print_as_tree, BTreeNode, NodePtr};
 
 #[test]
 fn test_debug_print() {

@@ -2,10 +2,7 @@
 
 use std::fmt::Debug;
 
-use crate::{
-    node::{BTreeNode, NodePtr},
-    node_util::NodeUtil,
-};
+use crate::{BTreeNode, NodePtr, NodeUtil};
 
 /// 削除するキーを指定するための列挙型
 #[derive(Debug)]
@@ -367,11 +364,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        btree,
-        debug::print_as_tree,
-        node::{BTreeNode, NodePtr},
-    };
+    use crate::{btree, print_as_tree, BTreeNode, NodePtr};
 
     use super::*;
 

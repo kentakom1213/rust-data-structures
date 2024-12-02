@@ -1,11 +1,6 @@
 #![feature(generic_const_exprs)]
 
-use btree_simple::{
-    debug::print_as_tree,
-    insert::insert,
-    node::{BTreeNode, NodePtr},
-    node_util::NodeUtil,
-};
+use btree_simple::{insert, print_as_tree, BTreeNode, NodePtr, NodeUtil};
 
 /// 空きのあるノードに挿入
 #[test]

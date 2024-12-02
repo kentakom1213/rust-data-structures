@@ -1,7 +1,4 @@
-use crate::{
-    node::{BTreeNode, NodePtr},
-    node_util::NodeUtil,
-};
+use crate::{BTreeNode, NodePtr, NodeUtil};
 
 /// B木に値を挿入する
 /// - `root`：挿入対象の木のルート

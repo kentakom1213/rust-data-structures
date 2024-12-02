@@ -1,6 +1,6 @@
 //! 探索の実装
 
-use crate::{node::NodePtr, node_util::NodeUtil};
+use crate::{NodePtr, NodeUtil};
 
 /// 最も左の葉ノードを探索する
 fn leftmost_leaf<const D: usize, K, V>(node: &NodePtr<D, K, V>) -> &NodePtr<D, K, V>
@@ -51,7 +51,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{btree, debug::print_as_tree, node::BTreeNode};
+    use crate::{btree, print_as_tree, BTreeNode};
 
     #[test]
     fn test_leftmost_leaf() {

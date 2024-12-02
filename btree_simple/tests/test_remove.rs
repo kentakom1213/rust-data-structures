@@ -1,12 +1,6 @@
 //! 削除のテスト
 
-use btree_simple::{
-    btree,
-    debug::print_as_tree,
-    insert::insert,
-    node::{BTreeNode, NodePtr},
-    remove::{remove, RemoveKey},
-};
+use btree_simple::{btree, insert, print_as_tree, remove, BTreeNode, NodePtr, RemoveKey};
 use rand::Rng;
 use rstest::rstest;
 use rustc_hash::FxHashMap;

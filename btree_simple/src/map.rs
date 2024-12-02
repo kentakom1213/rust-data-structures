@@ -1,5 +1,7 @@
 //! mapの構造体
 
+use crate::NodePtr;
+
 /// B木による連想配列
 pub struct Map<const D: usize, K, V>
 where

@@ -1,6 +1,6 @@
 //! ノードのユーティリティ
 
-use crate::node::NodePtr;
+use crate::NodePtr;
 
 pub trait NodeUtil<const D: usize, K, V>
 where
@@ -76,13 +76,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        btree,
-        debug::print_as_tree,
-        node::{BTreeNode, NodePtr},
-    };
-
-    use super::NodeUtil;
+    use crate::{btree, print_as_tree, BTreeNode, NodePtr};
 
     #[test]
     fn test_nth_key() {

@@ -2,7 +2,7 @@
 
 use colored::Colorize;
 
-use crate::node::{BTreeNode, NodePtr};
+use crate::{BTreeNode, NodePtr};
 use std::fmt::Debug;
 
 const LEFT: &str = "  ┌─";
