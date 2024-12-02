@@ -128,14 +128,14 @@ where
 
     // キー，値を付け替える
     for j in 0..D - 1 {
-        z.keys[j] = y.keys_mut()[j + D].take();
-        z.vals[j] = y.vals_mut()[j + D].take();
+        z.keys[j] = y.keys[j + D].take();
+        z.vals[j] = y.vals[j + D].take();
     }
 
     z.size = D - 1;
 
     // 子を付け替える
-    if let Some((y_children, z_children)) = y.children_mut().as_mut().zip(z.children.as_mut()) {
+    if let Some((y_children, z_children)) = y.children.as_mut().zip(z.children.as_mut()) {
         for j in 0..D {
             z_children[j] = y_children[j + D].take();
         }
@@ -157,8 +157,8 @@ where
         x.vals[j + 1] = x.vals[j].take();
     }
 
-    x.keys[i] = y.keys_mut()[D - 1].take();
-    x.vals[i] = y.vals_mut()[D - 1].take();
+    x.keys[i] = y.keys[D - 1].take();
+    x.vals[i] = y.vals[D - 1].take();
 
     x.size += 1;
 

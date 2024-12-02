@@ -18,6 +18,7 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let BTreeNode {
+            size,
             keys,
             vals,
             children,
@@ -25,14 +26,16 @@ where
         } = self;
 
         match children {
-            Some(_children) => f
+            Some(_) => f
                 .debug_struct("Internal")
+                .field("size", &size)
                 .field("keys", &keys)
                 .field("vals", &vals)
                 // .field("children", &children)
                 .finish(),
             None => f
                 .debug_struct("Leaf")
+                .field("size", &size)
                 .field("keys", &keys)
                 .field("vals", &vals)
                 .finish(),

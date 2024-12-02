@@ -1,9 +1,23 @@
 //! B木からデータを削除する
 
+use std::fmt::Debug;
+
 use crate::{
+    debug::print_as_tree,
     node::{BTreeNode, NodePtr},
     node_util::NodeUtil,
 };
+
+/// 削除するキーを指定するための列挙型
+#[derive(Debug)]
+pub enum RemoveKey<'a, K: Ord> {
+    /// 最小値を削除
+    Min,
+    /// 指定したキーを削除
+    Key(&'a K),
+    /// 最大値を削除
+    Max,
+}
 
 /// B木から値を削除する．複数の値が存在する場合，そのうち一つのキーとそれに対応する値を削除する．
 ///
@@ -14,111 +28,278 @@ use crate::{
 /// **戻り値**
 /// - `Option<NodePtr<D, K, V>>`：削除後の木のルート
 /// - `Option<(K, V)>)`：削除されたキーと値
+/// - `Option<NodePtr<D, K, V>>`：（Min/Maxのとき）端の子
 pub fn remove<const D: usize, K, V>(
     root: Option<NodePtr<D, K, V>>,
-    key: &K,
-) -> (Option<NodePtr<D, K, V>>, Option<(K, V)>)
+    key: RemoveKey<K>,
+) -> (
+    Option<NodePtr<D, K, V>>,
+    Option<(K, V)>,
+    Option<NodePtr<D, K, V>>,
+)
 where
     [(); 2 * D - 1]:,
-    K: Ord,
+    K: Ord + Debug,
+    V: Debug,
 {
     let Some(mut node) = root else {
-        return (None, None);
+        return (None, None, None);
     };
 
     // 葉である場合
     if node.is_leaf() {
-        let removed_key_value = remove_from_leaf(&mut *node.as_mut(), RemoveKey::Key(key));
+        let (removed_key_value, edge_child) = remove_from_sufficient_node(&mut *node.as_mut(), key);
 
-        return (Some(node), removed_key_value);
+        return (Some(node), removed_key_value, edge_child);
     }
 
     let size = *node.size();
 
-    for i in 0..size {
-        if key < node.nth_key(i).unwrap() {
+    for i in 0..=size {
+        if match key {
+            RemoveKey::Min => i == 0,
+            RemoveKey::Key(k) => k < node.nth_key(i).unwrap(),
+            RemoveKey::Max => i == size,
+        } {
             // i番目の子から削除する
-            todo!()
+            let ch_size = *node.nth_child(i).unwrap().size();
+
+            if ch_size >= D {
+                // 子のサイズがD以上の場合，再帰的に削除する
+                let (ch, removed_key_value, edge_child) = remove(node.take_nth_child(i), key);
+
+                node.children.as_mut().unwrap()[i] = ch;
+
+                return (Some(node), removed_key_value, edge_child);
+            }
+
+            let lch_size = if i == 0 {
+                0
+            } else {
+                *node.nth_child(i - 1).unwrap().size()
+            };
+            let rch_size = if i == size {
+                0
+            } else {
+                *node.nth_child(i + 1).unwrap().size()
+            };
+
+            if lch_size >= D {
+                // 左の子がD以上の場合，左の子から最大値を削除し，その値をi番目のキーに移植する
+                let (lch, max_key_value, rightmost_child) =
+                    remove(node.take_nth_child(i - 1), RemoveKey::Max);
+
+                node.children.as_mut().unwrap()[i - 1] = lch;
+
+                let mut ch = node.take_nth_child(i);
+
+                // 右に1つづつずらす
+                if let Some(ch_children) = ch.as_mut().unwrap().children.as_mut() {
+                    ch_children.swap(node.size, node.size + 1);
+                }
+
+                for j in (0..ch_size).rev() {
+                    ch.as_mut().unwrap().keys[j] = ch.as_mut().unwrap().keys[j + 1].take();
+                    ch.as_mut().unwrap().vals[j] = ch.as_mut().unwrap().vals[j + 1].take();
+                    if let Some(ch_children) = ch.as_mut().unwrap().children.as_mut() {
+                        ch_children.swap(j, j + 1);
+                    }
+                }
+
+                // i番目のキーをchに追加
+                ch.as_mut().unwrap().keys[0] = node.keys[i - 1].take();
+                ch.as_mut().unwrap().vals[0] = node.vals[i - 1].take();
+
+                if let Some((k, v)) = max_key_value {
+                    node.keys[i - 1] = Some(k);
+                    node.vals[i - 1] = Some(v);
+                }
+
+                if let Some((ch_children, rightmost_child)) =
+                    ch.as_mut().unwrap().children.as_mut().zip(rightmost_child)
+                {
+                    ch_children[0] = Some(rightmost_child);
+                }
+
+                ch.as_mut().unwrap().size += 1;
+
+                // i番目の子から削除する
+                let (ch, removed_key_value, edge_child) = remove(ch, key);
+
+                node.children.as_mut().unwrap()[i] = ch;
+
+                return (Some(node), removed_key_value, edge_child);
+            } else if rch_size >= D {
+                // 右の子がD以上の場合，右の子から最小値を削除し，その値をi番目のキーに移植する
+                let (rch, min_key_value, leftmost_child) =
+                    remove(node.take_nth_child(i + 1), RemoveKey::Min);
+
+                node.children.as_mut().unwrap()[i + 1] = rch;
+
+                let mut ch = node.take_nth_child(i);
+
+                // i - 1番目のキーをchに追加
+                ch.as_mut().unwrap().keys[ch_size] = node.keys[i].take();
+                ch.as_mut().unwrap().vals[ch_size] = node.vals[i].take();
+
+                if let Some((k, v)) = min_key_value {
+                    node.keys[i] = Some(k);
+                    node.vals[i] = Some(v);
+                }
+
+                if let Some((ch_children, leftmost_child)) =
+                    ch.as_mut().unwrap().children.as_mut().zip(leftmost_child)
+                {
+                    ch_children[ch_size + 1] = Some(leftmost_child);
+                }
+
+                ch.as_mut().unwrap().size += 1;
+
+                // i番目の子から削除する
+                let (ch, removed_key_value, edge_child) = remove(ch, key);
+
+                node.children.as_mut().unwrap()[i] = ch;
+
+                return (Some(node), removed_key_value, edge_child);
+            } else {
+                // 左右の子をマージする
+                node = if i == size {
+                    merge_childs(Some(node), i - 1).unwrap()
+                } else {
+                    merge_childs(Some(node), i).unwrap()
+                };
+
+                // i番目の子から削除する
+                let (new_node, removed_key_value, edge_child) = remove(Some(node), key);
+
+                return (new_node, removed_key_value, edge_child);
+            }
         }
-        if key == node.nth_key(i).unwrap() {
+
+        if i < size && matches!(key, RemoveKey::Key(k) if k == node.nth_key(i).unwrap()) {
             // i番目の値を削除する
-            let removed_key = node.keys[i].take();
-            let removed_val = node.vals[i].take();
+            let removed_key_value;
+            let edge_child;
 
             let lch_size = *node.nth_child(i).unwrap().size();
             let rch_size = *node.nth_child(i + 1).unwrap().size();
 
             if lch_size >= D {
                 // 左の子がD以上の場合，左の子から最大値を削除する
-                todo!()
+                let (lch, max_key_value);
+                (lch, max_key_value, edge_child) = remove(node.take_nth_child(i), RemoveKey::Max);
+
+                if let Some((k, v)) = max_key_value {
+                    node.keys[i] = Some(k);
+                    node.vals[i] = Some(v);
+                }
+
+                node.children.as_mut().unwrap()[i] = lch;
+
+                // i番目の値を削除する
+                removed_key_value = node.keys[i].take().zip(node.vals[i].take());
             } else if rch_size >= D {
                 // 右の子がD以上の場合，右の子から最小値を削除する
-                todo!()
+                let (rch, min_key_value);
+                (rch, min_key_value, edge_child) =
+                    remove(node.take_nth_child(i + 1), RemoveKey::Min);
+
+                if let Some((k, v)) = min_key_value {
+                    node.keys[i] = Some(k);
+                    node.vals[i] = Some(v);
+                }
+
+                node.children.as_mut().unwrap()[i + 1] = rch;
+
+                // i番目の値を削除する
+                removed_key_value = node.keys[i].take().zip(node.vals[i].take());
             } else {
                 // 左右の子をマージする
-                todo!()
+                node = merge_childs(Some(node), i).unwrap();
+
+                // i番目の子から削除する
+                let ith;
+                (ith, removed_key_value, edge_child) = remove(node.take_nth_child(i), key);
+
+                node.children.as_mut().unwrap()[i] = ith;
             }
 
-            return (Some(node), removed_key.zip(removed_val));
+            node.size -= 1;
+
+            return (Some(node), removed_key_value, edge_child);
         }
     }
 
-    todo!()
+    unreachable!()
 }
 
-/// 削除するキーを指定するための列挙型
-enum RemoveKey<'a, K: Ord> {
-    /// 最小値を削除
-    Min,
-    /// 指定したキーを削除
-    Key(&'a K),
-    /// 最大値を削除
-    Max,
-}
-
-/// 葉からキー`key`を削除する
+/// サイズが`D`以上のノードからキー`key`を削除する
+///
+/// **引数**
 /// - `root`：削除対象の木のルート
 /// - `key`：削除するキー
-fn remove_from_leaf<const D: usize, K, V>(
-    leaf: &mut BTreeNode<D, K, V>,
+///
+/// **戻り値**
+/// - `Option<(K, V)>`：削除されたキーと値
+/// - `Option<NodePtr<D, K, V>>`：（Min/Maxのとき）端の子
+fn remove_from_sufficient_node<const D: usize, K, V>(
+    node: &mut BTreeNode<D, K, V>,
     key: RemoveKey<K>,
-) -> Option<(K, V)>
+) -> (Option<(K, V)>, Option<NodePtr<D, K, V>>)
 where
     [(); 2 * D - 1]:,
     K: Ord,
 {
-    debug_assert!(leaf.is_leaf());
+    debug_assert!(node.is_leaf() || node.size >= D);
 
     let mut removed_key = None;
     let mut removed_val = None;
+    let mut edge_child = None;
 
-    for i in 0..leaf.size {
+    for i in 0..node.size {
         if removed_key.is_some() {
             // 削除済の場合，左に1つづつずらす
-            leaf.keys[i - 1] = leaf.keys[i].take();
-            leaf.vals[i - 1] = leaf.vals[i].take();
+            node.keys[i - 1] = node.keys[i].take();
+            node.vals[i - 1] = node.vals[i].take();
         } else if match key {
             RemoveKey::Min => i == 0,
-            RemoveKey::Key(k) => leaf.keys[i].as_ref().unwrap() == k,
-            RemoveKey::Max => i == leaf.size - 1,
+            RemoveKey::Key(k) => node.keys[i].as_ref().unwrap() == k,
+            RemoveKey::Max => i == node.size - 1,
         } {
             // 値が一致する場合，削除
-            removed_key = leaf.keys[i].take();
-            removed_val = leaf.vals[i].take();
+            removed_val = node.vals[i].take();
+            removed_key = node.keys[i].take();
         } else if match key {
             RemoveKey::Min => true,
-            RemoveKey::Key(k) => leaf.keys[i].as_ref().unwrap() > k,
+            RemoveKey::Key(k) => node.keys[i].as_ref().unwrap() > k,
             RemoveKey::Max => false,
         } {
             break;
         }
     }
 
-    if removed_key.is_some() {
-        leaf.size -= 1;
+    if !node.is_leaf() {
+        edge_child = match key {
+            RemoveKey::Min => {
+                let leftmost = node.take_nth_child(0);
+
+                // 1つづつ左にずらす
+                for i in 1..node.size {
+                    node.children.as_mut().unwrap().swap(i - 1, i);
+                }
+
+                leftmost
+            }
+            RemoveKey::Key(_) => None,
+            RemoveKey::Max => node.take_nth_child(node.size),
+        };
     }
 
-    removed_key.zip(removed_val)
+    if removed_key.is_some() {
+        node.size -= 1;
+    }
+
+    (removed_key.zip(removed_val), edge_child)
 }
 
 /// ノード`node`の`i`番目の子と`i+1`番目の子をマージする
@@ -145,8 +326,8 @@ where
 
     // 親のi番目の値を左の子に移植
     let lch_size = *lch.size();
-    lch.vals_mut()[lch_size] = node.vals[i].take();
-    lch.keys_mut()[lch_size] = node.keys[i].take();
+    lch.vals[lch_size] = node.vals[i].take();
+    lch.keys[lch_size] = node.keys[i].take();
 
     // 親のキー，値，子へのポインタを1つずつ左にずらす
     for j in i + 1..node.size {
@@ -154,10 +335,13 @@ where
         node.vals[j - 1] = node.vals[j].take();
         node.children.as_mut().unwrap().swap(j, j + 1);
     }
-    node.children
-        .as_mut()
-        .unwrap()
-        .swap(node.size, node.size + 1);
+
+    if node.size < 2 * D - 1 {
+        node.children
+            .as_mut()
+            .unwrap()
+            .swap(node.size, node.size + 1);
+    }
 
     node.size -= 1;
 
@@ -166,13 +350,13 @@ where
     let rch_size = *rch.size();
 
     for k in 0..rch_size {
-        lch.keys_mut()[j] = rch.keys_mut()[k].take();
-        lch.vals_mut()[j] = rch.vals_mut()[k].take();
+        lch.keys[j] = rch.keys[k].take();
+        lch.vals[j] = rch.vals[k].take();
         j += 1;
     }
 
     // 内部ノードの場合は右の子の子も移植
-    if let Some((lch_ch, rch_ch)) = lch.children_mut().as_mut().zip(rch.children_mut().as_mut()) {
+    if let Some((lch_ch, rch_ch)) = lch.children.as_mut().zip(rch.children.as_mut()) {
         let mut j = lch_size + 1;
 
         for k in 0..rch_size {
@@ -198,6 +382,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use std::env::consts::OS;
+
     use crate::{
         btree,
         debug::print_as_tree,
@@ -218,10 +404,13 @@ mod test {
 
         for c in ['g', 'x', 'i', 'a', 'c', 'e', 'a', 'k'] {
             println!("> remove \'{c}\'");
-            let res = remove_from_leaf(tree.as_mut().unwrap(), RemoveKey::Key(&c));
+            let (res, ptr) =
+                remove_from_sufficient_node(tree.as_mut().unwrap(), RemoveKey::Key(&c));
 
             print_as_tree(&tree);
             println!("removed (key, val) = {:?}", res);
+
+            assert!(ptr.is_none());
 
             if let Some((k, _)) = res {
                 assert_eq!(k, c);
@@ -240,16 +429,18 @@ mod test {
         print_as_tree(&tree);
 
         println!("> remove min");
-        let min = remove_from_leaf(tree.as_mut().unwrap(), RemoveKey::Min);
+        let (min, ptr) = remove_from_sufficient_node(tree.as_mut().unwrap(), RemoveKey::Min);
         print_as_tree(&tree);
 
+        assert!(ptr.is_none());
         assert!(min.is_some());
         assert_eq!(min.unwrap(), ('a', 434));
 
         println!("> remove max");
-        let max = remove_from_leaf(tree.as_mut().unwrap(), RemoveKey::Max);
+        let (max, ptr) = remove_from_sufficient_node(tree.as_mut().unwrap(), RemoveKey::Max);
         print_as_tree(&tree);
 
+        assert!(ptr.is_none());
         assert!(max.is_some());
         assert_eq!(max.unwrap(), ('k', 963));
     }
@@ -384,5 +575,72 @@ mod test {
 
             print_as_tree(&tree);
         }
+    }
+
+    #[test]
+    fn test_remove_min_max_2() {
+        let mut tree = build_tree_2();
+
+        print_as_tree(&tree);
+
+        println!("> remove min");
+        let min;
+        (tree, min, _) = remove(tree, RemoveKey::Min);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", min);
+
+        assert!(min.is_some());
+        assert_eq!(min.unwrap(), ('a', "Apple".to_string()));
+
+        println!("> remove max");
+        let max;
+        (tree, max, _) = remove(tree, RemoveKey::Max);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", max);
+
+        assert!(max.is_some());
+        assert_eq!(max.unwrap(), ('g', "Grape".to_string()));
+
+        println!("> remove min");
+        let min;
+        (tree, min, _) = remove(tree, RemoveKey::Min);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", min);
+        assert_eq!(min.unwrap(), ('b', "Banana".to_string()));
+
+        println!("> remove min");
+        let min;
+        (tree, min, _) = remove(tree, RemoveKey::Min);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", min);
+        assert_eq!(min.unwrap(), ('c', "Cherry".to_string()));
+
+        println!("> remove min");
+        let min;
+        (tree, min, _) = remove(tree, RemoveKey::Min);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", min);
+        assert_eq!(min.unwrap(), ('d', "Doughnut".to_string()));
+
+        println!("> remove min");
+        let min;
+        (tree, min, _) = remove(tree, RemoveKey::Min);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", min);
+        assert_eq!(min.unwrap(), ('e', "Eggplant".to_string()));
+
+        println!("> remove max");
+        let max;
+        (tree, max, _) = remove(tree, RemoveKey::Max);
+
+        print_as_tree(&tree);
+        println!("removed (key, val) = {:?}", max);
+        assert_eq!(max.unwrap(), ('f', "Fruit".to_string()));
     }
 }

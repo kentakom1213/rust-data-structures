@@ -10,24 +10,12 @@ where
     fn size(&self) -> &usize;
     /// ノードの要素数への可変参照を取得する
     fn size_mut(&mut self) -> &mut usize;
-    /// キーの配列への不変参照を取得する
-    fn keys(&self) -> &[Option<K>; 2 * D - 1];
-    /// キーの配列への可変参照を取得する
-    fn keys_mut(&mut self) -> &mut [Option<K>; 2 * D - 1];
     /// n番目のキーへの不変参照を取得する
     fn nth_key(&self, n: usize) -> Option<&K>;
-    /// 値の配列への不変参照を取得する
-    fn vals(&self) -> &[Option<V>; 2 * D - 1];
-    /// 値の配列への可変参照を取得する
-    fn vals_mut(&mut self) -> &mut [Option<V>; 2 * D - 1];
     /// n番目の値への不変参照を取得する
     fn nth_val(&self, n: usize) -> Option<&V>;
     /// n番目の値への可変参照を取得する
     fn nth_val_mut(&mut self, n: usize) -> Option<&mut V>;
-    /// 子ノードの配列への不変参照を取得する
-    fn children(&self) -> &Option<[Option<NodePtr<D, K, V>>; 2 * D]>;
-    /// 子ノードの配列への可変参照を取得する
-    fn children_mut(&mut self) -> &mut Option<[Option<NodePtr<D, K, V>>; 2 * D]>;
     /// n番目の子ノードへの不変参照を取得する
     fn nth_child(&self, n: usize) -> Option<&NodePtr<D, K, V>>;
     /// n番目の子ノードへの可変参照を取得する
@@ -60,21 +48,6 @@ where
 {
     impl_get_ref!(size, size, &usize);
     impl_get_ref!(size_mut, size, &mut usize, mut);
-    impl_get_ref!(keys, keys, &[Option<K>; 2 * D - 1]);
-    impl_get_ref!(keys_mut, keys, &mut [Option<K>; 2 * D - 1], mut);
-    impl_get_ref!(vals, vals, &[Option<V>; 2 * D - 1]);
-    impl_get_ref!(vals_mut, vals, &mut [Option<V>; 2 * D - 1], mut);
-    impl_get_ref!(
-        children,
-        children,
-        &Option<[Option<NodePtr<D, K, V>>; 2 * D]>
-    );
-    impl_get_ref!(
-        children_mut,
-        children,
-        &mut Option<[Option<NodePtr<D, K, V>>; 2 * D]>,
-        mut
-    );
 
     fn nth_key(&self, n: usize) -> Option<&K> {
         self.keys.get(n).map(|x| x.as_ref()).flatten()
