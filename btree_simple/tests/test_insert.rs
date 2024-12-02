@@ -1,5 +1,3 @@
-#![feature(generic_const_exprs)]
-
 use btree_simple::{insert, print_as_tree, BTreeNode, NodePtr, NodeUtil};
 
 /// 空きのあるノードに挿入

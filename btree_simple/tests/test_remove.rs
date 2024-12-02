@@ -1,5 +1,7 @@
 //! 削除のテスト
 
+#![allow(non_snake_case)]
+
 use btree_simple::{btree, insert, print_as_tree, remove, BTreeNode, NodePtr, RemoveKey};
 use rand::Rng;
 use rstest::rstest;
@@ -123,6 +125,7 @@ fn test_hand_1() {
     (tree, removed) = remove(tree, RemoveKey::Key(&67));
 
     print_as_tree(&tree);
+    assert_eq!(removed.unwrap().0, 67);
 }
 
 #[test]

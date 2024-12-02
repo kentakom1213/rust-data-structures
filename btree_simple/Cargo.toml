@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-colored = "2.1.0"
+serde = "1.0.215"
 
+colored = "2.1.0"
+serde_json = "1.0.133"
 [dev-dependencies]
 rand = "0.8.5"
 rstest = "0.23.0"

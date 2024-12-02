@@ -10,7 +10,6 @@ pub type NodePtr<const D: usize, K, V> = Box<BTreeNode<D, K, V>>;
 ///
 /// ノードは`x`個（`k ≤ x ≤ 2k-1`）のデータをもつ．
 /// 更にノードが内部ノードであるとき，`x+1`個の子を持つ．
-#[derive(Clone)]
 pub struct BTreeNode<const D: usize, K, V>
 where
     [(); 2 * D - 1]:,
