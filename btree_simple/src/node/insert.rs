@@ -1,10 +1,10 @@
 use crate::{BTreeNode, NodePtr, NodeUtil};
 
-/// B木に値を挿入する
+/// B木に値を挿入する．すでに挿入されている場合でも重複して挿入する．
 /// - `root`：挿入対象の木のルート
 /// - `key`：挿入するキー
 /// - `value`：挿入する値
-pub fn insert<const D: usize, K, V>(
+pub fn insert_multi<const D: usize, K, V>(
     root: Option<NodePtr<D, K, V>>,
     key: K,
     value: V,

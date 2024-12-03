@@ -1,4 +1,4 @@
-use btree_simple::{insert, print_as_tree, BTreeNode, NodePtr, NodeUtil};
+use btree_simple::{insert_multi, print_as_tree, BTreeNode, NodePtr, NodeUtil};
 
 /// 空きのあるノードに挿入
 #[test]
@@ -29,7 +29,7 @@ fn test_insert_with_vacent() {
     ];
 
     for (k, v) in items {
-        tree = insert(tree, k, v);
+        tree = insert_multi(tree, k, v);
 
         println!("> insert {k}");
         print_as_tree(&tree);

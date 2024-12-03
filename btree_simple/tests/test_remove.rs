@@ -2,7 +2,7 @@
 
 #![allow(non_snake_case)]
 
-use btree_simple::{btree, insert, print_as_tree, remove, BTreeNode, NodePtr, RemoveKey};
+use btree_simple::{btree, insert_multi, print_as_tree, remove, BTreeNode, NodePtr, RemoveKey};
 use rand::Rng;
 use rstest::rstest;
 use rustc_hash::FxHashMap;
@@ -14,7 +14,7 @@ fn test_remove_incremental_D2() {
     let mut tree: Option<NodePtr<2, u32, String>> = None;
 
     for i in 0..COUNT {
-        tree = insert(tree, i, i.to_string());
+        tree = insert_multi(tree, i, i.to_string());
     }
 
     // print_as_tree(&tree);
@@ -35,7 +35,7 @@ fn test_remove_decremental_D2() {
     let mut tree: Option<NodePtr<2, u32, String>> = None;
 
     for i in 0..COUNT {
-        tree = insert(tree, i, i.to_string());
+        tree = insert_multi(tree, i, i.to_string());
     }
 
     // print_as_tree(&tree);
@@ -56,7 +56,7 @@ fn test_remove_incremental_D3() {
     let mut tree: Option<NodePtr<3, u32, String>> = None;
 
     for i in 0..COUNT {
-        tree = insert(tree, i, i.to_string());
+        tree = insert_multi(tree, i, i.to_string());
     }
 
     // print_as_tree(&tree);
@@ -77,7 +77,7 @@ fn test_remove_decremental_D3() {
     let mut tree: Option<NodePtr<3, u32, String>> = None;
 
     for i in 0..COUNT {
-        tree = insert(tree, i, i.to_string());
+        tree = insert_multi(tree, i, i.to_string());
     }
 
     // print_as_tree(&tree);
@@ -222,7 +222,7 @@ fn test_random_D2(max: u32, count: u32) {
 
     for _ in 0..count {
         let x = rng.gen_range(0..max);
-        tree = insert(tree, x, x.to_string());
+        tree = insert_multi(tree, x, x.to_string());
         *set.entry(x).or_insert(0) += 1;
     }
 
@@ -279,7 +279,7 @@ fn test_random_D3(max: u32, count: u32) {
 
     for _ in 0..count {
         let x = rng.gen_range(0..max);
-        tree = insert(tree, x, x.to_string());
+        tree = insert_multi(tree, x, x.to_string());
         *set.entry(x).or_insert(0) += 1;
     }
 
@@ -336,7 +336,7 @@ fn test_random_D4(max: u32, count: u32) {
 
     for _ in 0..count {
         let x = rng.gen_range(0..max);
-        tree = insert(tree, x, x.to_string());
+        tree = insert_multi(tree, x, x.to_string());
         *set.entry(x).or_insert(0) += 1;
     }
 
