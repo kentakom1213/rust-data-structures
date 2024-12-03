@@ -1,7 +1,5 @@
 //! B木からデータを削除する
 
-use std::fmt::Debug;
-
 use crate::{BTreeNode, NodePtr, NodeUtil};
 
 /// 削除するキーを指定するための列挙型
@@ -30,8 +28,7 @@ pub fn remove<const D: usize, K, V>(
 ) -> (Option<NodePtr<D, K, V>>, Option<(K, V)>)
 where
     [(); 2 * D - 1]:,
-    K: Ord + Debug,
-    V: Debug,
+    K: Ord,
 {
     let Some(mut node) = root else {
         return (None, None);
@@ -234,8 +231,7 @@ fn remove_from_sufficient_node<const D: usize, K, V>(
 ) -> (Option<(K, V)>, Option<NodePtr<D, K, V>>)
 where
     [(); 2 * D - 1]:,
-    K: Ord + Debug,
-    V: Debug,
+    K: Ord,
 {
     debug_assert!(node.is_leaf() || node.size >= D);
 
