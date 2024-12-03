@@ -1,139 +1,84 @@
-//! 探索の実装
+//! 検索を行う
 
-use crate::{NodePtr, NodeUtil};
+use super::NodePtr;
 
-/// 最も左の葉ノードを探索する
-fn leftmost_leaf<const D: usize, K, V>(node: &NodePtr<D, K, V>) -> &NodePtr<D, K, V>
+/// B木のノードからキーを検索する．
+///
+/// **引数**
+/// - `root`: 検索を行うノードのポインタ
+/// - `key`: 検索するキー
+///
+/// **戻り値**
+/// - `Some(&V)`: キーが見つかった場合，そのキーに対応する値への参照
+pub fn get<'a, const D: usize, K, V>(root: &'a Option<NodePtr<D, K, V>>, key: &K) -> Option<&'a V>
 where
     [(); 2 * D - 1]:,
+    K: Ord,
 {
-    let mut x = node;
+    let mut node = root.as_ref()?;
 
-    while let Some(left) = x.nth_child(0) {
-        x = left;
+    'outer: while !node.is_leaf() {
+        for i in 0..node.size {
+            if key < node.keys[i].as_ref().unwrap() {
+                node = node.children.as_ref().unwrap()[i].as_ref().unwrap();
+                continue 'outer;
+            }
+            if key == node.keys[i].as_ref().unwrap() {
+                return node.vals[i].as_ref();
+            }
+        }
+        // 右端の子に移動
+        node = node.children.as_ref().unwrap()[node.size].as_ref().unwrap();
     }
 
-    x
+    // 葉ノードの検索
+    for i in 0..node.size {
+        if key == node.keys[i].as_ref().unwrap() {
+            return node.vals[i].as_ref();
+        }
+    }
+
+    None
 }
 
-/// 最も右の葉ノードを探索する
-fn rightmost_leaf<const D: usize, K, V>(node: &NodePtr<D, K, V>) -> &NodePtr<D, K, V>
+/// B木のノードからキーを検索し，可変参照を取得する．
+///
+/// **引数**
+/// - `root`: 検索を行うノードのポインタ
+/// - `key`: 検索するキー
+///
+/// **戻り値**
+/// - `Some(&V)`: キーが見つかった場合，そのキーに対応する値への可変参照
+pub fn get_mut<'a, const D: usize, K, V>(
+    root: &'a mut Option<NodePtr<D, K, V>>,
+    key: &K,
+) -> Option<&'a mut V>
 where
     [(); 2 * D - 1]:,
+    K: Ord,
 {
-    let mut x = node;
+    let mut node = root.as_mut()?;
 
-    while let Some(right) = x.nth_child(*x.size()) {
-        x = right;
+    'outer: while !node.is_leaf() {
+        for i in 0..node.size {
+            if key < node.keys[i].as_ref().unwrap() {
+                node = node.children.as_mut().unwrap()[i].as_mut().unwrap();
+                continue 'outer;
+            }
+            if key == node.keys[i].as_ref().unwrap() {
+                return node.vals[i].as_mut();
+            }
+        }
+        // 右端の子に移動
+        node = node.children.as_mut().unwrap()[node.size].as_mut().unwrap();
     }
 
-    x
-}
-
-/// 部分木の最小値を返す
-pub fn min_key<const D: usize, K, V>(node: &NodePtr<D, K, V>) -> Option<&K>
-where
-    [(); 2 * D - 1]:,
-{
-    leftmost_leaf(node).keys[0].as_ref()
-}
-
-/// 部分木の最大値を返す
-pub fn max_key<const D: usize, K, V>(node: &NodePtr<D, K, V>) -> Option<&K>
-where
-    [(); 2 * D - 1]:,
-{
-    let rightmost = rightmost_leaf(node);
-    let size = *rightmost.size();
-    rightmost.keys[size - 1].as_ref()
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::{btree, print_as_tree, BTreeNode};
-
-    #[test]
-    fn test_leftmost_leaf() {
-        let tree: Option<NodePtr<2, i32, &str>> = btree! {
-            keys: [Some(1), Some(2), Some(3)],
-            vals: [Some("a"), Some("b"), Some("c")],
-            children: [
-                btree! {
-                    keys: [Some(0), None, None],
-                    vals: [Some("x"), None, None],
-                    size: 1,
-                },
-                btree! {
-                    keys: [Some(4), None, None],
-                    vals: [Some("d"), None, None],
-                    size: 1,
-                },
-                btree! {
-                    keys: [Some(5), None, None],
-                    vals: [Some("e"), None, None],
-                    size: 1,
-                },
-                btree! {
-                    keys: [Some(6), None, None],
-                    vals: [Some("f"), None, None],
-                    size: 1,
-                },
-            ],
-            size: 3,
-        };
-
-        print_as_tree(&tree);
-
-        let leftmost = leftmost_leaf(&tree.as_ref().unwrap());
-        let rightmost = rightmost_leaf(&tree.as_ref().unwrap());
-
-        print!("leftmost: {:?}", leftmost);
-        print!("rightmost: {:?}", rightmost);
-
-        assert_eq!(*leftmost.nth_key(0).unwrap(), 0);
-        assert_eq!(*rightmost.nth_key(0).unwrap(), 6);
+    // 葉ノードの検索
+    for i in 0..node.size {
+        if key == node.keys[i].as_ref().unwrap() {
+            return node.vals[i].as_mut();
+        }
     }
 
-    #[test]
-    fn test_min_max() {
-        let tree: Option<NodePtr<2, i32, &str>> = btree! {
-            keys: [Some(1), Some(2), Some(3)],
-            vals: [Some("a"), Some("b"), Some("c")],
-            children: [
-                btree! {
-                    keys: [Some(0), None, None],
-                    vals: [Some("x"), None, None],
-                    size: 1,
-                },
-                btree! {
-                    keys: [Some(4), None, None],
-                    vals: [Some("d"), None, None],
-                    size: 1,
-                },
-                btree! {
-                    keys: [Some(5), None, None],
-                    vals: [Some("e"), None, None],
-                    size: 1,
-                },
-                btree! {
-                    keys: [Some(6), None, None],
-                    vals: [Some("f"), None, None],
-                    size: 1,
-                },
-            ],
-            size: 3,
-        };
-
-        print_as_tree(&tree);
-
-        let min = min_key(&tree.as_ref().unwrap());
-        let max = max_key(&tree.as_ref().unwrap());
-
-        println!("min: {:?}", min);
-        println!("max: {:?}", max);
-
-        assert_eq!(*min.unwrap(), 0);
-        assert_eq!(*max.unwrap(), 6);
-    }
+    None
 }

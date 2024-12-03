@@ -1,4 +1,7 @@
 use btree_simple::{insert_multi, print_as_tree, BTreeNode, NodePtr, NodeUtil};
+use rand::Rng;
+use rstest::rstest;
+use rustc_hash::FxHashMap;
 
 /// 空きのあるノードに挿入
 #[test]
@@ -32,6 +35,22 @@ fn test_insert_with_vacent() {
         tree = insert_multi(tree, k, v);
 
         println!("> insert {k}");
+        print_as_tree(&tree);
+    }
+}
+
+#[rstest(max, n, case(10, 20))]
+fn test_insert_multiple(max: i32, n: usize) {
+    let mut tree: Option<NodePtr<2, i32, usize>> = None;
+    let mut counter = FxHashMap::default();
+    let mut rng = rand::thread_rng();
+
+    for _ in 0..n {
+        let k = rng.gen_range(1..=max);
+        let v = counter.entry(k).or_insert(0);
+        *v += 1;
+
+        tree = insert_multi(tree, k, *v);
         print_as_tree(&tree);
     }
 }
